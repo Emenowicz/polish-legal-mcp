@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Install or update polish-legal-mcp as a hardened systemd service (no Docker) and publish it
-# with Tailscale Funnel. Run on the host as root:  sudo bash pi-setup.sh
+# with Tailscale Funnel. Run on the host as root:  sudo bash pi-setup.sh [--reconfigure]
 # Prerequisites: Tailscale installed and logged in (`sudo tailscale up`), MagicDNS + HTTPS
-# certificates enabled in the tailnet, and a GitHub OAuth App whose callback URL is
-# https://<host>.<tailnet>.ts.net/auth/callback. Re-running updates the code and restarts.
+# certificates enabled in the tailnet, and a Google OAuth client or GitHub OAuth App whose
+# redirect/callback URL is https://<host>.<tailnet>.ts.net/auth/callback.
+# Re-running updates the code and restarts; --reconfigure asks for the sign-in settings again
+# (and rotates the signing key, so every client has to connect again).
 set -euo pipefail
 
 APP_USER=plmcp
@@ -13,6 +15,8 @@ UNIT=/etc/systemd/system/polish-legal-mcp.service
 REPO=https://github.com/Emenowicz/polish-legal-mcp.git
 UV_VERSION=0.13.6
 PORT=8000
+RECONFIGURE=0
+[ "${1:-}" = "--reconfigure" ] && RECONFIGURE=1
 STATE_DIR=/var/lib/polish-legal-mcp
 STATE_IMG=/var/lib/polish-legal-mcp.img
 STATE_SIZE=64M
@@ -55,29 +59,46 @@ as_app /usr/local/bin/uv sync --locked --no-dev --no-editable --reinstall-packag
   --directory "$APP_DIR/app"
 
 echo "==> Configuration"
-if [ ! -f "$ENV_FILE" ]; then
+if [ ! -f "$ENV_FILE" ] || [ "$RECONFIGURE" = 1 ]; then
   dns=$(tailscale status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))')
   default_url="https://$dns"
   read -rp "Public base URL [$default_url]: " base_url; base_url=${base_url:-$default_url}
-  read -rp "GitHub OAuth App client ID: " gh_id
-  read -rsp "GitHub OAuth App client secret (hidden): " gh_secret; echo
-  read -rp "Allowed GitHub logins, comma-separated [Emenowicz]: " logins; logins=${logins:-Emenowicz}
+  read -rp "Sign-in provider, google or github [google]: " provider; provider=${provider:-google}
+  case "$provider" in
+    google)
+      read -rp "Google OAuth client ID: " client_id
+      read -rsp "Google OAuth client secret (hidden): " client_secret; echo
+      read -rp "Allowed Google e-mail addresses, comma-separated: " allowed
+      allow_line="PLMCP_ALLOWED_EMAILS=$allowed"
+      ;;
+    github)
+      read -rp "GitHub OAuth App client ID: " client_id
+      read -rsp "GitHub OAuth App client secret (hidden): " client_secret; echo
+      read -rp "Allowed GitHub logins, comma-separated [Emenowicz]: " allowed; allowed=${allowed:-Emenowicz}
+      allow_line="PLMCP_ALLOWED_GITHUB_LOGINS=$allowed"
+      ;;
+    *) echo "Unknown provider: $provider" >&2; exit 1 ;;
+  esac
+  if [ -z "$client_id" ] || [ -z "$client_secret" ] || [ -z "$allowed" ]; then
+    echo "Client ID, secret and allowlist are required." >&2; exit 1
+  fi
+  upper=$(echo "$provider" | tr '[:lower:]' '[:upper:]')
   jwt=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')
   umask 077
   # No inline comments: systemd EnvironmentFile would keep them as part of the value.
   cat > "$ENV_FILE" <<CONF
 PLMCP_ENV=production
-PLMCP_AUTH_MODE=github
+PLMCP_AUTH_MODE=$provider
 PLMCP_BASE_URL=$base_url
-PLMCP_GITHUB_CLIENT_ID=$gh_id
-PLMCP_GITHUB_CLIENT_SECRET=$gh_secret
+PLMCP_${upper}_CLIENT_ID=$client_id
+PLMCP_${upper}_CLIENT_SECRET=$client_secret
 PLMCP_JWT_SIGNING_KEY=$jwt
-PLMCP_ALLOWED_GITHUB_LOGINS=$logins
+$allow_line
 CONF
   chown root:root "$ENV_FILE"; chmod 600 "$ENV_FILE"
-  echo "Wrote $ENV_FILE (callback URL to register in GitHub: $base_url/auth/callback)"
+  echo "Wrote $ENV_FILE (redirect/callback URL to register: $base_url/auth/callback)"
 else
-  echo "Keeping existing $ENV_FILE"
+  echo "Keeping existing $ENV_FILE (use --reconfigure to change sign-in settings)"
 fi
 
 echo "==> State storage: dedicated $STATE_SIZE filesystem (a flood of OAuth requests cannot fill the root disk)"

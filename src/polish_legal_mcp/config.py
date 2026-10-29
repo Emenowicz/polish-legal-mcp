@@ -18,13 +18,17 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, ge=1, le=65535)
     log_level: str = "INFO"
 
-    # Authentication. Production requires GitHub OAuth (see docs/security.md).
-    auth_mode: Literal["none", "github"] = "none"
+    # Authentication. Production requires GitHub or Google OAuth (see docs/security.md).
+    auth_mode: Literal["none", "github", "google"] = "none"
     base_url: str | None = None
+    jwt_signing_key: SecretStr | None = None
     github_client_id: str | None = None
     github_client_secret: SecretStr | None = None
-    jwt_signing_key: SecretStr | None = None
     allowed_github_logins: Annotated[list[str], NoDecode] = Field(default_factory=list)
+    google_client_id: str | None = None
+    google_client_secret: SecretStr | None = None
+    # Only Google accounts whose e-mail is verified by Google are matched.
+    allowed_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
     # Extra Host header values accepted besides the base_url host and loopback.
     allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
@@ -39,7 +43,7 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=3600, ge=0)
     cache_max_documents: int = Field(default=32, ge=1)
 
-    @field_validator("allowed_github_logins", "allowed_hosts", mode="before")
+    @field_validator("allowed_github_logins", "allowed_emails", "allowed_hosts", mode="before")
     @classmethod
     def _split_csv(cls, value: object) -> object:
         if isinstance(value, str):
@@ -48,19 +52,18 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _check_security(self) -> Settings:
-        if self.auth_mode == "github":
-            missing = [
-                name
-                for name in ("base_url", "github_client_id", "github_client_secret")
-                if not getattr(self, name)
-            ]
+        if self.auth_mode != "none":
+            mode = self.auth_mode
+            allowlist = "allowed_github_logins" if mode == "github" else "allowed_emails"
+            required = ("base_url", f"{mode}_client_id", f"{mode}_client_secret", allowlist)
+            missing = [name for name in required if not getattr(self, name)]
             if missing:
-                raise ValueError(f"auth_mode=github requires: {', '.join(missing)}")
-            if not self.allowed_github_logins:
-                raise ValueError("auth_mode=github requires a non-empty allowed_github_logins")
+                raise ValueError(f"auth_mode={mode} requires: {', '.join(missing)}")
         if self.env == "production":
-            if self.auth_mode != "github":
-                raise ValueError("production requires auth_mode=github; refusing to start")
+            if self.auth_mode == "none":
+                raise ValueError(
+                    "production requires auth_mode=github or google; refusing to start"
+                )
             if not (self.base_url or "").startswith("https://"):
                 raise ValueError("production requires an https:// base_url")
             key = self.jwt_signing_key.get_secret_value() if self.jwt_signing_key else ""

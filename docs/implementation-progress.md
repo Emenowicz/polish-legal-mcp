@@ -33,7 +33,7 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] 7 legal regression cases + "never VERIFIED when state unknown" tests
 
 ## Phase 5 — Security and deployment — DONE / remote deployment VERIFIED (2026-10-29)
-- [x] GitHub OAuth (OAuthProxy, DCR/CIMD, PKCE), login allowlist, rate limiting, Host guard
+- [x] OAuth (OAuthProxy: GitHub or Google, CIMD/DCR, PKCE), allowlist, rate limiting, Host guard
 - [x] Dockerfile (multi-stage, non-root, healthcheck), compose (loopback port, read-only, limits)
 - [x] Container verified locally on arm64 (Apple Silicon): healthy, uid 10001, 401 with
       `resource_metadata`, PRM `resource` = `<base>/mcp`, foreign Host → 421
@@ -49,7 +49,11 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] Unauthenticated disk-write bounds (body cap, `/register`/`/authorize` rate limits, hourly
       cull of the OAuth store, 64 MiB state filesystem) — tested locally; Pi rollout pending re-run
       of `pi-setup.sh`
-- [ ] Real GitHub OAuth sign-in round trip — **NOT EXECUTED** (pending the Claude connector sign-in)
+- [x] Google sign-in mode (allowlist by verified e-mail), installer `--reconfigure`; CIMD
+      advertised and tested in both modes (Claude's consent page showed "Verified domain: claude.ai")
+- [x] Fixed: consent form rejected as "Forbidden Origin" behind Funnel (https Origin vs http app)
+- [x] Fixed: installer did not reinstall the app on source-only updates
+- [ ] Real OAuth sign-in round trip — **NOT EXECUTED** (pending the Claude connector sign-in)
 
 ## Phase 6 — Claude and mobile validation — NOT EXECUTED
 - [ ] Claude custom connector added and authenticated — **NOT EXECUTED**

@@ -14,6 +14,7 @@ from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth import AuthContext
 from fastmcp.server.auth.providers.github import GitHubProvider
+from fastmcp.server.auth.providers.google import GoogleProvider
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import AuthMiddleware, Middleware
 from fastmcp.server.middleware.middleware import MiddlewareContext
@@ -120,42 +121,77 @@ async def _run[T](call: Callable[[], Awaitable[T]]) -> T:
         raise ToolError(str(exc)) from exc
 
 
-def allowlist_check(logins: list[str]) -> Callable[[AuthContext], bool]:
-    allowed = {login.lower() for login in logins}
+def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
+    """Allow GitHub logins (case-insensitive) or Google e-mails verified by Google."""
+    if settings.auth_mode == "google":
+        emails = {email.lower() for email in settings.allowed_emails}
 
-    def check(ctx: AuthContext) -> bool:
+        def check_google(ctx: AuthContext) -> bool:
+            claims = ctx.token.claims if ctx.token else {}
+            email, verified = claims.get("email"), claims.get("email_verified")
+            return (
+                isinstance(email, str)
+                and str(verified).lower() == "true"
+                and email.lower() in emails
+            )
+
+        return check_google
+    logins = {login.lower() for login in settings.allowed_github_logins}
+
+    def check_github(ctx: AuthContext) -> bool:
         login = ctx.token.claims.get("login") if ctx.token else None
-        return isinstance(login, str) and login.lower() in allowed
+        return isinstance(login, str) and login.lower() in logins
 
-    return check
+    return check_github
 
 
 def _rate_limit_key(context: MiddlewareContext) -> str:
     token = get_access_token()
     if token is None:
         return "anonymous"
-    login = token.claims.get("login")
-    return f"user:{login}" if isinstance(login, str) else f"client:{token.client_id}"
+    user = token.claims.get("login") or token.claims.get("email")
+    return f"user:{user}" if isinstance(user, str) else f"client:{token.client_id}"
 
 
-def build_auth(settings: Settings) -> tuple[GitHubProvider | None, FileTreeStore | None]:
-    """GitHub OAuth provider plus the raw OAuth store (to cull), or (None, None) without auth."""
-    if settings.auth_mode != "github":
+def build_auth(
+    settings: Settings,
+) -> tuple[GitHubProvider | GoogleProvider | None, FileTreeStore | None]:
+    """OAuth provider plus the raw OAuth store (to cull), or (None, None) without auth."""
+    if settings.auth_mode == "none":
         return None, None
-    assert settings.github_client_secret is not None and settings.base_url is not None
+    assert settings.base_url is not None
     jwt_key = settings.jwt_signing_key.get_secret_value() if settings.jwt_signing_key else None
     storage, store = (
         build_oauth_storage(fastmcp.settings.home, jwt_key) if jwt_key else (None, None)
     )
-    provider = GitHubProvider(
-        client_id=str(settings.github_client_id),
-        client_secret=settings.github_client_secret.get_secret_value(),
-        base_url=settings.base_url,
-        # Least privilege: only the GitHub login is needed for the allowlist.
-        required_scopes=["read:user"],
-        jwt_signing_key=jwt_key,
-        client_storage=storage,
-    )
+    if settings.auth_mode == "google":
+        assert settings.google_client_secret is not None
+        provider: GitHubProvider | GoogleProvider = GoogleProvider(
+            client_id=str(settings.google_client_id),
+            client_secret=settings.google_client_secret.get_secret_value(),
+            base_url=settings.base_url,
+            # Least privilege: only the verified e-mail is needed for the allowlist.
+            required_scopes=["openid", "email"],
+            jwt_signing_key=jwt_key,
+            client_storage=storage,
+            # Claude and Claude Code identify themselves with a Client ID Metadata Document
+            # (no registration stored on disk); DCR stays available for other MCP clients.
+            enable_cimd=True,
+        )
+    else:
+        assert settings.github_client_secret is not None
+        provider = GitHubProvider(
+            client_id=str(settings.github_client_id),
+            client_secret=settings.github_client_secret.get_secret_value(),
+            base_url=settings.base_url,
+            # Least privilege: only the GitHub login is needed for the allowlist.
+            required_scopes=["read:user"],
+            jwt_signing_key=jwt_key,
+            client_storage=storage,
+            # Claude and Claude Code identify themselves with a Client ID Metadata Document
+            # (no registration stored on disk); DCR stays available for other MCP clients.
+            enable_cimd=True,
+        )
     return provider, store
 
 
@@ -183,7 +219,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     ]
     auth, oauth_store = build_auth(settings)
     if auth is not None:
-        middleware.insert(0, AuthMiddleware(auth=allowlist_check(settings.allowed_github_logins)))
+        middleware.insert(0, AuthMiddleware(auth=allowlist_check(settings)))
 
     mcp = FastMCP(
         name="polish-legal-mcp",

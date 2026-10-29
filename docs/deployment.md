@@ -34,12 +34,22 @@ curl -fsS http://127.0.0.1:8000/health
 3. Note the Pi's public name: `tailscale status --json | jq -r .Self.DNSName` →
    e.g. `pi.tail1234.ts.net.` → `BASE_URL=https://pi.tail1234.ts.net`.
 
-### 3.3 GitHub OAuth App
-GitHub → Settings → Developer settings → OAuth Apps → *New OAuth App*:
-- Homepage URL: `https://pi.tail1234.ts.net`
-- Authorization callback URL: `https://pi.tail1234.ts.net/auth/callback`
+### 3.3 Sign-in provider (pick one)
+Whoever adds the Claude connector signs in once with this provider; Claude itself passes no
+identity. Claude identifies itself to the server via CIMD (Client ID Metadata Document), so no
+client registration is stored for it.
 
-Generate a client secret.
+**Google** (`PLMCP_AUTH_MODE=google`, allowlist by verified e-mail — good for people without GitHub):
+1. <https://console.cloud.google.com/> → create a project, e.g. `polish-legal-mcp`.
+2. *Google Auth Platform* → **Branding**: app name and support e-mail. **Audience**: *External*,
+   then **Publish app** (only `openid`/`email` are requested, which needs no Google verification;
+   in *Testing* mode refresh tokens expire after 7 days and users must be added as test users).
+3. **Clients** → *Create client* → *Web application* → Authorized redirect URI
+   `https://pi.tail1234.ts.net/auth/callback` → copy the client ID and secret.
+
+**GitHub** (`PLMCP_AUTH_MODE=github`, allowlist by login): GitHub → Settings → Developer settings
+→ OAuth Apps → *New OAuth App*, homepage `https://pi.tail1234.ts.net`, callback
+`https://pi.tail1234.ts.net/auth/callback`, then generate a client secret.
 
 ### 3.4 Configuration
 ```bash
@@ -126,7 +136,9 @@ never fill the host's root disk (see security.md).
    scp deploy/pi-setup.sh <pi>:~/
    ssh -t <pi> 'sudo bash ~/pi-setup.sh'
    ```
-3. Update later by re-running the same command (keeps `/etc/polish-legal-mcp.env`).
+3. Update later by re-running the same command (keeps `/etc/polish-legal-mcp.env`). To switch
+   provider or change the allowlist: `ssh -t <pi> 'sudo bash ~/pi-setup.sh --reconfigure'`
+   (rotates the signing key — connected clients must connect again).
 4. Operate: `systemctl status polish-legal-mcp`, `journalctl -u polish-legal-mcp -f`,
    `sudo systemctl restart polish-legal-mcp`, `tailscale funnel status`.
 

@@ -69,11 +69,13 @@ Environment variables with prefix `PLMCP_` (see [.env.example](.env.example)):
 |---|---|---|
 | `PLMCP_ENV` | `development` | `production` requires GitHub OAuth or refuses to start. |
 | `PLMCP_HOST` / `PLMCP_PORT` | `127.0.0.1` / `8000` | Docker image sets `0.0.0.0`. |
-| `PLMCP_AUTH_MODE` | `none` | `github` for remote use. |
+| `PLMCP_AUTH_MODE` | `none` | `google` or `github` for remote use. |
 | `PLMCP_BASE_URL` | – | Public HTTPS URL without `/mcp`. |
 | `PLMCP_GITHUB_CLIENT_ID` / `_SECRET` | – | GitHub OAuth App. |
 | `PLMCP_JWT_SIGNING_KEY` | – | ≥32 random chars. |
-| `PLMCP_ALLOWED_GITHUB_LOGINS` | – | Comma-separated allowlist. |
+| `PLMCP_ALLOWED_GITHUB_LOGINS` | – | Comma-separated allowlist (GitHub mode). |
+| `PLMCP_GOOGLE_CLIENT_ID` / `_SECRET` | – | Google OAuth client (Web application). |
+| `PLMCP_ALLOWED_EMAILS` | – | Comma-separated allowlist of Google-verified e-mails (Google mode). |
 | `PLMCP_RATE_LIMIT_PER_SECOND` / `_BURST` | `2` / `20` | Per user. |
 | `PLMCP_HTTP_TIMEOUT_SECONDS`, `PLMCP_HTTP_MAX_RETRIES` | `20`, `3` | Upstream calls. |
 | `PLMCP_CACHE_TTL_SECONDS`, `PLMCP_CACHE_MAX_DOCUMENTS` | `3600`, `32` | In-memory cache. |

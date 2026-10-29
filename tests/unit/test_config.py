@@ -44,3 +44,22 @@ def test_production_fails_closed(override):
 def test_env_variables(monkeypatch):
     monkeypatch.setenv("PLMCP_ALLOWED_HOSTS", "a.example, b.example")
     assert make().allowed_hosts == ["a.example", "b.example"]
+
+
+GOOD_GOOGLE = {
+    **{k: v for k, v in GOOD_PROD.items() if not k.startswith(("github", "allowed_github"))},
+    "auth_mode": "google",
+    "google_client_id": "123.apps.googleusercontent.com",
+    "google_client_secret": "secret",
+    "allowed_emails": "angela@example.com, me@example.com",
+}
+
+
+def test_google_production_config():
+    assert make(**GOOD_GOOGLE).allowed_emails == ["angela@example.com", "me@example.com"]
+
+
+@pytest.mark.parametrize("missing", ["google_client_id", "google_client_secret", "allowed_emails"])
+def test_google_mode_requires_its_settings(missing):
+    with pytest.raises(ValidationError, match=missing):
+        make(**{**GOOD_GOOGLE, missing: ""})

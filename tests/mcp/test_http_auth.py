@@ -70,12 +70,47 @@ async def test_foreign_host_header_rejected(secured_app):
     assert response.status_code == 421
 
 
-def test_allowlist_check_is_case_insensitive_and_denies_others():
-    check = allowlist_check(["Emenowicz"])
-    token = lambda login: SimpleNamespace(token=SimpleNamespace(claims={"login": login}))  # noqa: E731
-    assert check(token("emenowicz"))  # type: ignore[arg-type]
-    assert not check(token("someone-else"))  # type: ignore[arg-type]
-    assert not check(SimpleNamespace(token=None))  # type: ignore[arg-type]
+def _ctx(**claims):
+    return SimpleNamespace(token=SimpleNamespace(claims=claims) if claims else None)
+
+
+def test_github_allowlist_is_case_insensitive_and_denies_others():
+    check = allowlist_check(prod_settings())
+    assert check(_ctx(login="emenowicz"))  # type: ignore[arg-type]
+    assert not check(_ctx(login="someone-else"))  # type: ignore[arg-type]
+    assert not check(_ctx())  # type: ignore[arg-type]
+
+
+def google_settings() -> Settings:
+    return make_settings(
+        env="production",
+        auth_mode="google",
+        base_url=BASE,
+        google_client_id="123.apps.googleusercontent.com",
+        google_client_secret="test-secret",
+        jwt_signing_key="k" * 48,
+        allowed_emails="Angela@example.com",
+    )
+
+
+def test_google_allowlist_requires_verified_email():
+    check = allowlist_check(google_settings())
+    # tokeninfo returns "true" as a string, userinfo v2 a boolean
+    assert check(_ctx(email="angela@example.com", email_verified="true"))  # type: ignore[arg-type]
+    assert check(_ctx(email="ANGELA@example.com", email_verified=True))  # type: ignore[arg-type]
+    assert not check(_ctx(email="angela@example.com", email_verified="false"))  # type: ignore[arg-type]
+    assert not check(_ctx(email="other@example.com", email_verified="true"))  # type: ignore[arg-type]
+    assert not check(_ctx(login="angela@example.com"))  # type: ignore[arg-type]
+
+
+async def test_google_mode_serves_oauth_discovery(tmp_path, monkeypatch):
+    monkeypatch.setattr(fastmcp.settings, "home", tmp_path)
+    app = build_app(google_settings())
+    async with client_for(app) as http:
+        response = await http.post("/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+        prm = (await http.get("/.well-known/oauth-protected-resource/mcp")).json()
+    assert response.status_code == 401
+    assert prm["resource"] == f"{BASE}/mcp"
 
 
 async def test_consent_post_behind_tls_proxy_is_not_forbidden_origin(secured_app):
@@ -89,3 +124,14 @@ async def test_consent_post_behind_tls_proxy_is_not_forbidden_origin(secured_app
         )
     assert response.text != "Forbidden Origin"
     assert foreign.status_code == 403
+
+
+@pytest.mark.parametrize("make", [prod_settings, google_settings])
+async def test_cimd_advertised_as_claude_requires(make, tmp_path, monkeypatch):
+    # Claude uses CIMD only if metadata has both of these; otherwise it falls back to DCR.
+    monkeypatch.setattr(fastmcp.settings, "home", tmp_path)
+    async with client_for(build_app(make())) as http:
+        asm = (await http.get("/.well-known/oauth-authorization-server")).json()
+    assert asm["client_id_metadata_document_supported"] is True
+    assert "none" in asm["token_endpoint_auth_methods_supported"]
+    assert "S256" in asm["code_challenge_methods_supported"]

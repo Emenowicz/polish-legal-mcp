@@ -7,8 +7,8 @@ users may paste sensitive descriptions into prompts. Controls:
 | Control | Implementation |
 |---|---|
 | HTTPS | Tailscale Funnel terminates TLS (Let's Encrypt certificate for `*.ts.net`). The container publishes only `127.0.0.1:8000`. |
-| Authentication | OAuth 2.1 via FastMCP `GitHubProvider` (OAuthProxy): DCR + CIMD for Claude, PKCE S256, consent screen, RFC 9728 metadata. GitHub scope `read:user` only. |
-| Authorisation | `AuthMiddleware` allowlist on the GitHub `login` claim (`PLMCP_ALLOWED_GITHUB_LOGINS`, case-insensitive). Other GitHub users can sign in but see no tools and cannot call any. |
+| Authentication | OAuth 2.1 via FastMCP `GoogleProvider` or `GitHubProvider` (OAuthProxy): CIMD (used by Claude and Claude Code) and DCR, PKCE S256, consent screen, RFC 9728 metadata. Scopes: Google `openid email`, GitHub `read:user`. |
+| Authorisation | `AuthMiddleware` allowlist: Google e-mails that Google marks as verified (`PLMCP_ALLOWED_EMAILS`) or GitHub logins (`PLMCP_ALLOWED_GITHUB_LOGINS`), case-insensitive. Other accounts can sign in but see no tools and cannot call any. |
 | Fail closed | `PLMCP_ENV=production` refuses to start (exit 2) unless GitHub OAuth, an `https://` base URL, a ≥32-char JWT signing key and a non-empty allowlist are configured. |
 | DNS rebinding / Host spoofing | FastMCP Host/Origin guard in strict mode; allowed hosts = base URL host + loopback (+ `PLMCP_ALLOWED_HOSTS`). Others get 421. |
 | Rate limiting | Token bucket per authenticated user (`PLMCP_RATE_LIMIT_PER_SECOND`, `PLMCP_RATE_LIMIT_BURST`). |
