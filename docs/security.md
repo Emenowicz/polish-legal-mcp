@@ -10,7 +10,7 @@ users may paste sensitive descriptions into prompts. Controls:
 | Authentication | OAuth 2.1 via FastMCP `GoogleProvider` or `GitHubProvider` (OAuthProxy): CIMD (used by Claude and Claude Code) and DCR, PKCE S256, consent screen, RFC 9728 metadata. Scopes: Google `openid email`, GitHub `read:user`. |
 | Authorisation | `AuthMiddleware` allowlist: Google e-mails that Google marks as verified (`PLMCP_ALLOWED_EMAILS`) or GitHub logins (`PLMCP_ALLOWED_GITHUB_LOGINS`), case-insensitive. Other accounts can sign in but see no tools and cannot call any. |
 | Fail closed | `PLMCP_ENV=production` refuses to start (exit 2) unless GitHub OAuth, an `https://` base URL, a ≥32-char JWT signing key and a non-empty allowlist are configured. |
-| DNS rebinding / Host spoofing | FastMCP Host/Origin guard in strict mode; allowed hosts = base URL host + loopback (+ `PLMCP_ALLOWED_HOSTS`). Others get 421. |
+| DNS rebinding / Host spoofing | FastMCP Host guard in strict mode; allowed hosts = base URL host + loopback (+ `PLMCP_ALLOWED_HOSTS`). Others get 421. With a public base URL any `Origin` is accepted: Claude's backend sends `Origin: https://claude.ai`, `/mcp` requires a bearer token (never sent automatically by browsers) and the consent form has FastMCP's CSRF token. Local development keeps strict origin checks. |
 | Rate limiting | Token bucket per authenticated user (`PLMCP_RATE_LIMIT_PER_SECOND`, `PLMCP_RATE_LIMIT_BURST`). |
 | No arbitrary URLs | Upstream base URLs are constants; paths are built from validated identifiers (`ActId`, integer ids); paths containing `://`, `..` or `\` are rejected; redirects are not followed. |
 | Input bounds | Pydantic constraints on every tool argument (lengths, patterns, ranges); citations ≤1000 chars, descriptions ≤2000. |

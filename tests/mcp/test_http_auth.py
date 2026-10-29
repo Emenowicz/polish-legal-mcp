@@ -70,6 +70,32 @@ async def test_foreign_host_header_rejected(secured_app):
     assert response.status_code == 421
 
 
+async def test_claude_backend_origin_reaches_auth_not_origin_guard(secured_app):
+    # Claude's servers send `Origin: https://claude.ai`; they must get the OAuth 401, not 403.
+    async with client_for(secured_app) as http:
+        response = await http.post(
+            "/mcp",
+            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+            headers={
+                "Origin": "https://claude.ai",
+                "Accept": "application/json, text/event-stream",
+            },
+        )
+    assert response.status_code == 401
+    assert "resource_metadata=" in response.headers["www-authenticate"]
+
+
+async def test_requests_are_access_logged_without_query(secured_app, caplog):
+    with caplog.at_level("INFO", logger="polish_legal_mcp.access"):
+        async with client_for(secured_app) as http:
+            await http.get("/authorize?code=secret-code&state=x")
+            await http.get("/health", headers={"Host": "evil.example"})
+    records = [r for r in caplog.records if r.name == "polish_legal_mcp.access"]
+    assert [r.fields["path"] for r in records] == ["/authorize", "/health"]  # type: ignore[attr-defined]
+    assert records[1].fields["status"] == 421  # type: ignore[attr-defined]
+    assert all("secret-code" not in str(r.__dict__) for r in records)
+
+
 def _ctx(**claims):
     return SimpleNamespace(token=SimpleNamespace(claims=claims) if claims else None)
 
@@ -119,11 +145,7 @@ async def test_consent_post_behind_tls_proxy_is_not_forbidden_origin(secured_app
         transport=httpx.ASGITransport(app=secured_app), base_url="http://pi.example.ts.net"
     ) as http:
         response = await http.post("/consent", data={"action": "approve"}, headers={"Origin": BASE})
-        foreign = await http.post(
-            "/consent", data={"action": "approve"}, headers={"Origin": "https://evil.example"}
-        )
     assert response.text != "Forbidden Origin"
-    assert foreign.status_code == 403
 
 
 @pytest.mark.parametrize("make", [prod_settings, google_settings])
