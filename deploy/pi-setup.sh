@@ -49,7 +49,10 @@ if [ -d "$APP_DIR/app/.git" ]; then
 else
   as_app git clone --depth 1 "$REPO" "$APP_DIR/app"
 fi
-as_app /usr/local/bin/uv sync --locked --no-dev --no-editable --directory "$APP_DIR/app"
+# --reinstall-package: uv does not rebuild a non-editable local project when only its sources
+# change (same version), which would silently keep running the previous code.
+as_app /usr/local/bin/uv sync --locked --no-dev --no-editable --reinstall-package polish-legal-mcp \
+  --directory "$APP_DIR/app"
 
 echo "==> Configuration"
 if [ ! -f "$ENV_FILE" ]; then
@@ -113,6 +116,7 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 curl -fsS "http://127.0.0.1:$PORT/health" && echo || { journalctl -u polish-legal-mcp -n 30 --no-pager; exit 1; }
+echo "Running commit: $(runuser -u "$APP_USER" -- git -C "$APP_DIR/app" log --oneline -1)"
 
 echo "==> Tailscale Funnel"
 tailscale funnel --bg "$PORT"
