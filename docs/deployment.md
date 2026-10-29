@@ -70,6 +70,8 @@ tailscale funnel status
 Stop publishing: `sudo tailscale funnel --https=443 off`.
 
 ### 3.6 Verification (run from outside your LAN, e.g. a phone hotspot)
+A newly enabled Funnel can reset TLS connections for a few minutes (seen: ~3 min) while it
+becomes publicly available; retry before debugging.
 ```bash
 BASE=https://pi.tail1234.ts.net
 curl -fsS $BASE/health                                        # {"status":"ok",...}

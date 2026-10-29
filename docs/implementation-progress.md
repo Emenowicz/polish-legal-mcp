@@ -32,15 +32,21 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] `verify_legal_citation`, `get_legal_act_amendments`, lexical `find_legal_basis`
 - [x] 7 legal regression cases + "never VERIFIED when state unknown" tests
 
-## Phase 5 — Security and deployment — DONE (local) / NOT EXECUTED (remote)
+## Phase 5 — Security and deployment — DONE / remote deployment VERIFIED (2026-10-29)
 - [x] GitHub OAuth (OAuthProxy, DCR/CIMD, PKCE), login allowlist, rate limiting, Host guard
 - [x] Dockerfile (multi-stage, non-root, healthcheck), compose (loopback port, read-only, limits)
 - [x] Container verified locally on arm64 (Apple Silicon): healthy, uid 10001, 401 with
       `resource_metadata`, PRM `resource` = `<base>/mcp`, foreign Host → 421
 - [x] Raspberry Pi + Tailscale Funnel runbook (`deployment.md`)
-- [ ] Deployment on the Raspberry Pi — **NOT EXECUTED** (no access to the device)
-- [ ] Tailscale Funnel public reachability — **NOT EXECUTED**
-- [ ] Real GitHub OAuth sign-in round trip — **NOT EXECUTED** (needs the OAuth App on the final URL)
+- [x] Deployment on a Raspberry Pi 5 (Debian 13, arm64) — **VERIFIED**: Docker-free variant
+      (`deploy/pi-setup.sh`, hardened systemd unit, dedicated `plmcp` user, env file root:root 600);
+      service active/enabled, `/health` 200 on 127.0.0.1:8000
+- [x] Tailscale Funnel public reachability — **VERIFIED** from outside the tailnet:
+      `https://<host>.<tailnet>.ts.net/health` 200 (Let's Encrypt cert), `/mcp` → 401 with
+      `resource_metadata`, PRM `resource` = `<base>/mcp`, AS metadata with `registration_endpoint`,
+      CIMD and PKCE S256, foreign Host → 421. A newly enabled Funnel reset TLS handshakes for
+      ~3 minutes before becoming stable.
+- [ ] Real GitHub OAuth sign-in round trip — **NOT EXECUTED** (pending the Claude connector sign-in)
 
 ## Phase 6 — Claude and mobile validation — NOT EXECUTED
 - [ ] Claude custom connector added and authenticated — **NOT EXECUTED**
