@@ -1,0 +1,51 @@
+# Security
+
+## Threat model
+The data served is public, but the endpoint must not become an open proxy to official APIs, and
+users may paste sensitive descriptions into prompts. Controls:
+
+| Control | Implementation |
+|---|---|
+| HTTPS | Tailscale Funnel terminates TLS (Let's Encrypt certificate for `*.ts.net`). The container publishes only `127.0.0.1:8000`. |
+| Authentication | OAuth 2.1 via FastMCP `GitHubProvider` (OAuthProxy): DCR + CIMD for Claude, PKCE S256, consent screen, RFC 9728 metadata. GitHub scope `read:user` only. |
+| Authorisation | `AuthMiddleware` allowlist on the GitHub `login` claim (`PLMCP_ALLOWED_GITHUB_LOGINS`, case-insensitive). Other GitHub users can sign in but see no tools and cannot call any. |
+| Fail closed | `PLMCP_ENV=production` refuses to start (exit 2) unless GitHub OAuth, an `https://` base URL, a ≥32-char JWT signing key and a non-empty allowlist are configured. |
+| DNS rebinding / Host spoofing | FastMCP Host/Origin guard in strict mode; allowed hosts = base URL host + loopback (+ `PLMCP_ALLOWED_HOSTS`). Others get 421. |
+| Rate limiting | Token bucket per authenticated user (`PLMCP_RATE_LIMIT_PER_SECOND`, `PLMCP_RATE_LIMIT_BURST`). |
+| No arbitrary URLs | Upstream base URLs are constants; paths are built from validated identifiers (`ActId`, integer ids); paths containing `://`, `..` or `\` are rejected; redirects are not followed. |
+| Input bounds | Pydantic constraints on every tool argument (lengths, patterns, ranges); citations ≤1000 chars, descriptions ≤2000. |
+| Output bounds | Provision text ≤12 000 chars, judgment text paged (≤20 000 per call), TOC paged, search ≤50 items. |
+| Upstream response bounds | Max 10 MB per response, timeouts, ≤3 retries, `Retry-After` honoured only up to 10 s. |
+| Error hygiene | `mask_error_details=True`; domain errors become Polish `ToolError` messages; no stack traces to clients. |
+| Logging | JSON logs; tool arguments, search phrases and upstream query strings are not logged (httpx loggers at WARNING). Upstream paths contain only public act identifiers. Uvicorn access logs are disabled because OAuth callback URLs carry authorization codes. |
+| Container | Non-root uid 10001, read-only root FS, `cap_drop: ALL`, `no-new-privileges`, memory/CPU/PID limits, only `/data` (OAuth store) writable. |
+| Secrets | Only via environment / `.env` (git-ignored). OAuth store is Fernet-encrypted with a key derived from the JWT signing key. |
+| Supply chain | `uv.lock` pinned, `uv sync --locked` in CI and Docker, `pip-audit` in CI. |
+
+## Local development
+`PLMCP_ENV=development` (default) allows `PLMCP_AUTH_MODE=none` and binds `127.0.0.1`. Binding a
+non-loopback interface without auth logs a warning; never expose such an instance.
+
+## Data protection
+The server only reads public official sources and stores nothing about users except OAuth client
+registrations/tokens needed for sign-in (encrypted, on the `/data` volume). Prompts are processed
+by Claude (Anthropic), not by this server; only tool arguments reach it and they are not logged.
+
+**Do not paste confidential, classified or internal information of your institution, personal
+data or case files into a public AI service.** This project is not an official tool of any public
+authority or institution.
+
+## Known residual risks
+- The OAuth dynamic client registration endpoint (`/register`) is unauthenticated by design
+  (required by Claude's DCR flow) and persists registrations in `/data`. MCP rate limiting does
+  not cover OAuth routes, so a flood of registrations could fill the disk. Mitigations: monitor
+  the `oauth-data` volume size, rely on Tailscale Funnel's own limits, or place the volume on a
+  size-capped filesystem.
+- Forwarded headers are not trusted (`proxy_headers=False`); behind Docker the app sees the
+  bridge IP. Nothing depends on the client IP — do not "fix" this by trusting `*`.
+
+## Optional hardening
+- Restrict Funnel exposure further with a Tailscale ACL or front it with Cloudflare + an IP
+  allowlist for Anthropic's egress range `160.79.104.0/21` (OAuth sign-in in the browser must
+  still reach the server, so allow the users' IPs as well).
+- Rotate `PLMCP_JWT_SIGNING_KEY` to invalidate all issued tokens (clients re-authorise).

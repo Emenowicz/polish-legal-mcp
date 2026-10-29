@@ -1,0 +1,33 @@
+# Production-style deployment (Raspberry Pi or any Docker host).
+# The port is published on loopback only; Tailscale Funnel (or another TLS proxy)
+# on the host exposes it publicly. See docs/deployment.md.
+services:
+  polish-legal-mcp:
+    build: .
+    image: polish-legal-mcp:local
+    container_name: polish-legal-mcp
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - oauth-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  oauth-data:

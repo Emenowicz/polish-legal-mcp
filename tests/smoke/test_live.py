@@ -1,0 +1,48 @@
+"""Opt-in checks against the real official APIs: `uv run pytest -m live`.
+
+They depend on upstream availability and current data, so they are excluded from CI.
+"""
+
+import pytest
+
+from polish_legal_mcp.clients.eli import EliClient
+from polish_legal_mcp.clients.saos import SaosClient
+from polish_legal_mcp.models import ActId
+from polish_legal_mcp.models import VerificationStatus as VS
+from polish_legal_mcp.services.judgments import JudgmentService
+from polish_legal_mcp.services.legal import LegalService
+
+pytestmark = pytest.mark.live
+
+
+@pytest.fixture
+async def live_legal(settings):
+    client = EliClient(settings)
+    yield LegalService(client)
+    await client.aclose()
+
+
+@pytest.fixture
+async def live_judgments(settings):
+    client = SaosClient(settings)
+    yield JudgmentService(client)
+    await client.aclose()
+
+
+async def test_live_search_finds_base_act(live_legal):
+    result = await live_legal.search_acts("gospodarce nieruchomo", act_type="Ustawa", limit=20)
+    assert "DU/1997/741" in [a.eli for a in result.items]
+
+
+async def test_live_provision_has_official_source(live_legal):
+    result = await live_legal.get_provision(ActId.parse("DU/1960/168"), "61", "1")
+    assert result.text and result.text.startswith("§ 1.")
+    assert result.verification.source_authenticity.status == VS.VERIFIED
+    assert result.wording_source and result.wording_source.html_url
+
+
+async def test_live_saos_search_and_get(live_judgments):
+    found = await live_judgments.search("nieruchomości Skarbu Państwa", limit=2)
+    assert found.total_results > 0
+    detail = await live_judgments.get(found.items[0].judgment_id, text_limit=500)
+    assert detail.source_url.startswith("https://www.saos.org.pl/judgments/")
