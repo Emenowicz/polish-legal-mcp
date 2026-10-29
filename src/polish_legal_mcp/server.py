@@ -60,6 +60,8 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
 - Od 2025 r. ELI publikuje teksty tylko w PDF – brzmienie może pochodzić ze starszego tekstu
   jednolitego; zawsze sprawdź ostrzeżenia i listę późniejszych zmian.
 - Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych.
+- Prawo Unii Europejskiej (rozporządzenia i dyrektywy, np. RODO) nie jest publikowane w Dz.U.
+  ani M.P. i nie jest dostępne w tym serwerze – powiedz o tym wprost i odeślij do EUR-Lex.
 - Wynik nie jest opinią prawną.
 """
 
@@ -304,7 +306,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         """Wyszukuje akty prawne (ustawy, rozporządzenia, obwieszczenia) w oficjalnym API ELI
         Sejmu RP po fragmentach tytułu i opcjonalnie haśle przedmiotowym. Zwraca identyfikatory
         ELI, adresy publikacji (Dz.U./M.P.), status i linki do ISAP. Nie jest to wyszukiwanie
-        pełnotekstowe ani semantyczne. Akty podstawowe są pokazywane przed zmieniającymi."""
+        pełnotekstowe ani semantyczne. Akty podstawowe są pokazywane przed zmieniającymi.
+        Obejmuje tylko Dziennik Ustaw i Monitor Polski – bez prawa UE (np. RODO)."""
         return await _run(
             lambda: legal.search_acts(
                 query, publisher, year, limit, act_type, in_force_only, keyword
@@ -395,7 +398,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując słowa opisu do haseł
         przedmiotowych ELI i tytułów aktów obowiązujących. To dopasowanie leksykalne, nie
         semantyczne i nie porada prawna: każdego kandydata zweryfikuj get_legal_act /
-        get_legal_provision."""
+        get_legal_provision. Nie obejmuje prawa UE (np. RODO) – jeśli sprawa dotyczy przepisów
+        unijnych, wskaż to użytkownikowi zamiast podsuwać niepowiązane akty krajowe."""
         return await _run(lambda: legal.find_legal_basis(issue_description, as_of_date, limit))
 
     @mcp.tool(annotations=READ_ONLY)

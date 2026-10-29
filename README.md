@@ -132,6 +132,7 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
   wording then comes from the newest HTML version and is marked `UNVERIFIED` for today's date.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
 - Search is lexical (titles/keywords), not full-text or semantic.
+- **No EU law** (e.g. RODO/GDPR): only Dziennik Ustaw and Monitor Polski are covered.
 - Amendment completeness, staged entry into force of amending acts and transitional provisions
   are not verified.
 
@@ -139,6 +140,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## Roadmap
 - Optional PDF text extraction for 2025+ consolidated texts (always marked `UNVERIFIED`).
+- EU law from EUR-Lex (official CELLAR/SPARQL API), e.g. RODO.
 - Additional official sources: Sejm API (legislative process), RCL (government drafts),
   GUGiK/Geoportal (parcels), GUS REGON (entities), administrative case law if an official API appears.
 - Hybrid legal retrieval (RAG) only after evaluating completeness, licensing, update cadence and

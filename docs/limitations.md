@@ -12,6 +12,12 @@
 - SAOS `lawJournalEntryCode` indexes only the originally cited publication; use
   `referenced_regulation` (title text) instead.
 
+## EU law
+- Only Polish journals (Dziennik Ustaw, Monitor Polski) are covered. EU regulations and
+  directives (e.g. GDPR/RODO) are not published there and are not available; the server
+  instructions tell Claude to say so and refer to EUR-Lex. Possible extension: EUR-Lex (CELLAR)
+  as an official source.
+
 ## Search
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems
   work better ("zakwaterowa", "gospodarce nieruchomo").
