@@ -57,7 +57,7 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] Real OAuth sign-in round trip — **VERIFIED** 2026-10-29 with Google sign-in via the Claude
       connector (CIMD), allowlisted account — **NOT EXECUTED** (pending the Claude connector sign-in)
 
-## Phase 6 — Claude and mobile validation — PARTIALLY VERIFIED
+## Phase 6 — Claude and mobile validation — VERIFIED
 - [x] Claude custom connector added and authenticated — **VERIFIED** 2026-10-29 (Google sign-in,
       consent page completed on an iPhone)
 - [x] Tool invocation from Claude — **VERIFIED** for ELI tools (server logs at 17:52 show
@@ -65,8 +65,8 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] All 9 tools invoked from Claude — **VERIFIED** 2026-10-29 by the user (ELI, SAOS, EU law;
       e.g. art. 5 k.c., art. 118 k.c., RODO art. 6 ust. 1 lit. f, SN I PK 134/15); calls seen in
       the server journal
-- [ ] Tool use from the Android/iOS Claude app — **NOT CONFIRMED** (sign-in was on iPhone; the
-      device used for the tool calls is unknown)
+- [x] Tool use from the Claude mobile app — **VERIFIED** 2026-10-29 (reported by the user; sign-in
+      consent was completed on an iPhone)
 
 Reproducible steps: `deployment.md` §3–4.
 
