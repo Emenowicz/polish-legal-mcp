@@ -122,25 +122,42 @@ async def _run[T](call: Callable[[], Awaitable[T]]) -> T:
 
 
 def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
-    """Allow GitHub logins (case-insensitive) or Google e-mails verified by Google."""
+    """Allow GitHub logins (case-insensitive) or Google e-mails verified by Google.
+
+    Denied identities are logged once per process: a signed-in account that is not on the
+    allowlist otherwise just sees an empty tool list, which is hard to diagnose.
+    """
+    denied_logged: set[str] = set()
+
+    def deny(identity: str) -> bool:
+        if identity not in denied_logged:
+            denied_logged.add(identity)
+            logger.warning(
+                "signed-in account not on allowlist; tools hidden",
+                extra={"fields": {"identity": identity}},
+            )
+        return False
+
     if settings.auth_mode == "google":
         emails = {email.lower() for email in settings.allowed_emails}
 
         def check_google(ctx: AuthContext) -> bool:
             claims = ctx.token.claims if ctx.token else {}
             email, verified = claims.get("email"), claims.get("email_verified")
-            return (
-                isinstance(email, str)
-                and str(verified).lower() == "true"
-                and email.lower() in emails
-            )
+            if not isinstance(email, str):
+                return deny("google:<no e-mail claim>")
+            if str(verified).lower() != "true":
+                return deny(f"google:{email} (e-mail not verified by Google)")
+            return email.lower() in emails or deny(f"google:{email}")
 
         return check_google
     logins = {login.lower() for login in settings.allowed_github_logins}
 
     def check_github(ctx: AuthContext) -> bool:
         login = ctx.token.claims.get("login") if ctx.token else None
-        return isinstance(login, str) and login.lower() in logins
+        if not isinstance(login, str):
+            return deny("github:<no login claim>")
+        return login.lower() in logins or deny(f"github:{login}")
 
     return check_github
 

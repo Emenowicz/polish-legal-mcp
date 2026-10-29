@@ -135,3 +135,13 @@ async def test_cimd_advertised_as_claude_requires(make, tmp_path, monkeypatch):
     assert asm["client_id_metadata_document_supported"] is True
     assert "none" in asm["token_endpoint_auth_methods_supported"]
     assert "S256" in asm["code_challenge_methods_supported"]
+
+
+def test_denied_identity_logged_once(caplog):
+    check = allowlist_check(google_settings())
+    with caplog.at_level("WARNING", logger="polish_legal_mcp.server"):
+        for _ in range(3):
+            check(_ctx(email="me@example.com", email_verified="true"))  # type: ignore[arg-type]
+    denied = [r for r in caplog.records if "not on allowlist" in r.getMessage()]
+    assert len(denied) == 1
+    assert denied[0].fields["identity"] == "google:me@example.com"  # type: ignore[attr-defined]

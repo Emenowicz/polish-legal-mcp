@@ -17,7 +17,7 @@ users may paste sensitive descriptions into prompts. Controls:
 | Output bounds | Provision text ≤12 000 chars, judgment text paged (≤20 000 per call), TOC paged, search ≤50 items. |
 | Upstream response bounds | Max 10 MB per response, timeouts, ≤3 retries, `Retry-After` honoured only up to 10 s. |
 | Error hygiene | `mask_error_details=True`; domain errors become Polish `ToolError` messages; no stack traces to clients. |
-| Logging | JSON logs; tool arguments, search phrases and upstream query strings are not logged (httpx loggers at WARNING). Upstream paths contain only public act identifiers. Uvicorn access logs are disabled because OAuth callback URLs carry authorization codes. |
+| Logging | JSON logs; tool arguments, search phrases and upstream query strings are not logged (httpx loggers at WARNING). Upstream paths contain only public act identifiers. Uvicorn access logs are disabled because OAuth callback URLs carry authorization codes. A signed-in account that is not on the allowlist is logged once (e-mail/login) so an empty tool list can be diagnosed. |
 | Container | Non-root uid 10001, read-only root FS, `cap_drop: ALL`, `no-new-privileges`, memory/CPU/PID limits, only `/data` (OAuth store) writable. |
 | Secrets | Only via environment / `.env` (git-ignored). OAuth store is Fernet-encrypted with a key derived from the JWT signing key. |
 | Supply chain | `uv.lock` pinned, `uv sync --locked` in CI and Docker, `pip-audit` in CI. |
