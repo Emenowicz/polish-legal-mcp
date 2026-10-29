@@ -287,10 +287,52 @@ class ParsedCitation(BaseModel):
     )
 
 
+class EuDocumentLink(BaseModel):
+    celex: str
+    version_date: date | None = Field(
+        default=None, description="Data wersji skonsolidowanej lub sprostowania."
+    )
+    eurlex_url: str
+
+
+class EuProvisionResult(BaseModel):
+    requested_act: str
+    celex: str | None = None
+    title: str | None = Field(default=None, description="Tytuł aktu UE (wersja polska).")
+    eli: str | None = Field(default=None, description="Identyfikator ELI aktu UE.")
+    eurlex_url: str | None = Field(default=None, description="Strona aktu w EUR-Lex.")
+    official_journal: str | None = Field(
+        default=None,
+        description="Publikacja w Dz. Urz. UE, np. 'Dz. Urz. UE L 119 z 4.5.2016, str. 1'.",
+    )
+    as_of_date: date
+    structural_path: list[str] = Field(default_factory=list)
+    text: str | None = Field(
+        default=None,
+        description="Brzmienie z tekstu opublikowanego w Dz. Urz. UE (wersja pierwotna, PL).",
+    )
+    text_truncated: bool = False
+    consolidated_versions: list[EuDocumentLink] = Field(
+        default_factory=list,
+        description="Wersje skonsolidowane (EUR-Lex, charakter dokumentacyjny) – ślad zmian aktu.",
+    )
+    polish_corrigenda: list[EuDocumentLink] = Field(
+        default_factory=list, description="Sprostowania dotyczące polskiej wersji językowej."
+    )
+    citation: str | None = Field(
+        default=None, description="Sformatowany cytat; brak bez metadanych."
+    )
+    verification: VerificationReport
+    warnings: list[str] = Field(default_factory=list)
+
+
 class CitationVerificationResult(BaseModel):
     parsed: ParsedCitation
     resolution_method: str | None = None
     provision: ProvisionResult | None = None
+    eu_provision: EuProvisionResult | None = Field(
+        default=None, description="Wynik dla aktu prawa UE (zamiast provision)."
+    )
     verification: VerificationReport
     supporting_sources: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

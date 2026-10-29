@@ -79,23 +79,38 @@ class UpstreamClient:
         settings: Settings,
         *,
         backoff_base: float = 0.5,
+        follow_redirects: bool = False,
     ) -> None:
         self.name = name
         self._settings = settings
         self._backoff_base = backoff_base
+        allowed_host = httpx.URL(base_url).host
+
+        async def same_host_only(request: httpx.Request) -> None:
+            # Redirects (if enabled) may never leave the official host.
+            if request.url.host != allowed_host:
+                raise UpstreamBadResponseError(f"{name}: przekierowanie poza oficjalne źródło.")
+
         self._client = httpx.AsyncClient(
             base_url=base_url,
             timeout=settings.http_timeout_seconds,
             headers={"User-Agent": settings.user_agent},
-            follow_redirects=False,
+            follow_redirects=follow_redirects,
+            max_redirects=5,
+            event_hooks={"request": [same_host_only]},
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
         )
 
     async def aclose(self) -> None:
         await self._client.aclose()
 
-    async def get_json(self, path: str, params: Mapping[str, str | int] | None = None) -> Any:
-        body = await self._get(path, params, accept="application/json")
+    async def get_json(
+        self,
+        path: str,
+        params: Mapping[str, str | int] | None = None,
+        accept: str = "application/json",
+    ) -> Any:
+        body = await self._get(path, params, accept=accept)
         try:
             return json.loads(body)
         except ValueError as exc:
@@ -103,11 +118,19 @@ class UpstreamClient:
                 f"{self.name}: odpowiedź nie jest poprawnym JSON-em."
             ) from exc
 
-    async def get_text(self, path: str, accept: str = "text/html") -> str:
-        body = await self._get(path, None, accept=accept)
+    async def get_text(
+        self, path: str, accept: str = "text/html", headers: Mapping[str, str] | None = None
+    ) -> str:
+        body = await self._get(path, None, accept=accept, headers=headers)
         return body.decode("utf-8", errors="replace")
 
-    async def _get(self, path: str, params: Mapping[str, str | int] | None, accept: str) -> bytes:
+    async def _get(
+        self,
+        path: str,
+        params: Mapping[str, str | int] | None,
+        accept: str,
+        headers: Mapping[str, str] | None = None,
+    ) -> bytes:
         # Paths are built from validated identifiers only; refuse anything URL-like.
         if not path.startswith("/") or "://" in path or ".." in path or "\\" in path:
             raise InvalidInputError("Niedozwolona ścieżka zapytania do źródła.")
@@ -116,7 +139,7 @@ class UpstreamClient:
             started = time.monotonic()
             try:
                 async with self._client.stream(
-                    "GET", path, params=params, headers={"Accept": accept}
+                    "GET", path, params=params, headers={"Accept": accept, **(headers or {})}
                 ) as response:
                     status = response.status_code
                     logger.info(

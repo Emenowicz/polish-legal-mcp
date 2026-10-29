@@ -28,6 +28,7 @@ from starlette.responses import JSONResponse
 
 from polish_legal_mcp import __version__
 from polish_legal_mcp.clients.eli import EliClient
+from polish_legal_mcp.clients.eurlex import EurLexClient
 from polish_legal_mcp.clients.saos import SaosClient
 from polish_legal_mcp.config import Settings
 from polish_legal_mcp.errors import LegalMcpError
@@ -36,6 +37,7 @@ from polish_legal_mcp.models import (
     ActId,
     AmendmentsResult,
     CitationVerificationResult,
+    EuProvisionResult,
     JudgmentDetails,
     JudgmentSearchResult,
     LegalActDetails,
@@ -44,6 +46,7 @@ from polish_legal_mcp.models import (
     SearchActsResult,
 )
 from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
+from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
 from polish_legal_mcp.services.legal import LegalService
 
@@ -60,8 +63,10 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
 - Od 2025 r. ELI publikuje teksty tylko w PDF – brzmienie może pochodzić ze starszego tekstu
   jednolitego; zawsze sprawdź ostrzeżenia i listę późniejszych zmian.
 - Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych.
-- Prawo Unii Europejskiej (rozporządzenia i dyrektywy, np. RODO) nie jest publikowane w Dz.U.
-  ani M.P. i nie jest dostępne w tym serwerze – powiedz o tym wprost i odeślij do EUR-Lex.
+- Prawo UE (np. RODO): get_eu_provision zwraca najbardziej aktualne brzmienie z wersji
+  skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
+  zaznacz to przy cytowaniu. Wyszukiwania aktów UE po temacie nie ma: potrzebny numer aktu
+  (np. 2016/679, 2014/24/UE), CELEX lub skrót RODO; akty krajowe szukaj w ELI.
 - Wynik nie jest opinią prawną.
 """
 
@@ -227,7 +232,9 @@ def build_auth(
 def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     eli = EliClient(settings, backoff_base=backoff_base)
     saos = SaosClient(settings, backoff_base=backoff_base)
-    legal = LegalService(eli)
+    eurlex = EurLexClient(settings, backoff_base=backoff_base)
+    eu_law = EuLawService(eurlex)
+    legal = LegalService(eli, eu=eu_law)
     judgments = JudgmentService(saos)
 
     @asynccontextmanager
@@ -238,6 +245,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         finally:
             await eli.aclose()
             await saos.aclose()
+            await eurlex.aclose()
 
     middleware: list[Middleware] = [
         RateLimitingMiddleware(
@@ -307,7 +315,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         Sejmu RP po fragmentach tytułu i opcjonalnie haśle przedmiotowym. Zwraca identyfikatory
         ELI, adresy publikacji (Dz.U./M.P.), status i linki do ISAP. Nie jest to wyszukiwanie
         pełnotekstowe ani semantyczne. Akty podstawowe są pokazywane przed zmieniającymi.
-        Obejmuje tylko Dziennik Ustaw i Monitor Polski – bez prawa UE (np. RODO)."""
+        Obejmuje Dziennik Ustaw i Monitor Polski; przepisy UE (np. RODO) – get_eu_provision."""
         return await _run(
             lambda: legal.search_acts(
                 query, publisher, year, limit, act_type, in_force_only, keyword
@@ -350,6 +358,32 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             lambda: legal.get_provision(
                 ActId.parse(act_id), article, paragraph, point, letter, as_of_date
             )
+        )
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def get_eu_provision(
+        act: Annotated[
+            str,
+            Field(
+                min_length=2,
+                max_length=300,
+                description="Akt UE: numer CELEX (np. 32016R0679), oznaczenie (np. "
+                "'rozporządzenie (UE) 2016/679', 'dyrektywa 2014/24/UE') lub skrót 'RODO'.",
+            ),
+        ],
+        article: ArticleStr,
+        paragraph: ParagraphStr = None,
+        point: PointStr = None,
+        letter: LetterStr = None,
+        as_of_date: AsOfDate = None,
+    ) -> EuProvisionResult:
+        """Pobiera najbardziej aktualne brzmienie przepisu prawa UE (rozporządzenia, dyrektywy,
+        decyzji) w języku polskim z oficjalnego serwisu Urzędu Publikacji UE (EUR-Lex): z wersji
+        skonsolidowanej obowiązującej na datę, ze zmianami i sprostowaniami. Zwraca cytat z
+        publikacją w Dz. Urz. UE, linki, listę sprostowań i wersji oraz statusy weryfikacji.
+        Tekst skonsolidowany ma charakter informacyjny – wiążący jest Dz. Urz. UE."""
+        return await _run(
+            lambda: eu_law.get_provision(act, article, paragraph, point, letter, as_of_date)
         )
 
     @mcp.tool(annotations=READ_ONLY)
@@ -398,8 +432,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując słowa opisu do haseł
         przedmiotowych ELI i tytułów aktów obowiązujących. To dopasowanie leksykalne, nie
         semantyczne i nie porada prawna: każdego kandydata zweryfikuj get_legal_act /
-        get_legal_provision. Nie obejmuje prawa UE (np. RODO) – jeśli sprawa dotyczy przepisów
-        unijnych, wskaż to użytkownikowi zamiast podsuwać niepowiązane akty krajowe."""
+        get_legal_provision. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
+        (np. RODO), użyj get_eu_provision zamiast podsuwać niepowiązane akty krajowe."""
         return await _run(lambda: legal.find_legal_basis(issue_description, as_of_date, limit))
 
     @mcp.tool(annotations=READ_ONLY)

@@ -226,7 +226,12 @@ def _render(unit: Any, depth: int, lines: list[str]) -> None:
             lines.append(indent + text)
 
 
+_XML_DECLARATION_RE = re.compile(r"^\s*<\?xml[^>]*\?>")
+
+
 def parse_html(html: str) -> Any:
+    # lxml rejects str input that still carries an XML encoding declaration (EU XHTML does).
+    html = _XML_DECLARATION_RE.sub("", html, count=1)
     try:
         return lxml.html.document_fromstring(html)
     except (ParserError, ValueError) as exc:

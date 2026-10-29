@@ -16,6 +16,7 @@ uvicorn ─ Starlette app (FastMCP http_app)
         └─ tools (server.py) ─► services ─► clients ─► official APIs only
                                  legal.py      eli.py   api.sejm.gov.pl/eli
                                  judgments.py  saos.py  www.saos.org.pl/api
+                                 eu_law.py     eurlex.py publications.europa.eu (EUR-Lex)
 ```
 
 | Module | Responsibility |
@@ -27,6 +28,7 @@ uvicorn ─ Starlette app (FastMCP http_app)
 | `parsers/entry_into_force.py` | Staged entry-into-force detection, Polish date parsing. |
 | `parsers/citations.py` | Citation parsing, verified code aliases. |
 | `services/legal.py` | Version selection, verification rules, citations, amendments, search, lexical legal basis. |
+| `clients/eurlex.py`, `parsers/eu_html.py`, `services/eu_law.py` | EU law: CELLAR documents (redirects only within the host) and SPARQL metadata, OJ/consolidated article extraction, version choice, corrigenda/amendment checks. |
 | `services/judgments.py` | SAOS search/details normalisation, HTML stripping, paging, excerpts. |
 | `server.py` | FastMCP server, Polish tool descriptions, auth, middleware, health. |
 | `main.py` | Entry point: logging, uvicorn with proxy headers and graceful shutdown. |

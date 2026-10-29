@@ -83,6 +83,26 @@ known. Otherwise `formatted` is `null` and only structured fields are returned. 
 used is the newest official consolidated text as of the date (or the original publication),
 with `, z późn. zm.` appended when ELI lists amendments effective after that text and ≤ the date.
 
+## EU law (`get_eu_provision`)
+
+Source: EU Publications Office (CELLAR, behind EUR-Lex). For a requested date D the wording comes
+from the newest **consolidated version** dated ≤ D (it incorporates amendments and corrigenda,
+marked ►M1/►C1 in the document, which the server removes from the wording); without one, the act
+as published in the Official Journal. Consolidated texts are informational — every result says
+that the OJ text (with corrigenda) is binding.
+
+`temporal_applicability = VERIFIED` only if: the act is in force on D per the Publications Office
+metadata (entry into force ≤ D, all later "entry into force/application" dates ≤ D, no end of
+validity); D is not in the future; **every corrigendum of the Polish language version** listed in
+the metadata is listed as incorporated in the header of the version used; and **no amending act**
+listed in the metadata took effect after that version's date and on or before D. Otherwise
+`UNVERIFIED` with the reason (e.g. "32026L0806 (od 2026-05-10)" not yet consolidated).
+
+Example (real data, 2026-10-29): RODO art. 4 pkt 1 — the 2016 OJ text says "oznaczają informacje",
+the version with the 2018 Polish corrigendum "oznaczają **wszelkie** informacje"; the server
+returns the corrected wording, `VERIFIED`, citation "(Dz. Urz. UE L 119 z 4.5.2016, str. 1,
+ze sprost.)".
+
 ## What is deliberately not done
 
 - Applying amendments to reconstruct wording (not a text substitution problem).

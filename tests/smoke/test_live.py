@@ -46,3 +46,14 @@ async def test_live_saos_search_and_get(live_judgments):
     assert found.total_results > 0
     detail = await live_judgments.get(found.items[0].judgment_id, text_limit=500)
     assert detail.source_url.startswith("https://www.saos.org.pl/judgments/")
+
+
+async def test_live_eu_rodo_corrected_wording(settings):
+    from polish_legal_mcp.clients.eurlex import EurLexClient
+    from polish_legal_mcp.services.eu_law import EuLawService
+
+    client = EurLexClient(settings)
+    result = await EuLawService(client).get_provision("RODO", "4", point="1")
+    await client.aclose()
+    assert result.text and "wszelkie informacje" in result.text
+    assert result.official_journal == "Dz. Urz. UE L 119 z 4.5.2016, str. 1"

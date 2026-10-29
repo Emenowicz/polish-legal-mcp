@@ -39,6 +39,15 @@ ISAP page for humans: `https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id={addr
 
 `courtType=ADMINISTRATIVE` returned **0** results: no WSA/NSA case law.
 
+## EU Publications Office (CELLAR) — `https://publications.europa.eu` (verified 2026-10-29)
+
+| Capability | Endpoint | Notes |
+|---|---|---|
+| Document | `GET /resource/celex/{CELEX}` with `Accept: application/xhtml+xml`, `Accept-Language: pol` | 303 redirects within the host to the Polish manifestation. OJ format: `div#art_28`, paragraphs `div#028.003`, points in two-cell tables, header `oj-hd-oj` "L 119/1", `oj-hd-date`. Consolidated (`0…-YYYYMMDD`): `div.norm` + `span.no-parag`, `grid-container` lists, header table of modifiers (`p.arrow a[title=CELEX]` ►C1/►M1). Older acts (e.g. 32001R1049 OJ) have no article ids. |
+| Metadata | `GET /webapi/rdf/sparql` (`Accept: application/sparql-results+json`, 406 for plain JSON) | `cdm:resource_legal_id_celex`, `…_date_entry-into-force` (several: entry into force + application), `…_date_end-of-validity` (9999-12-31 = none), `…_in-force`, `…_eli`, `cdm:expression_title` (POL), consolidated versions by CELEX prefix `0…-`, corrigenda `{CELEX}R(nn)` with a Polish expression, amending acts via `cdm:resource_legal_amends_resource_legal`. |
+
+No registration or key. EUR-Lex pages: `https://eur-lex.europa.eu/legal-content/PL/TXT/?uri=CELEX:{CELEX}`.
+
 ## FastMCP / MCP (PyPI, 2026-10-29)
 
 fastmcp 4.1.4 (depends on `mcp` 2.3.0 → `httpx2` internally), pydantic 2.14.1,

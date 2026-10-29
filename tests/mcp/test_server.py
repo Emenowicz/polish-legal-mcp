@@ -12,6 +12,7 @@ EXPECTED_TOOLS = {
     "search_legal_acts",
     "get_legal_act",
     "get_legal_provision",
+    "get_eu_provision",
     "get_legal_act_amendments",
     "verify_legal_citation",
     "find_legal_basis",

@@ -2,7 +2,8 @@
 
 Free, open-source **remote MCP server** that lets Claude (web, desktop, mobile) and other MCP
 clients retrieve, inspect and cite **official Polish legislation** (ELI API of the Sejm —
-Dziennik Ustaw, Monitor Polski) and **court decisions** (SAOS), with explicit, component-level
+Dziennik Ustaw, Monitor Polski), **EU law in Polish** (EU Publications Office / EUR-Lex) and
+**court decisions** (SAOS), with explicit, component-level
 verification of what could and could not be established.
 
 > **Ważne / Important**
@@ -30,6 +31,7 @@ case numbers.
 | `search_legal_acts` | Search acts by title fragments / ELI keyword; base acts ranked before amending acts. |
 | `get_legal_act` | Metadata, status, dates, text formats, consolidated texts, paged table of contents. |
 | `get_legal_provision` | Exact wording of art./ust./§/pkt/lit. from official HTML, citation, later amendments, verification report. |
+| `get_eu_provision` | EU law (e.g. RODO) by CELEX, act number or alias: most current Polish wording from the EUR-Lex consolidated version (amendments + corrigenda), OJ citation, verification report. |
 | `get_legal_act_amendments` | Amending acts with ELI dates, pending amendments, amendments after the latest consolidated text, TK rulings. |
 | `verify_legal_citation` | Parse a citation ("art. 61 § 1 k.p.a.", "… (Dz. U. z 2025 r. poz. 817)"), resolve the act, check unit, wording and date. |
 | `find_legal_basis` | Lexical candidate discovery (ELI keyword vocabulary + title stems). Not semantic, not advice. |
@@ -132,7 +134,8 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
   wording then comes from the newest HTML version and is marked `UNVERIFIED` for today's date.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
 - Search is lexical (titles/keywords), not full-text or semantic.
-- **No EU law** (e.g. RODO/GDPR): only Dziennik Ustaw and Monitor Polski are covered.
+- EU law: provisions by act number/CELEX/alias only (no topic search); wording comes from the
+  EUR-Lex consolidated version, which is informational — the Official Journal text is binding.
 - Amendment completeness, staged entry into force of amending acts and transitional provisions
   are not verified.
 
@@ -140,7 +143,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ## Roadmap
 - Optional PDF text extraction for 2025+ consolidated texts (always marked `UNVERIFIED`).
-- EU law from EUR-Lex (official CELLAR/SPARQL API), e.g. RODO.
+- EU law: topic search, CJEU case law, links from directives to Polish implementing acts.
 - Additional official sources: Sejm API (legislative process), RCL (government drafts),
   GUGiK/Geoportal (parcels), GUS REGON (entities), administrative case law if an official API appears.
 - Hybrid legal retrieval (RAG) only after evaluating completeness, licensing, update cadence and

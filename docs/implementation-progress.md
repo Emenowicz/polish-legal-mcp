@@ -68,6 +68,13 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 
 Reproducible steps: `deployment.md` §3–4.
 
+## EU law (first version) — DONE locally / deployment pending
+- [x] `get_eu_provision`: CELLAR documents + SPARQL metadata, consolidated version with Polish
+      corrigenda and amendments as wording source, OJ fallback, citation with OJ reference
+- [x] `verify_legal_citation` routes EU citations (e.g. "art. 28 ust. 9 RODO")
+- [x] Tests on real documents (RODO OJ + consolidated, directive 2014/24 consolidated 2026-01-01)
+- [ ] Deployed to the Pi and tried from Claude — **NOT EXECUTED**
+
 ## Quality gates (local, 2026-10-29)
 - `uv run pytest`: 119 passed (offline); `uv run pytest -m live`: 3 passed (real APIs)
 - `ruff check`, `ruff format --check`, `pyright`: clean

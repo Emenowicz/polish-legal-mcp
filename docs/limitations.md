@@ -13,10 +13,15 @@
   `referenced_regulation` (title text) instead.
 
 ## EU law
-- Only Polish journals (Dziennik Ustaw, Monitor Polski) are covered. EU regulations and
-  directives (e.g. GDPR/RODO) are not published there and are not available; the server
-  instructions tell Claude to say so and refer to EUR-Lex. Possible extension: EUR-Lex (CELLAR)
-  as an official source.
+- `get_eu_provision` needs the act's number, CELEX or a known alias (RODO); there is no topic
+  search for EU acts and `find_legal_basis` covers Polish acts only.
+- The wording comes from the newest EUR-Lex consolidated version valid on the date. Consolidated
+  texts are informational; the Official Journal (with corrigenda) is binding.
+- Amendments that EUR-Lex has not consolidated yet (e.g. directive 2026/806 amending directive
+  2014/24 as of 2026-05-10) make the result `UNVERIFIED`; the wording is then possibly outdated.
+- Older documents without article markup are not parsed (the tool says so and links EUR-Lex).
+- Directives bind Member States; for domestic cases the Polish implementing act usually applies.
+- No CJEU case law.
 
 ## Search
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems

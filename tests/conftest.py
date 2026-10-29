@@ -101,3 +101,44 @@ async def judgments(settings: Settings) -> Any:
     client = SaosClient(settings, backoff_base=0)
     yield JudgmentService(client)
     await client.aclose()
+
+
+EU = "https://publications.europa.eu"
+_SPARQL_MARKER = re.compile(r"# plmcp:(\w+)")
+_SPARQL_CELEX = re.compile(r'"0?(\d{5}[RLD]\d{4})')
+
+
+def eurlex_fixture_response(request: httpx.Request) -> httpx.Response:
+    """Serve tests/fixtures/eurlex: SPARQL by query marker + CELEX, documents by CELEX."""
+    if request.url.path == "/webapi/rdf/sparql":
+        query = request.url.params["query"]
+        marker = _SPARQL_MARKER.search(query)
+        celex = _SPARQL_CELEX.search(query)
+        if marker and celex:
+            path = FIXTURES / "eurlex" / f"sparql_{marker.group(1)}_3{celex.group(1)[-9:]}.json"
+            if path.exists():
+                return httpx.Response(200, content=path.read_bytes())
+        return httpx.Response(200, json={"head": {"vars": []}, "results": {"bindings": []}})
+    name = request.url.path.rsplit("/", 1)[-1]
+    for suffix in (".xhtml.gz", ".html.gz"):
+        path = FIXTURES / "eurlex" / f"{name}{suffix}"
+        if path.exists():
+            return httpx.Response(200, text=gzip.decompress(path.read_bytes()).decode("utf-8"))
+    return httpx.Response(404)
+
+
+@pytest.fixture
+def eurlex_mock() -> Iterator[respx.MockRouter]:
+    with respx.mock(assert_all_called=False) as router:
+        router.get(url__regex=rf"^{re.escape(EU)}/").mock(side_effect=eurlex_fixture_response)
+        yield router
+
+
+@pytest.fixture
+async def eu_law(settings: Settings) -> Any:
+    from polish_legal_mcp.clients.eurlex import EurLexClient
+    from polish_legal_mcp.services.eu_law import EuLawService
+
+    client = EurLexClient(settings, backoff_base=0)
+    yield EuLawService(client, today=lambda: TODAY)
+    await client.aclose()

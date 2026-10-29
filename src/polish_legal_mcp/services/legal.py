@@ -14,7 +14,7 @@ import re
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from zoneinfo import ZoneInfo
 
 from polish_legal_mcp.clients.eli import EliClient
@@ -55,6 +55,9 @@ from polish_legal_mcp.parsers.legal_html import (
     iter_toc,
     parse_html,
 )
+
+if TYPE_CHECKING:
+    from polish_legal_mcp.services.eu_law import EuLawService
 
 WARSAW = ZoneInfo("Europe/Warsaw")
 SEARCH_WINDOW = 100
@@ -433,9 +436,15 @@ class Version:
 
 
 class LegalService:
-    def __init__(self, eli: EliClient, today: Callable[[], date] = warsaw_today) -> None:
+    def __init__(
+        self,
+        eli: EliClient,
+        today: Callable[[], date] = warsaw_today,
+        eu: EuLawService | None = None,
+    ) -> None:
         self._eli = eli
         self._today = today
+        self._eu = eu
 
     # ----------------------------------------------------------------- search & details
 
@@ -894,6 +903,10 @@ class LegalService:
         as_of = as_of or self._today()
         unresolved: list[str] = []
         warnings: list[str] = []
+        if self._eu is not None and not parsed.publication and parsed.article:
+            eu_result = await self._eu.verify_citation(parsed, as_of)
+            if eu_result is not None:
+                return eu_result
         act_id: ActId | None = None
         method: str | None = None
 
