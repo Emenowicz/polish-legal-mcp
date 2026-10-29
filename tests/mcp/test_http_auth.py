@@ -76,3 +76,16 @@ def test_allowlist_check_is_case_insensitive_and_denies_others():
     assert check(token("emenowicz"))  # type: ignore[arg-type]
     assert not check(token("someone-else"))  # type: ignore[arg-type]
     assert not check(SimpleNamespace(token=None))  # type: ignore[arg-type]
+
+
+async def test_consent_post_behind_tls_proxy_is_not_forbidden_origin(secured_app):
+    # Funnel terminates TLS and forwards plain http, while the browser sends the https Origin.
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=secured_app), base_url="http://pi.example.ts.net"
+    ) as http:
+        response = await http.post("/consent", data={"action": "approve"}, headers={"Origin": BASE})
+        foreign = await http.post(
+            "/consent", data={"action": "approve"}, headers={"Origin": "https://evil.example"}
+        )
+    assert response.text != "Forbidden Origin"
+    assert foreign.status_code == 403
