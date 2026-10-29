@@ -121,6 +121,15 @@ async def _run[T](call: Callable[[], Awaitable[T]]) -> T:
         raise ToolError(str(exc)) from exc
 
 
+def canonical_email(email: str) -> str:
+    """Lowercase; for Gmail also drop dots in the local part (Gmail ignores them, so
+    a.b@gmail.com and ab@gmail.com are the same account and cannot belong to different people)."""
+    local, _, domain = email.strip().lower().partition("@")
+    if domain in ("gmail.com", "googlemail.com"):
+        return f"{local.replace('.', '')}@gmail.com"
+    return f"{local}@{domain}"
+
+
 def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
     """Allow GitHub logins (case-insensitive) or Google e-mails verified by Google.
 
@@ -139,7 +148,7 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
         return False
 
     if settings.auth_mode == "google":
-        emails = {email.lower() for email in settings.allowed_emails}
+        emails = {canonical_email(email) for email in settings.allowed_emails}
 
         def check_google(ctx: AuthContext) -> bool:
             claims = ctx.token.claims if ctx.token else {}
@@ -148,7 +157,7 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
                 return deny("google:<no e-mail claim>")
             if str(verified).lower() != "true":
                 return deny(f"google:{email} (e-mail not verified by Google)")
-            return email.lower() in emails or deny(f"google:{email}")
+            return canonical_email(email) in emails or deny(f"google:{email}")
 
         return check_google
     logins = {login.lower() for login in settings.allowed_github_logins}

@@ -145,3 +145,18 @@ def test_denied_identity_logged_once(caplog):
     denied = [r for r in caplog.records if "not on allowlist" in r.getMessage()]
     assert len(denied) == 1
     assert denied[0].fields["identity"] == "google:me@example.com"  # type: ignore[attr-defined]
+
+
+def test_gmail_dots_are_ignored_but_other_domains_are_exact():
+    settings = make_settings(
+        **{
+            **google_settings().model_dump(),
+            "allowed_emails": ["jandoe@gmail.com", "x.y@example.com"],
+        }
+    )
+    check = allowlist_check(settings)
+    assert check(_ctx(email="jan.doe@gmail.com", email_verified="true"))  # type: ignore[arg-type]
+    assert check(_ctx(email="Jan.Doe@googlemail.com", email_verified="true"))  # type: ignore[arg-type]
+    assert check(_ctx(email="x.y@example.com", email_verified="true"))  # type: ignore[arg-type]
+    assert not check(_ctx(email="xy@example.com", email_verified="true"))  # type: ignore[arg-type]
+    assert not check(_ctx(email="jan.doe2@gmail.com", email_verified="true"))  # type: ignore[arg-type]
