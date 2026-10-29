@@ -25,7 +25,11 @@ Status traps: superseded consolidated-text notices become `wygaśnięcie aktu`/`
 amending acts absorbed into a consolidated text are `akt objęty tekstem jednolitym`; acts not yet
 in force can be `obowiązujący` (e.g. DU/2026/1353, entry into force 2027-09-27).
 
-**Coverage cliff**: HTML present for 100 % of 2024 acts, 0 % of 2025 and 2026 acts.
+**Coverage cliff**: HTML present for 100 % of 2024 acts, 0 % of 2025 and 2026 acts (no DOCX
+either: texts `O`, `I`, `T` are PDF). The PDFs are born-digital: body text 10 pt, footnotes 9 pt,
+footnote markers 6–6.5 pt as "1" + ")", numbering superscripts 6.5 pt as "[1]" (art. 22¹), page
+headers "Dziennik Ustaw – N – Poz. M". ELI's struct writes art. 22¹ as `22_1` and the HTML as
+`22<sup>1</sup>`.
 
 ISAP page for humans: `https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id={address}`.
 

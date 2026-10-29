@@ -80,8 +80,8 @@ ArticleStr = Annotated[
     Field(
         min_length=1,
         max_length=20,
-        pattern=r"(?i)^\s*(art\.?\s*|§\s*)?\d+[a-z]{0,3}\s*$",
-        description="Numer artykułu, np. '11' lub '4a'. Dla rozporządzeń dzielonych na paragrafy: '§ 5'.",
+        pattern=r"(?i)^\s*(art\.?\s*|§\s*)?\d+[a-z]{0,3}(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]+|\^\d+|_\d+|\(\d+\))?\s*$",
+        description="Numer artykułu, np. '11', '4a' lub '22¹' (także '22^1'). Dla rozporządzeń dzielonych na paragrafy: '§ 5'.",
     ),
 ]
 ParagraphStr = Annotated[
@@ -89,7 +89,7 @@ ParagraphStr = Annotated[
     Field(
         default=None,
         max_length=20,
-        pattern=r"(?i)^\s*(ust\.?\s*|§\s*)?\d+[a-z]{0,3}\s*$",
+        pattern=r"(?i)^\s*(ust\.?\s*|§\s*)?\d+[a-z]{0,3}(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]+|\^\d+|_\d+|\(\d+\))?\s*$",
         description="Ustęp lub paragraf w artykule, np. '1', 'ust. 2' albo '§ 1' (kodeksy).",
     ),
 ]
@@ -98,7 +98,7 @@ PointStr = Annotated[
     Field(
         default=None,
         max_length=20,
-        pattern=r"(?i)^\s*(pkt\.?\s*)?\d+[a-z]{0,3}\s*$",
+        pattern=r"(?i)^\s*(pkt\.?\s*)?\d+[a-z]{0,3}(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]+|\^\d+|_\d+|\(\d+\))?\s*$",
         description="Punkt, np. '2'.",
     ),
 ]

@@ -41,7 +41,9 @@ uvicorn ─ Starlette app (FastMCP http_app)
    consolidated texts and silent on missing units (see api-research.md). lxml parses a 0.8 MB act
    in ~10 ms.
 3. **Component-level verification, no global boolean.** See legal-verification.md.
-4. **No PDF parsing** (user decision). PDF-only texts return links and `UNVERIFIED`.
+4. **PDF reading with cross-check** (user decision, revised 2026-10-29): newest consolidated texts
+   are PDF-only since 2025; `pypdf` (pure Python) reads them, unchanged provisions are confirmed
+   against the last HTML version, changed ones are returned as automatic reads (`UNVERIFIED`).
 5. **No database, Redis, vector store or LLM.** In-memory TTL caches (metadata/struct/HTML 1 h,
    keyword vocabulary 24 h) bounded for a Raspberry Pi. OAuth registrations live in FastMCP's
    encrypted file store on a Docker volume.

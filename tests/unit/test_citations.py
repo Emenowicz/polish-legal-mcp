@@ -83,3 +83,10 @@ def test_act_id_formats(raw, expected):
 def test_act_id_rejects_invalid(raw):
     with pytest.raises(InvalidInputError):
         ActId.parse(raw)
+
+
+@pytest.mark.parametrize("raw", ["art. 22¹ k.c.", "art. 22(1) k.c.", "art. 22^1 k.c."])
+def test_superscript_article_numbers(raw):
+    parsed = parse_citation(raw)
+    assert parsed.known_alias == "k.c."
+    assert parsed.article in ("22¹", "22(1)", "22^1")

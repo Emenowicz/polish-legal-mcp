@@ -77,6 +77,14 @@ Reproducible steps: `deployment.md` §3–4.
 - [x] Tests on real documents (RODO OJ + consolidated, directive 2014/24 consolidated 2026-01-01)
 - [x] Deployed to the Pi (fd459ec) and tried from Claude — **VERIFIED** 2026-10-29
 
+## PDF consolidated texts — DONE locally / deployment pending
+- [x] `pypdf` reading with font-size filtering (headers, footnotes, superscripts), unit lookup in
+      numbering order, HTML cross-check (`html_confirmed_by_pdf`) and automatic reads (`pdf_automatic`)
+- [x] Superscript article numbers (art. 22¹) in input, HTML, PDF and citations
+- [x] Live: art. 5 k.c. and art. 61 § 1 k.p.a. now `VERIFIED` against 2026/2025 PDFs; art. 187 k.c.
+      returns the amended wording as an automatic read
+- [ ] Deployed to the Pi — pending
+
 ## Quality gates (local, 2026-10-29)
 - `uv run pytest`: 119 passed (offline); `uv run pytest -m live`: 3 passed (real APIs)
 - `ruff check`, `ruff format --check`, `pyright`: clean

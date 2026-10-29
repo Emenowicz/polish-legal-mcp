@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from polish_legal_mcp.clients.http import TTLCache, UpstreamClient
 from polish_legal_mcp.config import Settings
 from polish_legal_mcp.errors import UpstreamBadResponseError
 from polish_legal_mcp.models import ELI_API, ActId
+from polish_legal_mcp.parsers.pdf_text import PdfText, read_pdf
 
 KEYWORDS_TTL_SECONDS = 24 * 3600
 
@@ -23,6 +25,8 @@ class EliClient:
         # Act HTML is up to ~1 MB, hence the small bound (Raspberry Pi sized).
         self._html = TTLCache(ttl, settings.cache_max_documents)
         self._keywords = TTLCache(KEYWORDS_TTL_SECONDS, 1)
+        # Parsed PDF texts (a large code is ~0.5 MB of text); parsing takes seconds on a Pi.
+        self._pdf = TTLCache(ttl, 8)
 
     async def aclose(self) -> None:
         await self._http.aclose()
@@ -60,6 +64,21 @@ class EliClient:
         text = await self._http.get_text(f"{act_id.api_path}/text.html")
         self._html.set(act_id.eli, text)
         return text
+
+    async def pdf_text(self, act_id: ActId) -> PdfText:
+        """Official PDF of the act, read into lines (in a worker thread: CPU-bound)."""
+        cached = self._pdf.get(act_id.eli)
+        if cached is not None:
+            return cached
+        data = await self._http.get_bytes(f"{act_id.api_path}/text.pdf", accept="application/pdf")
+        try:
+            parsed = await asyncio.to_thread(read_pdf, data)
+        except Exception as exc:  # pypdf raises many types on damaged files
+            raise UpstreamBadResponseError(
+                f"ELI: nie udało się odczytać PDF {act_id.eli}."
+            ) from exc
+        self._pdf.set(act_id.eli, parsed)
+        return parsed
 
     async def keywords(self) -> list[str]:
         cached = self._keywords.get("all")

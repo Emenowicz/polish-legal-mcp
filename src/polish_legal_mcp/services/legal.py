@@ -50,11 +50,13 @@ from polish_legal_mcp.parsers.entry_into_force import StagedEntry, find_staged_e
 from polish_legal_mcp.parsers.legal_html import (
     UnitLookupError,
     act_body_text,
+    display_name,
     extract_unit,
     find_unit,
     iter_toc,
     parse_html,
 )
+from polish_legal_mcp.parsers.pdf_text import find_pdf_unit, repeal_marker, same_wording
 
 if TYPE_CHECKING:
     from polish_legal_mcp.services.eu_law import EuLawService
@@ -232,13 +234,16 @@ def unit_designation(
     article: str, paragraph: str | None, kind: str | None, point: str | None, letter: str | None
 ) -> str:
     article = article.strip()
-    parts = [article if article.startswith("§") else f"art. {cit_normalize(article)}"]
+    if article.startswith("§"):
+        parts = [f"§ {display_name(article)}"]
+    else:
+        parts = [f"art. {display_name(article)}"]
     if paragraph:
-        parts.append(f"{kind or 'ust.'} {cit_normalize(paragraph)}")
+        parts.append(f"{kind or 'ust.'} {display_name(paragraph)}")
     if point:
-        parts.append(f"pkt {cit_normalize(point)}")
+        parts.append(f"pkt {display_name(point)}")
     if letter:
-        parts.append(f"lit. {cit_normalize(letter)}")
+        parts.append(f"lit. {display_name(letter)}")
     return " ".join(parts)
 
 
@@ -308,6 +313,7 @@ class TemporalInputs:
     undated_changes: list[ActReference]
     staged: StagedEntry | None
     footnote_dates: list[date]
+    wording_verified: bool = True
 
 
 def assess_temporal(t: TemporalInputs) -> CheckResult:
@@ -322,6 +328,12 @@ def assess_temporal(t: TemporalInputs) -> CheckResult:
             else "Nie odczytano brzmienia przepisu z tekstu strukturalnego (HTML)."
         )
         return CheckResult(status=VS.UNVERIFIED, detail=reason)
+    if not t.wording_verified:
+        return CheckResult(
+            status=VS.UNVERIFIED,
+            detail=f"{t.source_label}: brzmienie odczytane automatycznie z PDF – niezweryfikowane; "
+            "porównaj z PDF przed cytowaniem.",
+        )
     if t.as_of > t.today:
         return CheckResult(
             status=VS.UNVERIFIED,
@@ -586,9 +598,13 @@ class LegalService:
         return original, latest_official
 
     async def _changes(
-        self, base_meta: dict[str, Any], lo: date, hi: date
+        self, base_meta: dict[str, Any], lo: date, hi: date, include_lo: bool = True
     ) -> tuple[list[ActReference], list[ActReference]]:
-        """Amendments and TK rulings dated within [lo, hi]; plus undated ones that may matter."""
+        """Amendments and TK rulings dated within [lo, hi] (or (lo, hi]); plus undated ones."""
+
+        def inside(when: date) -> bool:
+            return (lo <= when if include_lo else lo < when) and when <= hi
+
         dated: list[ActReference] = []
         undated: list[ActReference] = []
         for ref in _refs(base_meta, AMENDING):
@@ -596,7 +612,7 @@ class LegalService:
             item = _reference(ref, AMENDING, ref_date)
             if ref_date is None:
                 undated.append(item)
-            elif lo <= ref_date <= hi:
+            elif inside(ref_date):
                 dated.append(item)
         candidates = [
             (ref, act_id)
@@ -619,7 +635,7 @@ class LegalService:
             item = _reference(ref, TK_RULINGS, ref_date)
             if ref_date is None:
                 undated.append(item)
-            elif lo <= ref_date <= hi:
+            elif inside(ref_date):
                 dated.append(item)
         dated.sort(key=lambda r: r.effective_date or date.min)
         return dated, undated
@@ -733,12 +749,94 @@ class LegalService:
                 unit_check = CheckResult(status=VS.UNVERIFIED, detail=str(exc))
                 wording_check = unit_check
 
-        state = source.state_date
+        # Since 2025 ELI publishes consolidated texts only as PDF. Confirm the HTML wording
+        # against the newest one, or read the current wording from it when it differs.
+        current = source
+        text_origin: str | None = "html" if text is not None else None
+        pdf_page: int | None = None
+        earlier_wording: str | None = None
+        earlier_source: SourceDocument | None = None
+        pdf_version: Version | None = None
+        if not source.has_html:
+            pdf_version = source
+        elif (
+            requested_version is None
+            and latest_official is not None
+            and not latest_official.has_html
+            and latest_official.act_id != source.act_id
+        ):
+            pdf_version = latest_official
+        if pdf_version is not None:
+            pdf_unit = None
+            try:
+                pdf = await self._eli.pdf_text(pdf_version.act_id)
+                pdf_unit = find_pdf_unit(pdf, article, paragraph, point, letter)
+            except UnitLookupError as exc:
+                if text is None and not source.has_html:
+                    status = VS.NOT_FOUND if exc.reason == "not_found" else VS.UNVERIFIED
+                    detail = f"{exc.message} (odczyt automatyczny PDF {pdf_version.act_id.eli})"
+                    unit_check = CheckResult(status=status, detail=detail)
+                    wording_check = CheckResult(status=status, detail=detail)
+                else:
+                    warnings.append(
+                        f"Nie odnaleziono jednostki w najnowszym tekście jednolitym "
+                        f"{pdf_version.act_id.eli} (PDF): {exc.message} Możliwa zmiana numeracji, "
+                        "uchylenie lub błąd automatycznego odczytu."
+                    )
+            except LegalMcpError as exc:
+                warnings.append(f"Nie odczytano PDF {pdf_version.act_id.eli}: {exc}")
+            if pdf_unit is not None:
+                pdf_page = pdf_unit.page
+                current = pdf_version
+                same, updated = same_wording(text, pdf_unit.text) if text else (False, None)
+                where = f"{pdf_version.label} (PDF, str. {pdf_unit.page})"
+                if same and text is not None:
+                    text = updated or text
+                    text_origin = "html_confirmed_by_pdf"
+                    wording_check = CheckResult(
+                        status=VS.VERIFIED,
+                        detail=f"Brzmienie z oficjalnego HTML ({source.label}) jest zgodne z "
+                        f"najnowszym tekstem jednolitym {where}"
+                        + (
+                            "; adresy publikacji przywołanych aktów zaktualizowano według PDF."
+                            if updated
+                            else "."
+                        ),
+                    )
+                else:
+                    if text is not None:
+                        earlier_wording, earlier_source = text, source.source_document()
+                    text = pdf_unit.text
+                    footnotes = []
+                    marker = repeal_marker(pdf_unit.text)
+                    text_origin = "pdf_automatic"
+                    unit_found = True
+                    path = path or pdf_unit.path
+                    detail = (
+                        f"Brzmienie odczytane automatycznie z {where}"
+                        + (
+                            f"; różni się od wersji HTML ({source.label}) – przepis zmieniony lub "
+                            "błąd odczytu."
+                            if earlier_wording
+                            else "."
+                        )
+                        + " Przed cytowaniem porównaj z PDF."
+                    )
+                    unit_check = CheckResult(
+                        status=VS.UNVERIFIED,
+                        detail=f"Jednostka odnaleziona w {where} (odczyt automatyczny).",
+                    )
+                    wording_check = CheckResult(status=VS.UNVERIFIED, detail=detail)
+
+        state = current.state_date
         changes: list[ActReference] = []
         undated: list[ActReference] = []
         if state is not None:
             lo, hi = min(state, as_of), max(state, as_of)
-            changes, undated = await self._changes(base_meta, lo, hi)
+            # A consolidated text "według stanu prawnego na dzień X" already includes changes in
+            # force on X; for an original text stay conservative and include its start date.
+            include_lo = not (current.kind == "tekst_jednolity" and lo == state)
+            changes, undated = await self._changes(base_meta, lo, hi, include_lo)
 
         if text and len(text) > MAX_PROVISION_CHARS:
             text = text[:MAX_PROVISION_CHARS]
@@ -754,24 +852,25 @@ class LegalService:
                 act_check=act_check,
                 text_read=text is not None,
                 unit_found=unit_check.status != VS.NOT_FOUND,
-                source_label=source.label,
+                source_label=current.label,
                 state_date=state,
                 marker=marker,
                 changes=changes,
                 undated_changes=undated,
                 staged=staged,
                 footnote_dates=[d for f in footnotes for d in parse_dates(f)],
+                wording_verified=wording_check.status == VS.VERIFIED,
             )
         )
 
         latest_doc = latest_official.source_document() if latest_official else None
-        if latest_official and latest_official.act_id != source.act_id:
+        if latest_official and latest_official.act_id != current.act_id:
             warnings.append(
                 f"Najnowszy urzędowy tekst jednolity na żądaną datę to {latest_official.act_id.eli} "
                 f"(stan na {latest_official.state_date or '?'}), dostępny tylko w PDF lub nieużyty; "
                 f"brzmienie pochodzi z {source.label}. Porównaj z PDF: {latest_doc.pdf_url if latest_doc else ''}"
             )
-        if source.kind == "tekst_pierwotny" and _refs(base_meta, AMENDING):
+        if current.kind == "tekst_pierwotny" and _refs(base_meta, AMENDING):
             warnings.append(
                 "Brzmienie pochodzi z tekstu pierwotnego aktu, który był później zmieniany."
             )
@@ -802,7 +901,7 @@ class LegalService:
                 point=point,
                 letter=letter,
                 official_url=summarize_act(base_meta).isap_url or base_id.api_url,
-                source_version=f"{source.label} (stan na {state.isoformat() if state else '?'})",
+                source_version=f"{current.label} (stan na {state.isoformat() if state else '?'})",
                 as_of_date=as_of,
                 formatted=format_citation(designation, base_meta, pub.meta, amended_after_pub),
             )
@@ -815,8 +914,12 @@ class LegalService:
             structural_path=path,
             text=text,
             text_truncated=truncated,
+            text_origin=text_origin,  # type: ignore[arg-type]
+            pdf_page=pdf_page,
+            earlier_wording=earlier_wording[:MAX_PROVISION_CHARS] if earlier_wording else None,
+            earlier_wording_source=earlier_source,
             footnotes=footnotes,
-            wording_source=source.source_document(),
+            wording_source=current.source_document(),
             latest_official_consolidated_text=latest_doc,
             changes_after_source=changes + undated,
             citation=citation,

@@ -240,9 +240,21 @@ class ProvisionResult(BaseModel):
     unit_id: str | None = None
     structural_path: list[str] = Field(default_factory=list)
     text: str | None = Field(
-        default=None, description="Brzmienie z oficjalnego HTML (bez przypisów)."
+        default=None, description="Brzmienie przepisu (bez przypisów); pochodzenie: text_origin."
     )
     text_truncated: bool = False
+    text_origin: Literal["html", "html_confirmed_by_pdf", "pdf_automatic"] | None = Field(
+        default=None,
+        description="Skąd brzmienie: html – oficjalny HTML; html_confirmed_by_pdf – HTML zgodny z "
+        "najnowszym tekstem jednolitym w PDF; pdf_automatic – odczyt automatyczny z PDF (sprawdź).",
+    )
+    pdf_page: int | None = Field(default=None, description="Strona PDF, na której jest jednostka.")
+    earlier_wording: str | None = Field(
+        default=None,
+        description="Wcześniejsze brzmienie (HTML starszego tekstu jednolitego) – do porównania, "
+        "gdy najnowszy tekst w PDF się od niego różni.",
+    )
+    earlier_wording_source: SourceDocument | None = None
     footnotes: list[str] = Field(
         default_factory=list, description="Przypisy redakcyjne do jednostki."
     )

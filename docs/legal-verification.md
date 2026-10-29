@@ -38,7 +38,8 @@ All of the following must hold:
    entry into force for original texts);
 5. ELI lists **no** amending act and **no** Constitutional Tribunal ruling dated within
    `[min(state date, requested date), max(state date, requested date)]`, and none without a date
-   that could fall in that window;
+   that could fall in that window (for a consolidated text the state date itself is excluded:
+   "stan prawny na dzień X" already includes changes in force on X);
 6. the act's own entry-into-force clause has no unresolved staged entry ("z wyjątkiem …") — exceptions
    must be absolute dates or computable periods from promulgation, all ≤ the requested date;
 7. no footnote of the unit carries a date later than the requested date.
@@ -57,9 +58,27 @@ For a requested date D the server scans the act's consolidated texts newest-firs
 - the newest consolidated text with HTML and legal-state date ≤ D as the **wording source**;
   if none exists, the original text of the act.
 
-When the two differ (common: ELI has no HTML for anything published since 2025) a warning names
-the newer PDF-only text, and all amendments between the wording source and D are listed, so the
-result is `UNVERIFIED`. Passing a consolidated-text ELI explicitly forces that text as the source.
+When the official reference is PDF-only (ELI has no HTML for anything published since 2025) the
+server reads that PDF (`text_origin`):
+
+- `html_confirmed_by_pdf` — the unit's HTML wording equals the unit in the newest PDF text,
+  ignoring whitespace and line-end hyphenation (PDF artefacts). The verified HTML wording is
+  returned and treated as current **as of the PDF text's legal-state date**; if only the
+  publication addresses of cited acts differ and the PDF ones are well-formed
+  ("(Dz. U. z 2025 r. poz. 277)"), they are updated from the PDF. `exact_wording: VERIFIED`.
+- `pdf_automatic` — the unit differs from the HTML (amended) or exists only in the PDF. The
+  current wording is read automatically from the PDF (page in `pdf_page`, earlier HTML wording in
+  `earlier_wording`). Automatic PDF reading is never verified: `unit_existence`, `exact_wording`
+  and `temporal_applicability` are `UNVERIFIED`.
+- PDF unavailable or the unit not found in it — the HTML version is used, with a warning and the
+  amendments after it listed (`UNVERIFIED`).
+
+PDF reading drops page headers, separates footnotes and footnote markers by font size, keeps
+numbering superscripts (art. 22¹) and accepts unit markers only in numbering order. Measured on the
+Civil Code (DU/2026/795 vs DU/2024/1061, 1296 articles): 1283 matched, 13 differed — real 2025–2026
+amendments plus four ISAP HTML quirks ("§" without a number), which stay `UNVERIFIED`.
+
+Passing a consolidated-text ELI explicitly forces that text as the source.
 
 ## Example (real data, 2026-10-29)
 

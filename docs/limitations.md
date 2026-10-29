@@ -3,8 +3,11 @@
 ## Data coverage
 - **No HTML in ELI for acts published since 2025** (measured 2026-10-29: 0 of 1900 acts from 2025,
   0 of 1422 from 2026; 100 % of 2024). Current consolidated texts are therefore usually PDF-only.
-  The server does not parse PDFs; it returns the PDF link, the newest HTML version and the list of
-  later amendments, with `UNVERIFIED` wording/temporal statuses.
+  The server reads those PDFs: unchanged provisions are confirmed against the last HTML version
+  (`VERIFIED`), changed or new ones are read automatically from the PDF and stay `UNVERIFIED`
+  (check the PDF page given). Tables, annexes (załączniki) and grouped units such as
+  "Art. 102–119" are not split out of PDFs. The first read of a large code takes several seconds
+  on a Raspberry Pi (then cached for an hour).
 - The *tekst ujednolicony* (type `U`) files are informational compilations, not official texts;
   they are listed with `official: false` and never used as a wording source.
 - **SAOS has no administrative-court judgments** (`courtType=ADMINISTRATIVE` → 0 results). WSA/NSA

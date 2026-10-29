@@ -26,7 +26,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 TODAY = date(2026, 10, 29)
 ELI = "https://api.sejm.gov.pl/eli"
 SAOS = "https://www.saos.org.pl/api"
-ACT_PATH = re.compile(r"^/eli/acts/(DU|MP)/(\d{4})/(\d+)(/struct|/text\.html)?$")
+ACT_PATH = re.compile(r"^/eli/acts/(DU|MP)/(\d{4})/(\d+)(/struct|/text\.html|/text\.pdf)?$")
 
 
 def load_json(name: str) -> Any:
@@ -40,6 +40,13 @@ def eli_fixture_response(request: httpx.Request) -> httpx.Response:
         return httpx.Response(404)
     stem = f"{match.group(1)}_{match.group(2)}_{match.group(3)}"
     suffix = match.group(4)
+    if suffix == "/text.pdf":
+        path = FIXTURES / "eli" / f"{stem}.pdf"
+        if not path.exists():
+            return httpx.Response(404)
+        return httpx.Response(
+            200, content=path.read_bytes(), headers={"Content-Type": "application/pdf"}
+        )
     if suffix == "/text.html":
         path = FIXTURES / "eli" / f"{stem}.html.gz"
         if not path.exists():

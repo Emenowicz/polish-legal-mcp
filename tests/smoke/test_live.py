@@ -38,7 +38,9 @@ async def test_live_provision_has_official_source(live_legal):
     result = await live_legal.get_provision(ActId.parse("DU/1960/168"), "61", "1")
     assert result.text and result.text.startswith("§ 1.")
     assert result.verification.source_authenticity.status == VS.VERIFIED
-    assert result.wording_source and result.wording_source.html_url
+    assert result.wording_source and (
+        result.wording_source.html_url or result.wording_source.pdf_url
+    )
 
 
 async def test_live_saos_search_and_get(live_judgments):
@@ -57,3 +59,10 @@ async def test_live_eu_rodo_corrected_wording(settings):
     await client.aclose()
     assert result.text and "wszelkie informacje" in result.text
     assert result.official_journal == "Dz. Urz. UE L 119 z 4.5.2016, str. 1"
+
+
+async def test_live_pdf_consolidated_text_confirms_html(live_legal):
+    result = await live_legal.get_provision(ActId.parse("DU/1964/93"), "5")
+    assert result.text_origin in ("html_confirmed_by_pdf", "pdf_automatic")
+    assert result.pdf_page is not None
+    assert result.wording_source and not result.wording_source.html_available

@@ -1,21 +1,22 @@
 """Legal regression cases on real ELI metadata/text (captured 2026-10-29); 'today' = 2026-10-29.
 
 1. existing provision, VERIFIED narrow case       -> DU/2000/856 via TJ DU/2024/1835
-2. amended after the consolidated text             -> DU/2015/1322 via TJ DU/2024/98
+2. amended after the consolidated text             -> DU/2015/1322: TJ 2024/98 (HTML) vs 2025/817 (PDF)
 3. delayed entry into force                        -> DU/2026/1353 (enters 2027-09-27)
 4. repealed act requested for an earlier date      -> DU/1996/405 (repealed 2015-10-01)
-5. unresolvable legal state (must not be VERIFIED) -> DU/2015/1322 art. 4a; latest TJ is PDF-only
+5. unresolvable legal state (must not be VERIFIED) -> DU/2015/1322 art. 4a, 2025-06-01 and 2027
 6. nonexistent structural unit                     -> DU/2015/1322 art. 999
 7. unavailable official source                     -> ELI answering 503 (synthetic)
 """
 
+import re
 from datetime import date
 
 import respx
 
 from polish_legal_mcp.models import ActId
 from polish_legal_mcp.models import VerificationStatus as VS
-from tests.conftest import ELI
+from tests.conftest import ELI, eli_fixture_response
 
 
 async def test_1_existing_provision_verified(legal, eli_mock):
@@ -35,17 +36,42 @@ async def test_1_existing_provision_verified(legal, eli_mock):
     )
 
 
-async def test_2_amended_after_consolidated_text(legal, eli_mock):
+async def test_2_html_wording_confirmed_by_newest_pdf_consolidated_text(legal, eli_mock):
+    # Newest TJ DU/2025/817 (state 2025-06-11) is PDF-only; the 2024 HTML wording of art. 11
+    # ust. 1 matches it except for the updated address of the Labour Code.
     result = await legal.get_provision(ActId.parse("DU/2015/1322"), "11", "1")
-    assert result.wording_source.eli == "DU/2024/98"
-    assert result.latest_official_consolidated_text.eli == "DU/2025/817"
-    assert not result.latest_official_consolidated_text.html_available
-    assert {c.eli for c in result.changes_after_source} == {"DU/2024/1907", "DU/2025/603"}
+    assert result.text_origin == "html_confirmed_by_pdf"
+    assert result.wording_source.eli == "DU/2025/817"
+    assert result.pdf_page == 6
+    assert result.text.endswith("Kodeks pracy (Dz. U. z 2025 r. poz. 277).")
+    assert result.changes_after_source == []
     assert result.verification.exact_wording.status == VS.VERIFIED
-    assert result.verification.temporal_applicability.status == VS.UNVERIFIED
-    assert any("DU/2025/817" in w for w in result.warnings)
-    # The citation points at the newest official consolidated text, not the HTML source.
+    assert result.verification.temporal_applicability.status == VS.VERIFIED
     assert result.citation.publication_eli == "DU/2025/817"
+
+
+async def test_2b_changed_provision_read_from_pdf_is_unverified(legal, eli_mock):
+    # art. 6 gained pkt 4 by DU/2025/603: the current wording exists only in the PDF.
+    result = await legal.get_provision(ActId.parse("DU/2015/1322"), "6")
+    assert result.text_origin == "pdf_automatic"
+    assert "4) przeznaczonych do zbycia albo nieodpłatnego przekazania" in result.text
+    assert result.earlier_wording and "4) przeznaczonych" not in result.earlier_wording
+    assert result.earlier_wording_source.eli == "DU/2024/98"
+    assert result.verification.exact_wording.status == VS.UNVERIFIED
+    assert result.verification.temporal_applicability.status == VS.UNVERIFIED
+    assert "PDF" in result.verification.exact_wording.detail
+
+
+async def test_2c_pdf_unavailable_falls_back_to_html_and_lists_changes(legal):
+    with respx.mock(assert_all_called=False) as router:
+        router.get(f"{ELI}/acts/DU/2025/817/text.pdf").respond(404)
+        router.get(url__regex=rf"^{re.escape(ELI)}/acts/").mock(side_effect=eli_fixture_response)
+        result = await legal.get_provision(ActId.parse("DU/2015/1322"), "11", "1")
+    assert result.text_origin == "html"
+    assert result.wording_source.eli == "DU/2024/98"
+    assert {c.eli for c in result.changes_after_source} == {"DU/2024/1907", "DU/2025/603"}
+    assert result.verification.temporal_applicability.status == VS.UNVERIFIED
+    assert any("Nie odczytano PDF" in w for w in result.warnings)
 
 
 async def test_3_delayed_entry_into_force(legal, eli_mock):
@@ -69,7 +95,9 @@ async def test_4_repealed_act_on_earlier_date(legal, eli_mock):
 
 
 async def test_5_unresolvable_state_never_verified(legal, eli_mock):
-    for as_of in (None, date(2025, 6, 1), date(2027, 1, 1)):
+    # Before the newest TJ's state date only the 2024 HTML applies, with amendments in between;
+    # a future date can never be verified.
+    for as_of in (date(2025, 6, 1), date(2027, 1, 1)):
         result = await legal.get_provision(ActId.parse("DU/2015/1322"), "4a", as_of=as_of)
         v = result.verification
         assert v.temporal_applicability.status == VS.UNVERIFIED, as_of
@@ -197,3 +225,13 @@ async def test_tk_rulings_get_title_and_date_from_their_own_record(legal, eli_mo
     assert [t.eli for t in tk] == ["DU/2003/15"]
     assert tk[0].title and tk[0].title.startswith("Wyrok Trybunału Konstytucyjnego")
     assert tk[0].effective_date == date(2003, 1, 8)
+
+
+async def test_change_on_consolidated_state_date_counts_as_included(legal):
+    # Synthetic metadata: an amendment effective exactly on the TJ state date.
+    meta = {"references": {"Akty zmieniające": [{"id": "DU/2026/184", "date": "2026-05-19"}]}}
+    lo, hi = date(2026, 5, 19), date(2026, 10, 29)
+    inclusive, _ = await legal._changes(meta, lo, hi)
+    exclusive, _ = await legal._changes(meta, lo, hi, include_lo=False)
+    assert [c.eli for c in inclusive] == ["DU/2026/184"]
+    assert exclusive == []

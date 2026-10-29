@@ -48,9 +48,30 @@ class ExtractedUnit:
     marker: str | None = None  # "(uchylony)" etc. when the unit has no normative content
 
 
+SUPERSCRIPT_DIGITS = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+_FROM_SUPERSCRIPT = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
+_SUPERSCRIPT_RE = re.compile(r"([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$")
+_SUFFIX_FORMS_RE = re.compile(r"(?:\^|_)(\d+)$|\((\d+)\)$")
+
+
 def normalize_name(value: str) -> str:
-    value = _PREFIX_RE.sub("", value.strip().lower())
-    return value.rstrip(").").replace(" ", "")
+    """Canonical unit number as ELI's struct writes it: '22¹', '22^1', '22(1)' → '22_1'."""
+    value = _PREFIX_RE.sub("", value.strip().lower()).replace(" ", "")
+    value = value.rstrip(".")
+    superscript = _SUPERSCRIPT_RE.search(value)
+    if superscript:
+        digits = superscript.group(1).translate(_FROM_SUPERSCRIPT)
+        return f"{value[: superscript.start()].rstrip(').')}_{digits}"
+    suffix = _SUFFIX_FORMS_RE.search(value)
+    if suffix:
+        return f"{value[: suffix.start()]}_{suffix.group(1) or suffix.group(2)}"
+    return value.rstrip(").")
+
+
+def display_name(value: str) -> str:
+    """'22_1' → '22¹' (how Polish legal texts print such numbers)."""
+    base, _, sup = normalize_name(value).partition("_")
+    return base + sup.translate(SUPERSCRIPT_DIGITS) if sup else base
 
 
 def _children(node: dict[str, Any]) -> list[dict[str, Any]]:
@@ -63,7 +84,11 @@ def _is_notice_part(node: dict[str, Any]) -> bool:
 
 
 def _label(node: dict[str, Any]) -> str:
-    return _clean(str(node.get("title") or node.get("id") or ""))
+    title = _clean(str(node.get("title") or node.get("id") or ""))
+    # ELI writes art. 22¹ as "22_1".
+    return re.sub(
+        r"(\d)_(\d+)", lambda m: m.group(1) + m.group(2).translate(SUPERSCRIPT_DIGITS), title
+    )
 
 
 def _top_units(nodes: list[dict[str, Any]], unit_type: str, path: list[str]):
@@ -199,6 +224,11 @@ def _strip_footnotes(unit: Any) -> list[str]:
         if body:
             footnotes.append(f"{marker} {body}".strip())
         link.drop_tree()
+    # Remaining <sup> are numbering superscripts (art. 22<sup>1</sup>), not footnote markers.
+    for sup in unit.iter("sup"):
+        digits = (sup.text or "").strip()
+        if digits.isdigit():
+            sup.text = digits.translate(SUPERSCRIPT_DIGITS)
     return footnotes
 
 

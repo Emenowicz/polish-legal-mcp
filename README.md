@@ -130,8 +130,9 @@ production config, Host guard, per-user rate limits, bounded inputs/outputs, no 
 fetching, no logging of tool arguments, hardened container. Details: [docs/security.md](docs/security.md).
 
 ## Known limitations
-- ELI has **no HTML for acts published since 2025** → current consolidated texts are PDF-only;
-  wording then comes from the newest HTML version and is marked `UNVERIFIED` for today's date.
+- ELI has **no HTML for acts published since 2025** → the server reads the PDF: unchanged
+  provisions are confirmed against the last HTML text (`VERIFIED`); changed ones are read
+  automatically from the PDF and marked `UNVERIFIED` with the page number to check.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
 - Search is lexical (titles/keywords), not full-text or semantic.
 - EU law: provisions by act number/CELEX/alias only (no topic search); wording comes from the

@@ -25,6 +25,8 @@ docker compose up -d --build              # container (needs .env)
 - `temporal_applicability` may be `VERIFIED` only under the rule in docs/legal-verification.md.
   Any change that widens that rule needs a regression test showing why it is safe.
 - Do not build normalised citations without the metadata to support them (`formatted=None`).
+- Text read automatically from a PDF (`text_origin = pdf_automatic`) is never `VERIFIED`; only an
+  exact match with official HTML (`html_confirmed_by_pdf`) may confirm wording.
 
 ## Architecture constraints
 - Layers: `server.py` (tools, thin) → `services/` (logic, Pydantic models) → `clients/`

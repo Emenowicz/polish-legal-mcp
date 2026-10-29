@@ -118,6 +118,9 @@ class UpstreamClient:
                 f"{self.name}: odpowiedź nie jest poprawnym JSON-em."
             ) from exc
 
+    async def get_bytes(self, path: str, accept: str) -> bytes:
+        return await self._get(path, None, accept=accept)
+
     async def get_text(
         self, path: str, accept: str = "text/html", headers: Mapping[str, str] | None = None
     ) -> str:

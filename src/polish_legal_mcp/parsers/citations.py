@@ -21,7 +21,7 @@ KNOWN_ALIASES: dict[str, tuple[str, str]] = {
     "konstytucja": ("Konstytucja RP", "DU/1997/483"),
 }
 
-_NO = r"\d+[a-z]{0,3}"
+_NO = r"\d+[a-z]{0,3}(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]+|\^\d+|\(\d+\))?"
 UNIT_RE = re.compile(
     rf"""
     (?:art\.?\s*(?P<art>{_NO})|§\s*(?P<top_par>{_NO}))
