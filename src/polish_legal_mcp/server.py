@@ -465,20 +465,20 @@ def build_app(settings: Settings):
     """ASGI app with Streamable HTTP at /mcp (stateless, so any request can be served alone)."""
     mcp = build_server(settings)
     allowed_hosts = list(settings.allowed_hosts)
+    allowed_origins: list[str] = []
     if settings.base_url:
-        hostname = urlsplit(settings.base_url).hostname
-        if hostname:
-            allowed_hosts.append(hostname)
+        url = urlsplit(settings.base_url)
+        if url.hostname:
+            allowed_hosts.append(url.hostname)
+            # TLS ends at the proxy (Funnel/Caddy), so the app sees http while browsers send the
+            # public https Origin (e.g. the OAuth consent form); same-origin matching would fail.
+            allowed_origins.append(f"{url.scheme}://{url.netloc}")
     app = mcp.http_app(
         path="/mcp",
         middleware=[StarletteMiddleware(RequestGuard)],
         stateless_http=True,
         host_origin_protection=True if allowed_hosts else "auto",
         allowed_hosts=allowed_hosts or None,
-        # Any Origin: Claude's backend sends `Origin: https://claude.ai` on MCP calls, and TLS
-        # ends at the proxy so even our own pages fail same-origin matching. The strict Host
-        # check stays (that is what stops DNS rebinding); /mcp needs a bearer token browsers
-        # never attach on their own, and the consent form carries FastMCP's CSRF token.
-        allowed_origins=["*"] if allowed_hosts else None,
+        allowed_origins=allowed_origins or None,
     )
     return AccessLog(app)

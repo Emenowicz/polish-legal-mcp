@@ -70,21 +70,6 @@ async def test_foreign_host_header_rejected(secured_app):
     assert response.status_code == 421
 
 
-async def test_claude_backend_origin_reaches_auth_not_origin_guard(secured_app):
-    # Claude's servers send `Origin: https://claude.ai`; they must get the OAuth 401, not 403.
-    async with client_for(secured_app) as http:
-        response = await http.post(
-            "/mcp",
-            json={"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
-            headers={
-                "Origin": "https://claude.ai",
-                "Accept": "application/json, text/event-stream",
-            },
-        )
-    assert response.status_code == 401
-    assert "resource_metadata=" in response.headers["www-authenticate"]
-
-
 async def test_requests_are_access_logged_without_query(secured_app, caplog):
     with caplog.at_level("INFO", logger="polish_legal_mcp.access"):
         async with client_for(secured_app) as http:

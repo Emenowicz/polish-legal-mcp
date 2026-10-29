@@ -53,12 +53,18 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
       advertised and tested in both modes (Claude's consent page showed "Verified domain: claude.ai")
 - [x] Fixed: consent form rejected as "Forbidden Origin" behind Funnel (https Origin vs http app)
 - [x] Fixed: installer did not reinstall the app on source-only updates
-- [ ] Real OAuth sign-in round trip — **NOT EXECUTED** (pending the Claude connector sign-in)
+- [x] Fixed: Gmail allowlist entries now ignore dots (Google returns the dotted address)
+- [x] Real OAuth sign-in round trip — **VERIFIED** 2026-10-29 with Google sign-in via the Claude
+      connector (CIMD), allowlisted account — **NOT EXECUTED** (pending the Claude connector sign-in)
 
-## Phase 6 — Claude and mobile validation — NOT EXECUTED
-- [ ] Claude custom connector added and authenticated — **NOT EXECUTED**
-- [ ] Tool discovery/invocation from Claude (ELI and SAOS prompts) — **NOT EXECUTED**
-- [ ] Android/iOS access — **NOT EXECUTED**
+## Phase 6 — Claude and mobile validation — PARTIALLY VERIFIED
+- [x] Claude custom connector added and authenticated — **VERIFIED** 2026-10-29 (Google sign-in,
+      consent page completed on an iPhone)
+- [x] Tool invocation from Claude — **VERIFIED** for ELI tools (server logs at 17:52 show
+      `find_legal_basis` searches and `get_legal_provision` on the Civil Code)
+- [ ] SAOS tools invoked from Claude — **NOT EXECUTED** (not yet observed in logs)
+- [ ] Tool use from the Android/iOS Claude app — **NOT CONFIRMED** (sign-in was on iPhone; the
+      device used for the tool calls is unknown)
 
 Reproducible steps: `deployment.md` §3–4.
 
