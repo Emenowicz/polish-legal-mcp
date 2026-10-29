@@ -114,6 +114,9 @@ environment of other processes with the same uid), sandboxed by systemd
 ([deploy/polish-legal-mcp.service](../deploy/polish-legal-mcp.service): `ProtectSystem=strict`,
 `NoNewPrivileges`, no capabilities, `MemoryMax=512M`, `CPUQuota=100%`). Secrets are in
 `/etc/polish-legal-mcp.env` (root:root 600), read by systemd before privileges are dropped.
+OAuth state lives on a dedicated 64 MiB loop filesystem mounted at `/var/lib/polish-legal-mcp`
+(image `/var/lib/polish-legal-mcp.img`, fstab entry added), so unauthenticated OAuth traffic can
+never fill the host's root disk (see security.md).
 
 1. Tailscale installed and logged in (§3.2), GitHub OAuth App created (§3.3).
 2. Copy and run the installer (it prompts for the client ID and, hidden, the secret; it generates

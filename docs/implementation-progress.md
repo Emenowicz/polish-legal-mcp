@@ -46,6 +46,9 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
       `resource_metadata`, PRM `resource` = `<base>/mcp`, AS metadata with `registration_endpoint`,
       CIMD and PKCE S256, foreign Host → 421. A newly enabled Funnel reset TLS handshakes for
       ~3 minutes before becoming stable.
+- [x] Unauthenticated disk-write bounds (body cap, `/register`/`/authorize` rate limits, hourly
+      cull of the OAuth store, 64 MiB state filesystem) — tested locally; Pi rollout pending re-run
+      of `pi-setup.sh`
 - [ ] Real GitHub OAuth sign-in round trip — **NOT EXECUTED** (pending the Claude connector sign-in)
 
 ## Phase 6 — Claude and mobile validation — NOT EXECUTED

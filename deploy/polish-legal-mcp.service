@@ -5,6 +5,8 @@
 Description=polish-legal-mcp (MCP server: Polish legislation and case law)
 After=network-online.target
 Wants=network-online.target
+# State lives on a dedicated, size-capped filesystem (see pi-setup.sh); never start without it.
+RequiresMountsFor=/var/lib/polish-legal-mcp
 
 [Service]
 Type=simple

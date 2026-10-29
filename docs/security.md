@@ -35,14 +35,26 @@ by Claude (Anthropic), not by this server; only tool arguments reach it and they
 data or case files into a public AI service.** This project is not an official tool of any public
 authority or institution.
 
+## Unauthenticated disk writes (OAuth)
+OAuth dynamic client registration (`/register`) and authorization requests (`/authorize`) must
+work before sign-in, and FastMCP persists both — registrations without expiry or size limit
+(measured: a 1 MB `client_name` was stored as a 1.8 MB file), and it never deletes expired
+entries. On a host shared with other services this could fill the disk. Mitigations:
+
+| Layer | Control |
+|---|---|
+| Host (guarantee) | `/var/lib/polish-legal-mcp` is a dedicated 64 MiB ext4 loop filesystem (16k inodes, `nodev,nosuid,noexec`) created by `deploy/pi-setup.sh`; the unit has `RequiresMountsFor=` so it never writes to the root filesystem. Worst case: sign-in stops working; other services are unaffected. |
+| App | Request bodies over 64 KiB → 413; global hourly caps: `POST /register` 20, `GET /authorize` 60 → 429 (`security.RequestGuard`). Claude uses CIMD (clients cached in memory, not on disk) and does not call `/register`. |
+| App | OAuth state uses our own encrypted file store, culled hourly so expired transactions/tokens are deleted (`security.periodic_cull`). |
+
+Docker deployments get the app-level controls; the named volume is not size-capped — put it on
+a size-limited filesystem if the host runs anything important.
+
 ## Known residual risks
-- The OAuth dynamic client registration endpoint (`/register`) is unauthenticated by design
-  (required by Claude's DCR flow) and persists registrations in `/data`. MCP rate limiting does
-  not cover OAuth routes, so a flood of registrations could fill the disk. Mitigations: monitor
-  the `oauth-data` volume size, rely on Tailscale Funnel's own limits, or place the volume on a
-  size-capped filesystem.
-- Forwarded headers are not trusted (`proxy_headers=False`); behind Docker the app sees the
-  bridge IP. Nothing depends on the client IP — do not "fix" this by trusting `*`.
+- A sustained flood at the rate limits can make sign-in temporarily unavailable (limits reset
+  hourly) — availability of this service only.
+- Forwarded headers are not trusted (`proxy_headers=False`); behind Docker/Funnel the app sees a
+  local IP. Nothing depends on the client IP — do not "fix" this by trusting `*`.
 
 ## Optional hardening
 - Restrict Funnel exposure further with a Tailscale ACL or front it with Cloudflare + an IP

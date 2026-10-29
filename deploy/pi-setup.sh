@@ -13,6 +13,9 @@ UNIT=/etc/systemd/system/polish-legal-mcp.service
 REPO=https://github.com/Emenowicz/polish-legal-mcp.git
 UV_VERSION=0.13.6
 PORT=8000
+STATE_DIR=/var/lib/polish-legal-mcp
+STATE_IMG=/var/lib/polish-legal-mcp.img
+STATE_SIZE=64M
 
 [ "$(id -u)" -eq 0 ] || { echo "Run as root: sudo bash $0" >&2; exit 1; }
 command -v tailscale >/dev/null || { echo "Install Tailscale first (https://tailscale.com/download/linux)." >&2; exit 1; }
@@ -73,6 +76,32 @@ CONF
 else
   echo "Keeping existing $ENV_FILE"
 fi
+
+echo "==> State storage: dedicated $STATE_SIZE filesystem (a flood of OAuth requests cannot fill the root disk)"
+if ! mountpoint -q "$STATE_DIR"; then
+  systemctl stop polish-legal-mcp 2>/dev/null || true
+  if [ ! -f "$STATE_IMG" ]; then
+    fallocate -l "$STATE_SIZE" "$STATE_IMG"
+    mkfs.ext4 -q -F -m 0 -N 16384 -L plmcp-state "$STATE_IMG"
+    chmod 600 "$STATE_IMG"
+  fi
+  grep -qs " $STATE_DIR " /etc/fstab \
+    || echo "$STATE_IMG $STATE_DIR ext4 loop,nodev,nosuid,noexec,nofail 0 0" >> /etc/fstab
+  saved=$(mktemp -d)
+  if [ -d "$STATE_DIR" ]; then
+    cp -a "$STATE_DIR/." "$saved/"
+    find "$STATE_DIR" -mindepth 1 -delete
+  fi
+  install -d -m 700 "$STATE_DIR"
+  systemctl daemon-reload
+  mount "$STATE_DIR"
+  cp -a "$saved/." "$STATE_DIR/"
+  rm -rf "$saved"
+fi
+mountpoint -q "$STATE_DIR" || { echo "State filesystem is not mounted at $STATE_DIR" >&2; exit 1; }
+chown "$APP_USER:$APP_USER" "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+df -h "$STATE_DIR" | tail -1
 
 echo "==> systemd"
 install -m 644 "$APP_DIR/app/deploy/polish-legal-mcp.service" "$UNIT"

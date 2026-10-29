@@ -9,6 +9,7 @@ from datetime import date
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
+import fastmcp
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth import AuthContext
@@ -17,8 +18,10 @@ from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import AuthMiddleware, Middleware
 from fastmcp.server.middleware.middleware import MiddlewareContext
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from key_value.aio.stores.filetree import FileTreeStore
 from mcp.types import ToolAnnotations
 from pydantic import Field
+from starlette.middleware import Middleware as StarletteMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -38,6 +41,7 @@ from polish_legal_mcp.models import (
     ProvisionResult,
     SearchActsResult,
 )
+from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
 from polish_legal_mcp.services.judgments import JudgmentService
 from polish_legal_mcp.services.legal import LegalService
 
@@ -134,20 +138,25 @@ def _rate_limit_key(context: MiddlewareContext) -> str:
     return f"user:{login}" if isinstance(login, str) else f"client:{token.client_id}"
 
 
-def build_auth(settings: Settings) -> GitHubProvider | None:
+def build_auth(settings: Settings) -> tuple[GitHubProvider | None, FileTreeStore | None]:
+    """GitHub OAuth provider plus the raw OAuth store (to cull), or (None, None) without auth."""
     if settings.auth_mode != "github":
-        return None
+        return None, None
     assert settings.github_client_secret is not None and settings.base_url is not None
-    return GitHubProvider(
+    jwt_key = settings.jwt_signing_key.get_secret_value() if settings.jwt_signing_key else None
+    storage, store = (
+        build_oauth_storage(fastmcp.settings.home, jwt_key) if jwt_key else (None, None)
+    )
+    provider = GitHubProvider(
         client_id=str(settings.github_client_id),
         client_secret=settings.github_client_secret.get_secret_value(),
         base_url=settings.base_url,
         # Least privilege: only the GitHub login is needed for the allowlist.
         required_scopes=["read:user"],
-        jwt_signing_key=settings.jwt_signing_key.get_secret_value()
-        if settings.jwt_signing_key
-        else None,
+        jwt_signing_key=jwt_key,
+        client_storage=storage,
     )
+    return provider, store
 
 
 def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
@@ -159,7 +168,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
         try:
-            yield
+            async with periodic_cull(oauth_store):
+                yield
         finally:
             await eli.aclose()
             await saos.aclose()
@@ -171,7 +181,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             get_client_id=_rate_limit_key,
         )
     ]
-    auth = build_auth(settings)
+    auth, oauth_store = build_auth(settings)
     if auth is not None:
         middleware.insert(0, AuthMiddleware(auth=allowlist_check(settings.allowed_github_logins)))
 
@@ -398,6 +408,7 @@ def build_app(settings: Settings):
             allowed_hosts.append(hostname)
     return mcp.http_app(
         path="/mcp",
+        middleware=[StarletteMiddleware(RequestGuard)],
         stateless_http=True,
         host_origin_protection=True if allowed_hosts else "auto",
         allowed_hosts=allowed_hosts or None,
