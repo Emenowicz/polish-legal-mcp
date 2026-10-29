@@ -105,6 +105,26 @@ curl -s -X POST localhost:8000/mcp $H -d '{"jsonrpc":"2.0","id":3,"method":"tool
 curl -s -X POST localhost:8000/mcp $H -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_legal_provision","arguments":{"act_id":"DU/1960/168","article":"drop"}}}'
 ```
 
+### 3.8 Without Docker: systemd + uv (shared hosts)
+Use this on a Pi that already runs other services and has no Docker. The server runs as a
+dedicated system user `plmcp` (never as a user that runs other workloads: a process can read the
+environment of other processes with the same uid), sandboxed by systemd
+([deploy/polish-legal-mcp.service](../deploy/polish-legal-mcp.service): `ProtectSystem=strict`,
+`NoNewPrivileges`, no capabilities, `MemoryMax=512M`, `CPUQuota=100%`). Secrets are in
+`/etc/polish-legal-mcp.env` (root:root 600), read by systemd before privileges are dropped.
+
+1. Tailscale installed and logged in (§3.2), GitHub OAuth App created (§3.3).
+2. Copy and run the installer (it prompts for the client ID and, hidden, the secret; it generates
+   the JWT key, installs a checksum-verified uv, clones the repo, syncs the locked environment,
+   installs and starts the unit, checks `/health` and enables Funnel):
+   ```bash
+   scp deploy/pi-setup.sh <pi>:~/
+   ssh -t <pi> 'sudo bash ~/pi-setup.sh'
+   ```
+3. Update later by re-running the same command (keeps `/etc/polish-legal-mcp.env`).
+4. Operate: `systemctl status polish-legal-mcp`, `journalctl -u polish-legal-mcp -f`,
+   `sudo systemctl restart polish-legal-mcp`, `tailscale funnel status`.
+
 ## 4. Claude connector
 1. claude.ai → **Settings → Connectors → Add custom connector** (Free plan: one custom connector).
 2. Name: `Prawo PL (ELI/SAOS)`, URL: `https://pi.tail1234.ts.net/mcp`. Leave OAuth client

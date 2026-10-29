@@ -1,0 +1,58 @@
+# Hardened systemd unit for hosts without Docker (e.g. a shared Raspberry Pi).
+# Installed by deploy/pi-setup.sh. Secrets live in /etc/polish-legal-mcp.env (root:root 600);
+# systemd reads it before dropping privileges, so the service user cannot read the file.
+[Unit]
+Description=polish-legal-mcp (MCP server: Polish legislation and case law)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=plmcp
+Group=plmcp
+WorkingDirectory=/opt/polish-legal-mcp/app
+EnvironmentFile=/etc/polish-legal-mcp.env
+Environment=PLMCP_HOST=127.0.0.1
+Environment=PLMCP_PORT=8000
+Environment=FASTMCP_HOME=/var/lib/polish-legal-mcp
+Environment=FASTMCP_SHOW_SERVER_BANNER=false
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/polish-legal-mcp/app/.venv/bin/polish-legal-mcp
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+StateDirectory=polish-legal-mcp
+StateDirectoryMode=0700
+UMask=0077
+
+# Resource limits: the host may run other workloads.
+MemoryMax=512M
+CPUQuota=100%
+TasksMax=128
+
+# Sandboxing
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

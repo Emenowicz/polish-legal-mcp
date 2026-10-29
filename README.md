@@ -99,7 +99,8 @@ Short version — full runbook with verification commands in [docs/deployment.md
 4. `docker compose up -d --build && sudo tailscale funnel --bg 8000`.
 5. From outside the LAN: `curl https://<pi>.<tailnet>.ts.net/health` and expect `401` on `/mcp`.
 
-A VPS + Caddy variant is in the same document.
+Hosts without Docker can use the hardened systemd unit and installer in [deploy/](deploy/)
+(§3.8). A VPS + Caddy variant is in the same document.
 
 ## Claude integration (incl. mobile)
 1. claude.ai → Settings → Connectors → **Add custom connector** (the Free plan allows one).
