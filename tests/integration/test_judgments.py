@@ -12,9 +12,14 @@ from tests.conftest import SAOS, load_json
 
 async def test_search_maps_results_and_pagination(judgments, saos_mock):
     result = await judgments.search(
-        "nieruchomości Skarbu Państwa", court_type="COMMON", date_from=date(2020, 1, 1), limit=3
+        "nieruchomości Skarbu Państwa",
+        court_type="COMMON",
+        date_from=date(2020, 1, 1),
+        limit=3,
+        legal_base="art. 5 kc",
     )
     params = saos_mock.calls.last.request.url.params
+    assert params["legalBase"] == "art. 5 kc"
     assert params["all"] == "nieruchomości Skarbu Państwa"
     assert (params["courtType"], params["judgmentDateFrom"], params["pageSize"]) == (
         "COMMON",

@@ -862,6 +862,28 @@ class LegalService:
             return item
 
         amendments = await gather_limited([lambda r=r: describe(r) for r in refs[:limit]])
+
+        async def describe_tk(ref: dict[str, Any]) -> ActReference:
+            # ELI lists TK rulings without date or title; take both from the ruling's own record.
+            item = _reference(ref, TK_RULINGS, _date(ref.get("date")))
+            ref_id = _act_id_or_none(ref["id"])
+            if ref_id:
+                try:
+                    meta = await self._eli.act(ref_id)
+                    item.title = str(meta.get("title", "")) or None
+                    item.effective_date = item.effective_date or _date(
+                        meta.get("entryIntoForce") or meta.get("promulgation")
+                    )
+                except LegalMcpError:
+                    pass
+            return item
+
+        tk_refs = sorted(
+            _refs(base_meta, TK_RULINGS),
+            key=lambda r: (a.year, a.position) if (a := _act_id_or_none(r["id"])) else (0, 0),
+            reverse=True,
+        )
+        tk_rulings = await gather_limited([lambda r=r: describe_tk(r) for r in tk_refs[:limit]])
         latest_state = latest.state_date if latest else None
         warnings = list(STANDARD_WARNINGS[:1])
         warnings.append(COMPLETENESS_UNVERIFIED.detail)
@@ -887,10 +909,7 @@ class LegalService:
                 for r in refs
                 if latest_state and (d := _date(r.get("date"))) and d > latest_state
             ],
-            constitutional_tribunal_rulings=[
-                _reference(r, TK_RULINGS, _date(r.get("date")))
-                for r in _refs(base_meta, TK_RULINGS)
-            ],
+            constitutional_tribunal_rulings=tk_rulings,
             warnings=warnings,
         )
 

@@ -101,6 +101,7 @@ class JudgmentService:
         limit: int = 10,
         page: int = 0,
         referenced_regulation: str | None = None,
+        legal_base: str | None = None,
     ) -> JudgmentSearchResult:
         params: dict[str, str | int] = {
             "all": query.strip(),
@@ -117,6 +118,8 @@ class JudgmentService:
             params["judgmentDateTo"] = date_to.isoformat()
         if referenced_regulation:
             params["referencedRegulation"] = referenced_regulation.strip()
+        if legal_base:
+            params["legalBase"] = legal_base.strip()
         data = await self._saos.search(params)
         total = int((data.get("info") or {}).get("totalResults") or 0)
         links = data.get("links") or []

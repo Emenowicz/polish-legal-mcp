@@ -67,6 +67,9 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
   zaznacz to przy cytowaniu. Wyszukiwania aktów UE po temacie nie ma: potrzebny numer aktu
   (np. 2016/679, 2014/24/UE), CELEX lub skrót RODO; akty krajowe szukaj w ELI.
+- Szukając podstawy prawnej, najpierw sam wskaż kandydujące akty i przepisy (np. ustawa o ochronie
+  praw lokatorów, Kodeks cywilny), a następnie zweryfikuj je search_legal_acts i
+  get_legal_provision. find_legal_basis dopasowuje tylko słowa – traktuj go pomocniczo.
 - Wynik nie jest opinią prawną.
 """
 
@@ -465,13 +468,29 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
                 description="Fragment tytułu aktu powołanego w orzeczeniu.",
             ),
         ] = None,
+        legal_base: Annotated[
+            str | None,
+            Field(
+                default=None,
+                max_length=100,
+                description="Podstawa prawna orzeczenia, np. 'art. 5 kc'. Wypełniana głównie w "
+                "orzeczeniach sądów powszechnych (dla SN w SAOS zwykle brak).",
+            ),
+        ] = None,
     ) -> JudgmentSearchResult:
         """Wyszukuje orzeczenia sądów w SAOS (sądy powszechne, SN, TK, KIO) – zwraca sygnatury,
         sąd, datę, fragment i link. SAOS nie zawiera wszystkich orzeczeń, w szczególności
         orzeczeń sądów administracyjnych (WSA/NSA). Orzeczenie nie jest przepisem prawa."""
         return await _run(
             lambda: judgments.search(
-                query, court_type, date_from, date_to, limit, page, referenced_regulation
+                query,
+                court_type,
+                date_from,
+                date_to,
+                limit,
+                page,
+                referenced_regulation,
+                legal_base,
             )
         )
 

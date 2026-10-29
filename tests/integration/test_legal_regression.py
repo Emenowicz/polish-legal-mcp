@@ -189,3 +189,11 @@ async def test_get_act_pdf_only_warns(legal, eli_mock):
     assert details.toc == []
     assert details.consolidated_text_of == "DU/2015/1322"
     assert any("PDF" in w for w in details.warnings)
+
+
+async def test_tk_rulings_get_title_and_date_from_their_own_record(legal, eli_mock):
+    result = await legal.get_amendments(ActId.parse("DU/1996/405"))
+    tk = result.constitutional_tribunal_rulings
+    assert [t.eli for t in tk] == ["DU/2003/15"]
+    assert tk[0].title and tk[0].title.startswith("Wyrok Trybunału Konstytucyjnego")
+    assert tk[0].effective_date == date(2003, 1, 8)
