@@ -7,8 +7,8 @@
   (`VERIFIED`), changed or new ones are read automatically from the PDF and stay `UNVERIFIED`
   (check the PDF page given). Grouped units such as "Art. 164–179. (uchylone)" resolve
   any article in the range (HTML struct node `arti_164-179` and PDF). Tables and annexes
-  (załączniki) are not extracted from PDFs: their layout does not survive text extraction (cells
-  run together), so they would not be reliable – use the PDF link. The first read of a large code takes several seconds
+  (załączniki) are not extracted from PDFs (not implemented: plain text extraction does not keep
+  table layout) – use the PDF link. The first read of a large code takes several seconds
   on a Raspberry Pi (then cached for an hour).
 - The *tekst ujednolicony* (type `U`) files are informational compilations, not official texts;
   they are listed with `official: false` and never used as a wording source.
