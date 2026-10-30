@@ -1,0 +1,83 @@
+{
+ "links": [
+  {
+   "rel": "self",
+   "href": "https://www.saos.org.pl/api/judgments/554454"
+  }
+ ],
+ "data": {
+  "id": 554454,
+  "courtType": "COMMON",
+  "href": "https://www.saos.org.pl/api/judgments/554454",
+  "courtCases": [
+   {
+    "caseNumber": "I Ca 382/26"
+   }
+  ],
+  "judgmentType": "REASONS",
+  "judgmentDate": "2026-10-14",
+  "judges": [
+   {
+    "name": "Alicja Wiśniewska",
+    "function": null,
+    "specialRoles": []
+   }
+  ],
+  "source": {
+   "code": "COMMON_COURT",
+   "judgmentUrl": "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api/judgement/details?id=150520000000503_I_Ca_000382_2026_Uz_2026-10-14_001",
+   "judgmentId": "150520000000503_I_Ca_000382_2026_Uz_2026-10-14_001",
+   "publisher": "Jolanta Urbanowicz",
+   "reviser": "Jolanta Urbanowicz",
+   "publicationDate": "2026-10-22"
+  },
+  "courtReporters": [],
+  "decision": null,
+  "summary": null,
+  "textContent": "<p>Sygn. akt I Ca 382/26</p>\n    <div>\n      <h2>UZASADNIENIE</h2>\n      <p>Powód <span class=\"anon-block\">X. P.</span> wniósł o zasądzenie od pozwanego Banku <span class=\"anon-block\">(...)</span> Spółki Akcyjnej z siedzibą w <span class=\"anon-block\">V.</span> kwoty 1.500,00 zł tytułem zwrotu części świadczenia nienależnego spełnionego na rzecz pozwanego przez powoda, tj. zapłaconych przez powoda, jako konsumenta odsetek umownych oraz innych kosztów wynikających z <span class=\"anon-block\">(...)</span> z dnia 12 maja 2020 roku, podlegających zwrotowi z uwagi na złożenie przez powoda prawnie skutecznego oświadczenia o skorzystaniu z sankcji kredytu darmowego wraz z odsetkami ustawowymi za opóźnienie, liczonymi od dnia wniesienia pozwu do dnia zapłaty. Nadto wniósł o zasądzenie na jego rzecz kosztów procesu według norm przepisanych, w tym kosztów zastępstwa procesowego.</p>\n      <p>Pozwany w odpowiedzi na pozew wniósł o oddalenie powództwa w całości oraz zasądzenie na jego rzecz kosztów procesu, w tym kosztów zastępstwa procesowego według norm przepisanych.</p>\n      <p>\n<strong>\n<!-- -->Wyrokiem z dnia 2 lipca 2026 roku</strong> Sąd Rejonowy w Olecku w sprawie o sygn. akt I C 282/25 <em>\n<!-- -->(k. 155)</em> zasądził od pozwanego Banku <span class=\"anon-block\">(...)</span> Spółki Akcyjnej z siedzibą w <span class=\"anon-block\">V.</span> na rzecz powoda <span class=\"anon-block\">X. P.</span> kwotę 1.500,00 zł z odsetkami ustawowymi za opóźnienie od dnia 29 października 2025 roku do dnia zapłaty <em>\n<!-- -->(pkt I.)</em> oraz zasądził od pozwanego Banku <span class=\"anon-block\">(...)</span> Spółki Akcyjnej z siedzibą w <span class=\"anon-block\">V.</span> na rzecz powoda <span class=\"anon-block\">X. P.</span> kwotę 1.017,00 zł tytułem zwrotu kosztów procesu wraz z odsetkami ustawowymi za opóźnienie od dnia uprawomocnienia się orzeczenia do dnia zapłaty <em>\n<!-- -->(pkt II.)</em>.</p>\n      <p>\n<strong>\n<!-- -->Apelację od powyższego wyrokuwywiódł pozwany</strong> Bank <s",
+  "legalBases": [],
+  "referencedRegulations": [
+   {
+    "journalTitle": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego",
+    "journalNo": 43,
+    "journalYear": 1964,
+    "journalEntry": 296,
+    "text": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego (Dz. U. z 1964 r. Nr 43, poz. 296 - art. 227; art. 230; art. 233; art. 233 § 1; art. 235(2); art. 235(2) § 1; art. 235(2) § 1 pkt. 4; art. 235(2) § 1 pkt. 5; art. 235(2) § 2; art. 299; art. 382; art. 385; art. 386; art. 386 § 1; art. 505(13); art. 505(13) § 2; art. 98; art. 98 § 1; art. 98 § 1(1))"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny",
+    "journalNo": 88,
+    "journalYear": 1997,
+    "journalEntry": 553,
+    "text": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny (Dz. U. z 1997 r. Nr 88, poz. 553 - art. 10; art. 10 ust. 2; art. 23; art. 29; art. 29 ust. 1; art. 3; art. 3 lit. j; art. 3 ust. 1; art. 3 ust. 2; art. 3 ust. 2 pkt. 1 u; art. 30; art. 30 ust. 1; art. 30 ust. 1 pkt. 1; art. 30 ust. 1 pkt. 10; art. 30 ust. 1 pkt. 10 u; art. 30 ust. 1 pkt. 11; art. 30 ust. 1 pkt. 14; art. 30 ust. 1 pkt. 15; art. 30 ust. 1 pkt. 15 u; art. 30 ust. 1 pkt. 16; art. 30 ust. 1 pkt. 16 u; art. 30 ust. 1 pkt. 17; art. 30 ust. 1 pkt. 2; art. 30 ust. 1 pkt. 3; art. 30 ust. 1 pkt. 4; art. 30 ust. 1 pkt. 5; art. 30 ust. 1 pkt. 6; art. 30 ust. 1 pkt. 6 u; art. 30 ust. 1 pkt. 7; art. 30 ust. 1 pkt. 7 u; art. 30 ust. 1 pkt. 8; art. 30 ust. 1 u; art. 31; art. 32; art. 33; art. 33 a; art. 36 a; art. 36 c; art. 45; art. 45 ust. 1 u; art. 45 ust. 5 u; art. 49 u; art. 5; art. 5 pkt. 10 u; art. 5 pkt. 12 u; art. 5 pkt. 6; art. 5 pkt. 6 lit. b; art. 5 pkt. 6 lit. u; art. 5 pkt. 6 u; art. 5 pkt. 7 u; art. 5 pkt. 8 u; art. 5 u; art. 53; art. 53 ust. 1 u; art. 53 ust. 2 u)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny",
+    "journalNo": 16,
+    "journalYear": 1964,
+    "journalEntry": 93,
+    "text": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny (Dz. U. z 1964 r. Nr 16, poz. 93 - art. 22(1); art. 405; art. 410; art. 410 § 1; art. 410 § 2; art. 411; art. 411 pkt. 2; art. 411 pkt. 4)"
+   }
+  ],
+  "keywords": [],
+  "referencedCourtCases": [],
+  "receiptDate": "",
+  "meansOfAppeal": null,
+  "judgmentResult": null,
+  "lowerCourtJudgments": [],
+  "division": {
+   "id": 298,
+   "name": "I Wydział Cywilny",
+   "href": "https://www.saos.org.pl/api/ccDivisions/298",
+   "code": "0000503",
+   "type": "Cywilny",
+   "court": {
+    "href": "https://www.saos.org.pl/api/commonCourts/49",
+    "id": 49,
+    "name": "Sąd Okręgowy w Suwałkach",
+    "code": "15052000",
+    "type": "REGIONAL"
+   }
+  }
+ }
+}

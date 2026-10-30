@@ -66,3 +66,10 @@ async def test_live_pdf_consolidated_text_confirms_html(live_legal):
     assert result.text_origin in ("html_confirmed_by_pdf", "pdf_automatic")
     assert result.pdf_page is not None
     assert result.wording_source and not result.wording_source.html_available
+
+
+async def test_live_judgments_for_civil_code_article(live_legal, live_judgments):
+    base, title = await live_legal.base_act(ActId.parse("DU/2026/795"))  # consolidated text of k.c.
+    assert base.eli == "DU/1964/93"
+    result = await live_judgments.for_provision(base, title, "415")
+    assert result.items and all("art. 415" in j.matched_references for j in result.items)

@@ -18,6 +18,7 @@ EXPECTED_TOOLS = {
     "find_legal_basis",
     "search_judgments",
     "get_judgment",
+    "find_judgments_for_provision",
 }
 
 

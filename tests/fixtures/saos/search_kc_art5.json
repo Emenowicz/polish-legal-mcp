@@ -1,0 +1,263 @@
+{
+ "links": [
+  {
+   "rel": "self",
+   "href": "https://www.saos.org.pl/api/search/judgments?pageSize=4&pageNumber=0&referencedRegulation=%22art.%205%22&lawJournalEntryCode=1964/93&sortingField=JUDGMENT_DATE&sortingDirection=DESC"
+  },
+  {
+   "rel": "next",
+   "href": "https://www.saos.org.pl/api/search/judgments?pageSize=4&pageNumber=1&referencedRegulation=%22art.%205%22&lawJournalEntryCode=1964/93&sortingField=JUDGMENT_DATE&sortingDirection=DESC"
+  }
+ ],
+ "items": [
+  {
+   "id": 554870,
+   "href": "https://www.saos.org.pl/api/judgments/554870",
+   "courtType": "COMMON",
+   "courtCases": [
+    {
+     "caseNumber": "I Ca 407/26"
+    }
+   ],
+   "judgmentType": "REASONS",
+   "judges": [
+    {
+     "name": "Alicja Wiśniewska",
+     "function": null,
+     "specialRoles": []
+    }
+   ],
+   "textContent": "Sygn. akt I Ca 407/26 UZASADNIENIE Powód (...) spółka z ograniczoną odpowiedzialnością z siedzibą w L. wystąpił przeciwko (...) Spółce Akcyjnej z siedzibą w C. z pozwem o zapłatę kwoty 36.168,21 zł wraz z ustawowymi odsetkami za opóźnienie liczonymi od dnia 19 sierpnia 2025 r. do dnia zapłaty. Jednocześnie powód domagał się zasądzenia od pozwanego na swoją rzecz zwrotu kosztów procesu, w tym kosztów zastępstwa procesowego według norm przepisanych. Pozwany (...) S.A. z siedzibą w C. wniósł o oddalenie powództwa w całości i zasądzenie od powoda na jego rzecz zwrotu kosztów procesu, w tym kosztów",
+   "keywords": [],
+   "division": {
+    "href": "https://www.saos.org.pl/api/ccDivisions/298",
+    "id": 298,
+    "name": "I Wydział Cywilny",
+    "code": "0000503",
+    "court": {
+     "href": "https://www.saos.org.pl/api/commonCourts/49",
+     "id": 49,
+     "code": "15052000",
+     "name": "Sąd Okręgowy w Suwałkach"
+    }
+   },
+   "judgmentDate": "2026-10-20"
+  },
+  {
+   "id": 554447,
+   "href": "https://www.saos.org.pl/api/judgments/554447",
+   "courtType": "COMMON",
+   "courtCases": [
+    {
+     "caseNumber": "I C 722/26"
+    }
+   ],
+   "judgmentType": "REASONS",
+   "judges": [
+    {
+     "name": "Aneta Ineza Sztukowska",
+     "function": null,
+     "specialRoles": []
+    }
+   ],
+   "textContent": "Sygn. akt I C 722/26 UZASADNIENIE Powodowie I. I. i T. I. (1) wystąpili przeciwko (...) S.A. z siedzibą w F. z pozwem o zasądzenie od pozwanego na ich rzecz solidarnie, ewentualnie łącznie, ewentualnie w częściach równych kwoty 60.000,00 zł wraz z odsetkami ustawowymi za opóźnienie od dnia 19 sierpnia 2026 r. do dnia zapłaty - tytułem zwrotu nienależnego świadczenia spełnionego na podstawie umowy kredytu na cele mieszkaniowe (...) z dnia 7 maja 2008 r. nr (...), zawartej przez powodów z poprzednikiem prawnym pozwanego – (...) S.A. z siedzibą w F., która to umowa jest nieważna w związku z zamie",
+   "keywords": [],
+   "division": {
+    "href": "https://www.saos.org.pl/api/ccDivisions/298",
+    "id": 298,
+    "name": "I Wydział Cywilny",
+    "code": "0000503",
+    "court": {
+     "href": "https://www.saos.org.pl/api/commonCourts/49",
+     "id": 49,
+     "code": "15052000",
+     "name": "Sąd Okręgowy w Suwałkach"
+    }
+   },
+   "judgmentDate": "2026-10-19"
+  },
+  {
+   "id": 554457,
+   "href": "https://www.saos.org.pl/api/judgments/554457",
+   "courtType": "COMMON",
+   "courtCases": [
+    {
+     "caseNumber": "II C 2145/25"
+    }
+   ],
+   "judgmentType": "REGULATION",
+   "judges": [],
+   "textContent": "Sygnatura akt II C 2145/25 UZASADNIENIE wyroku z 23 września 2026 r. Pozwem z 22 kwietnia 2024 r. (data nadania na poczcie) powodowie E. E. (2) i T. E. wnieśli pozew o zapłatę przeciwko (...) Bank spółce akcyjnej z siedzibą w M.. Domagali się nim zasądzenia od pozwanej na ich rzecz, w sposób łączny, kwoty 57.832,08 zł wraz z odsetkami ustawowymi za opóźnienie liczonymi od 20 marca 2024 r. do dnia zapłaty. Nadto zażądali przyznania im, także w sposób łączny, kosztów procesu według norm przepisanych z tym, że kosztów zastępstwa procesowego w podwójnej wysokości. Uzasadniając ww. żądania powodowi",
+   "keywords": [],
+   "division": {
+    "href": "https://www.saos.org.pl/api/ccDivisions/1740",
+    "id": 1740,
+    "name": "II Wydział Cywilny",
+    "code": "0001003",
+    "court": {
+     "href": "https://www.saos.org.pl/api/commonCourts/281",
+     "id": 281,
+     "code": "15450525",
+     "name": "Sąd Rejonowy dla m. st. Warszawy w Warszawie"
+    }
+   },
+   "judgmentDate": "2026-10-16"
+  },
+  {
+   "id": 554454,
+   "href": "https://www.saos.org.pl/api/judgments/554454",
+   "courtType": "COMMON",
+   "courtCases": [
+    {
+     "caseNumber": "I Ca 382/26"
+    }
+   ],
+   "judgmentType": "REASONS",
+   "judges": [
+    {
+     "name": "Alicja Wiśniewska",
+     "function": null,
+     "specialRoles": []
+    }
+   ],
+   "textContent": "Sygn. akt I Ca 382/26 UZASADNIENIE Powód X. P. wniósł o zasądzenie od pozwanego Banku (...) Spółki Akcyjnej z siedzibą w V. kwoty 1.500,00 zł tytułem zwrotu części świadczenia nienależnego spełnionego na rzecz pozwanego przez powoda, tj. zapłaconych przez powoda, jako konsumenta odsetek umownych oraz innych kosztów wynikających z (...) z dnia 12 maja 2020 roku, podlegających zwrotowi z uwagi na złożenie przez powoda prawnie skutecznego oświadczenia o skorzystaniu z sankcji kredytu darmowego wraz z odsetkami ustawowymi za opóźnienie, liczonymi od dnia wniesienia pozwu do dnia zapłaty. Nadto wni",
+   "keywords": [],
+   "division": {
+    "href": "https://www.saos.org.pl/api/ccDivisions/298",
+    "id": 298,
+    "name": "I Wydział Cywilny",
+    "code": "0000503",
+    "court": {
+     "href": "https://www.saos.org.pl/api/commonCourts/49",
+     "id": 49,
+     "code": "15052000",
+     "name": "Sąd Okręgowy w Suwałkach"
+    }
+   },
+   "judgmentDate": "2026-10-14"
+  }
+ ],
+ "queryTemplate": {
+  "pageNumber": {
+   "value": 0,
+   "description": "Represents current page number",
+   "allowedValues": "Not negative integer"
+  },
+  "pageSize": {
+   "value": 4,
+   "description": "Represents maximum number of items on the page",
+   "allowedValues": "Any integer greater or equal to 1 and less or equal to 100"
+  },
+  "sortingField": {
+   "value": "JUDGMENT_DATE",
+   "description": "Represents the field by which you want to sort a list of items",
+   "allowedValues": [
+    "DATABASE_ID",
+    "JUDGMENT_DATE",
+    "REFERENCING_JUDGMENTS_COUNT",
+    "MAXIMUM_MONEY_AMOUNT",
+    "CC_COURT_TYPE",
+    "CC_COURT_ID",
+    "CC_COURT_CODE",
+    "CC_COURT_NAME",
+    "CC_COURT_DIVISION_ID",
+    "CC_COURT_DIVISION_CODE",
+    "CC_COURT_DIVISION_NAME",
+    "SC_JUDGMENT_FORM_ID",
+    "SC_PERSONNEL_TYPE",
+    "SC_COURT_DIVISION_ID",
+    "SC_COURT_DIVISION_NAME",
+    "SC_COURT_DIVISIONS_CHAMBER_ID",
+    "SC_COURT_DIVISIONS_CHAMBER_NAME"
+   ]
+  },
+  "sortingDirection": {
+   "value": "DESC",
+   "description": "Represents the direction in which to sort a list of items",
+   "allowedValues": [
+    "ASC",
+    "DESC"
+   ]
+  },
+  "all": null,
+  "legalBase": null,
+  "referencedRegulation": "\"art. 5\"",
+  "lawJournalEntryCode": {
+   "value": "1964/93",
+   "description": "Represents polish law journal entry (pl. pozycja dziennika ustaw)",
+   "allowedValues": "String in format : 'year/entry_number'"
+  },
+  "judgeName": null,
+  "caseNumber": null,
+  "courtType": {
+   "value": null,
+   "description": "Represents judgment's court type",
+   "allowedValues": [
+    "COMMON",
+    "SUPREME",
+    "CONSTITUTIONAL_TRIBUNAL",
+    "NATIONAL_APPEAL_CHAMBER",
+    "ADMINISTRATIVE"
+   ]
+  },
+  "ccCourtType": {
+   "value": null,
+   "description": "Represents common court type",
+   "allowedValues": [
+    "APPEAL",
+    "REGIONAL",
+    "DISTRICT"
+   ]
+  },
+  "ccCourtId": null,
+  "ccCourtCode": null,
+  "ccCourtName": null,
+  "ccDivisionId": null,
+  "ccDivisionCode": null,
+  "ccDivisionName": null,
+  "ccIncludeDependentCourtJudgments": null,
+  "scPersonnelType": {
+   "value": null,
+   "description": "Represents supreme court judgment's personnel type",
+   "allowedValues": [
+    "ONE_PERSON",
+    "THREE_PERSON",
+    "FIVE_PERSON",
+    "SEVEN_PERSON",
+    "ALL_COURT",
+    "ALL_CHAMBER",
+    "JOINED_CHAMBERS"
+   ]
+  },
+  "scJudgmentForm": null,
+  "scChamberId": null,
+  "scChamberName": null,
+  "scDivisionId": null,
+  "scDivisionName": null,
+  "judgmentTypes": {
+   "value": [],
+   "description": "Represents list of judgments types",
+   "allowedValues": [
+    "DECISION",
+    "RESOLUTION",
+    "SENTENCE",
+    "REGULATION",
+    "REASONS"
+   ]
+  },
+  "keywords": [],
+  "judgmentDateFrom": {
+   "value": "",
+   "description": "Represents the earliest allowed judgment's date on the list of items",
+   "allowedValues": "Date in format : 'yyyy-MM-dd'"
+  },
+  "judgmentDateTo": {
+   "value": "",
+   "description": "Represents the latest of allowed judgment's date on the list of items",
+   "allowedValues": "Date in format : 'yyyy-MM-dd'"
+  }
+ },
+ "info": {
+  "totalResults": 35873
+ }
+}

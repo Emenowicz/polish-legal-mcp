@@ -1,0 +1,91 @@
+{
+ "links": [
+  {
+   "rel": "self",
+   "href": "https://www.saos.org.pl/api/judgments/554457"
+  }
+ ],
+ "data": {
+  "id": 554457,
+  "courtType": "COMMON",
+  "href": "https://www.saos.org.pl/api/judgments/554457",
+  "courtCases": [
+   {
+    "caseNumber": "II C 2145/25"
+   }
+  ],
+  "judgmentType": "REGULATION",
+  "judgmentDate": "2026-10-16",
+  "judges": [],
+  "source": {
+   "code": "COMMON_COURT",
+   "judgmentUrl": "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api/judgement/details?id=154505250001003_II_C_002145_2025_Uz_2026-10-16_001",
+   "judgmentId": "154505250001003_II_C_002145_2025_Uz_2026-10-16_001",
+   "publisher": "Magdalena Kempisty",
+   "reviser": "Magdalena Kempisty",
+   "publicationDate": "2026-10-22"
+  },
+  "courtReporters": [],
+  "decision": null,
+  "summary": null,
+  "textContent": "<p>Sygnatura akt II C 2145/25</p>\n    <div>\n      <h2>UZASADNIENIE</h2>\n      <p>\n        <strong>\n<!-- -->wyroku z 23 września 2026 r.</strong>\n</p>\n      <p>Pozwem z 22 kwietnia 2024 r. (data nadania na poczcie) powodowie <span class=\"anon-block\">E. E. (2)</span> i <span class=\"anon-block\">T. E.</span> wnieśli pozew o zapłatę przeciwko <span class=\"anon-block\">(...)</span> Bank spółce akcyjnej z siedzibą w <span class=\"anon-block\">M.</span>. Domagali się nim zasądzenia od pozwanej na ich rzecz, w sposób łączny, kwoty 57.832,08 zł wraz z odsetkami ustawowymi za opóźnienie liczonymi od 20 marca 2024 r. do dnia zapłaty. Nadto zażądali przyznania im, także w sposób łączny, kosztów procesu według norm przepisanych z tym, że kosztów zastępstwa procesowego w podwójnej wysokości.</p>\n      <p>Uzasadniając ww. żądania powodowie wskazali, że zawarli umowę o kredyt konsolidacyjny z pozwanym bankiem nr. <span class=\"anon-block\">(...)</span>. Z racji statusu stron tej umowy należy do niej stosować przepisy <a href=\"http://isap.sejm.gov.pl/DetailsServlet?id=WDU20111260715\" title=\"Ustawa z dnia 12 maja 2011 r. o kredycie konsumenckim - Dz. U. z 2011 r. Nr 126, poz. 715 ()\">ustawy z dnia 12 maja 2011 r. o kredycie konsumenckim</a> (dalej u.<a href=\"http://isap.sejm.gov.pl/DetailsServlet?id=WDU19970880553\" title=\"Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny - Dz. U. z 1997 r. Nr 88, poz. 553 ()\">k.k.</a>). Powodowie zawierali powyższą umowę jako konsumenci, a pozwany bank jako przedsiębiorca. Opisywana umowa o kredyt z 15 marca 2021 r. zawierała nieprawidłowości, które uprawniały do złożenia oświadczenia o skorzystaniu z sankcji kredytu darmowego (dalej SKD). Z uwagi na powyższe powodowie w dniu 1 grudnia 2023 r. przygotowali takie oświadczenie, w tym samym dniu udzielili również pełnomocnictwa <span class=\"anon-block\">(...)</span> S.A. z siedzibą we <span class=\"anon-block\">M.</span> do przesłania tego oświadczenia pozwanej. Oświadczenie to zawierające termin 7 dni na zapłatę d",
+  "legalBases": [],
+  "referencedRegulations": [
+   {
+    "journalTitle": "Ustawa z dnia 12 maja 2011 r. o kredycie konsumenckim",
+    "journalNo": 126,
+    "journalYear": 2011,
+    "journalEntry": 715,
+    "text": "Ustawa z dnia 12 maja 2011 r. o kredycie konsumenckim (Dz. U. z 2011 r. Nr 126, poz. 715 - )"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego",
+    "journalNo": 43,
+    "journalYear": 1964,
+    "journalEntry": 296,
+    "text": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego (Dz. U. z 1964 r. Nr 43, poz. 296 - art. 100; art. 229; art. 230; art. 98; art. 98 § 1(1))"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 29 sierpnia 1997 r. - Prawo bankowe",
+    "journalNo": 140,
+    "journalYear": 1997,
+    "journalEntry": 939,
+    "text": "Ustawa z dnia 29 sierpnia 1997 r. - Prawo bankowe (Dz. U. z 1997 r. Nr 140, poz. 939 - art. 75 c; art. 75 c ust. 1)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny",
+    "journalNo": 88,
+    "journalYear": 1997,
+    "journalEntry": 553,
+    "text": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny (Dz. U. z 1997 r. Nr 88, poz. 553 - art. 10; art. 23; art. 29; art. 29 ust. 1; art. 29 ust. 3; art. 29 ust. 3 u; art. 3; art. 3 ust. 1 u; art. 30; art. 30 u; art. 30 ust. 1; art. 30 ust. 1 pkt. 1; art. 30 ust. 1 pkt. 10; art. 30 ust. 1 pkt. 10 u; art. 30 ust. 1 pkt. 11; art. 30 ust. 1 pkt. 14; art. 30 ust. 1 pkt. 15; art. 30 ust. 1 pkt. 15 u; art. 30 ust. 1 pkt. 16; art. 30 ust. 1 pkt. 16 u; art. 30 ust. 1 pkt. 17; art. 30 ust. 1 pkt. 2; art. 30 ust. 1 pkt. 3; art. 30 ust. 1 pkt. 4; art. 30 ust. 1 pkt. 4 u; art. 30 ust. 1 pkt. 5; art. 30 ust. 1 pkt. 6; art. 30 ust. 1 pkt. 6 u; art. 30 ust. 1 pkt. 7; art. 30 ust. 1 pkt. 7 u; art. 30 ust. 1 pkt. 8; art. 30 ust. 1 pkt. 8 u; art. 30 ust. 1 u; art. 31; art. 32; art. 33; art. 33 a; art. 36 a; art. 36 c; art. 37; art. 37 ust. 1 u; art. 37 ust. 2; art. 37 ust. 2 pkt. 1 u; art. 37 ust. 2 u; art. 45; art. 45 u; art. 45 ust. 1 u; art. 45 ust. 4 u; art. 45 ust. 5 u; art. 5; art. 5 pkt. 10 u; art. 5 pkt. 6 a; art. 5 pkt. 7 u; art. 5 pkt. 9 u; art. 5 pkt. u; art. 5 u; art. 5 ust. 8; rozdział 5; rozdział a)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny",
+    "journalNo": 16,
+    "journalYear": 1964,
+    "journalEntry": 93,
+    "text": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny (Dz. U. z 1964 r. Nr 16, poz. 93 - art. 22(1); art. 359; art. 359 § 2(1); art. 405; art. 410; art. 410 § 1; art. 410 § 2; art. 455; art. 481; art. 481 § 1; art. 481 § 2(1); art. 5; art. 61; art. 61 § 1)"
+   }
+  ],
+  "keywords": [],
+  "referencedCourtCases": [],
+  "receiptDate": "",
+  "meansOfAppeal": null,
+  "judgmentResult": null,
+  "lowerCourtJudgments": [],
+  "division": {
+   "id": 1740,
+   "name": "II Wydział Cywilny",
+   "href": "https://www.saos.org.pl/api/ccDivisions/1740",
+   "code": "0001003",
+   "type": "Cywilny",
+   "court": {
+    "href": "https://www.saos.org.pl/api/commonCourts/281",
+    "id": 281,
+    "name": "Sąd Rejonowy dla m. st. Warszawy w Warszawie",
+    "code": "15450525",
+    "type": "DISTRICT"
+   }
+  }
+ }
+}

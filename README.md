@@ -37,6 +37,7 @@ case numbers.
 | `find_legal_basis` | Lexical candidate discovery (ELI keyword vocabulary + title stems). Not semantic, not advice. |
 | `search_judgments` | SAOS search (common courts, Supreme Court, Constitutional Tribunal, KIO) with paging. |
 | `get_judgment` | Judgment metadata, legal bases, referenced regulations, paged text, phrase excerpts. |
+| `find_judgments_for_provision` | Judgments (newest first) whose SAOS metadata cite a given provision, e.g. art. 5 k.c.; each one confirmed against its list of cited provisions. |
 
 Tool names are English; descriptions and messages are Polish. All outputs are typed (structured
 content) and bounded.

@@ -557,6 +557,11 @@ class LegalService:
 
     # -------------------------------------------------------------------- versions
 
+    async def base_act(self, act_id: ActId) -> tuple[ActId, str | None]:
+        """Base act and its title; a consolidated text (tekst jednolity) resolves to its act."""
+        base_id, base_meta, _ = await self._resolve_base(act_id)
+        return base_id, summarize_act(base_meta).title
+
     async def _resolve_base(self, act_id: ActId) -> tuple[ActId, dict[str, Any], Version | None]:
         """Return (base act id, base metadata, explicitly requested consolidated text)."""
         meta = await self._eli.act(act_id)

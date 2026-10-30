@@ -43,6 +43,15 @@ ISAP page for humans: `https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id={addr
 
 `courtType=ADMINISTRATIVE` returned **0** results: no WSA/NSA case law.
 
+Judgments citing a provision (verified 2026-10-30): `lawJournalEntryCode={year}/{entry}` of the
+**original** Dz.U. publication + `referencedRegulation="art. N"` (quoted phrase; superscripts as
+`art. 22(1)`). Search items carry no `referencedRegulations`, so each candidate needs
+`/judgments/{id}`; its regulation text ends with the cited units ("… poz. 93 - art. 5; art. 98 §
+1(1); art. 75 c)"). Share of the first 10 candidates confirmed by those units: k.c. art. 5 7/10,
+art. 415 10/10; k.p.c. art. 98 10/10; k.p. art. 22 9/10; k.p.a. art. 61 4/10. Newer acts are
+poorly indexed: `2019/2019` (Prawo zamówień publicznych 2019) → 0 judgments; 2023+ judgments
+citing *Prawo zamówień publicznych* are linked to the 2004 act (`2004/177`).
+
 ## EU Publications Office (CELLAR) — `https://publications.europa.eu` (verified 2026-10-29)
 
 | Capability | Endpoint | Notes |

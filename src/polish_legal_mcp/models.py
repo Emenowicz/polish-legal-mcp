@@ -388,6 +388,31 @@ class JudgmentSearchResult(BaseModel):
     coverage_note: str
 
 
+class ProvisionJudgment(JudgmentSummary):
+    matched_references: list[str] = Field(
+        description="Pozycje z listy przepisów powołanych w orzeczeniu (metadane SAOS), które "
+        "odpowiadają szukanemu przepisowi, np. 'art. 5' albo 'art. 98 § 1'."
+    )
+
+
+class ProvisionJudgmentsResult(BaseModel):
+    act_eli: str = Field(
+        description="Akt bazowy (teksty jednolite są sprowadzane do aktu bazowego)."
+    )
+    act_title: str | None = None
+    provision: str
+    total_candidates: int = Field(
+        description="Orzeczenia w SAOS powołujące ten akt i pasujące do numeru artykułu "
+        "(przed sprawdzeniem metadanych każdego z nich)."
+    )
+    candidates_checked: int
+    page: int
+    has_more: bool = Field(description="Czy są kolejni kandydaci do sprawdzenia (page+1).")
+    items: list[ProvisionJudgment]
+    warnings: list[str] = Field(default_factory=list)
+    coverage_note: str
+
+
 class ReferencedRegulation(BaseModel):
     text: str
     journal_year: int | None = None

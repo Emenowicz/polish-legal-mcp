@@ -14,6 +14,9 @@
   case law (CBOSA) is not available through an official API and is not integrated.
 - SAOS `lawJournalEntryCode` indexes only the originally cited publication; use
   `referenced_regulation` (title text) instead.
+- `find_judgments_for_provision` relies on SAOS's cited-provision metadata: good for codes and
+  older acts, sparse for newer acts (e.g. 0 judgments linked to Prawo zamówień publicznych 2019).
+  "Cited" is not "interpreted"; an empty result is not proof that there is no case law.
 
 ## EU law
 - `get_eu_provision` needs the act's number, CELEX or a known alias (RODO); there is no topic

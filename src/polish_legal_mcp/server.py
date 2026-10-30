@@ -42,6 +42,7 @@ from polish_legal_mcp.models import (
     JudgmentSearchResult,
     LegalActDetails,
     LegalBasisResult,
+    ProvisionJudgmentsResult,
     ProvisionResult,
     SearchActsResult,
 )
@@ -62,7 +63,8 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
 - Brak wyniku nie dowodzi, że przepis lub orzeczenie nie istnieje.
 - Od 2025 r. ELI publikuje teksty tylko w PDF – brzmienie może pochodzić ze starszego tekstu
   jednolitego; zawsze sprawdź ostrzeżenia i listę późniejszych zmian.
-- Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych.
+- Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych. Orzecznictwo
+  do konkretnego przepisu (np. art. 5 k.c.): find_judgments_for_provision.
 - Prawo UE (np. RODO): get_eu_provision zwraca najbardziej aktualne brzmienie z wersji
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
   zaznacz to przy cytowaniu. Wyszukiwania aktów UE po temacie nie ma: potrzebny numer aktu
@@ -506,6 +508,56 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
                 legal_base,
             )
         )
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def find_judgments_for_provision(
+        act_id: ActIdStr,
+        article: ArticleStr,
+        paragraph: ParagraphStr = None,
+        court_type: Annotated[
+            Literal["COMMON", "SUPREME", "CONSTITUTIONAL_TRIBUNAL", "NATIONAL_APPEAL_CHAMBER"]
+            | None,
+            Field(default=None, description="Rodzaj sądu: powszechny, Sąd Najwyższy, TK, KIO."),
+        ] = None,
+        date_from: Annotated[
+            date | None, Field(default=None, description="Orzeczenia od dnia.")
+        ] = None,
+        date_to: Annotated[
+            date | None, Field(default=None, description="Orzeczenia do dnia.")
+        ] = None,
+        candidates_per_page: Annotated[
+            int,
+            Field(
+                ge=1,
+                le=20,
+                description="Ilu kandydatów sprawdzić na stronę (każdy to jedno zapytanie do SAOS).",
+            ),
+        ] = 10,
+        page: Annotated[int, Field(ge=0, le=100, description="Numer strony (od 0).")] = 0,
+    ) -> ProvisionJudgmentsResult:
+        """Orzeczenia (SAOS), w których sąd powołał konkretny przepis, np. art. 5 k.c.
+        (DU/1964/93) albo art. 98 § 1 k.p.c. (DU/1964/296) – od najnowszych. Każde orzeczenie
+        jest potwierdzone listą przepisów powołanych w jego metadanych (matched_references).
+        Tylko akty z Dziennika Ustaw; tekst jednolity jest sprowadzany do aktu bazowego. Działa
+        najlepiej dla kodeksów i starszych ustaw – dla nowszych metadane SAOS bywają niepełne.
+        Brak orzeczeń WSA/NSA. Powołanie przepisu nie oznacza jego wykładni – sprawdź treść
+        get_judgment."""
+
+        async def call() -> ProvisionJudgmentsResult:
+            base, title = await legal.base_act(ActId.parse(act_id))
+            return await judgments.for_provision(
+                base,
+                title,
+                article,
+                paragraph,
+                court_type,
+                date_from,
+                date_to,
+                candidates_per_page,
+                page,
+            )
+
+        return await _run(call)
 
     @mcp.tool(annotations=READ_ONLY)
     async def get_judgment(

@@ -1,0 +1,90 @@
+{
+ "links": [
+  {
+   "rel": "self",
+   "href": "https://www.saos.org.pl/api/judgments/554870"
+  }
+ ],
+ "data": {
+  "id": 554870,
+  "courtType": "COMMON",
+  "href": "https://www.saos.org.pl/api/judgments/554870",
+  "courtCases": [
+   {
+    "caseNumber": "I Ca 407/26"
+   }
+  ],
+  "judgmentType": "REASONS",
+  "judgmentDate": "2026-10-20",
+  "judges": [
+   {
+    "name": "Alicja Wiśniewska",
+    "function": null,
+    "specialRoles": []
+   }
+  ],
+  "source": {
+   "code": "COMMON_COURT",
+   "judgmentUrl": "https://apiorzeczenia.wroclaw.sa.gov.pl/ncourt-api/judgement/details?id=150520000000503_I_Ca_000407_2026_Uz_2026-10-20_001",
+   "judgmentId": "150520000000503_I_Ca_000407_2026_Uz_2026-10-20_001",
+   "publisher": "Jolanta Urbanowicz",
+   "reviser": "Jolanta Urbanowicz",
+   "publicationDate": "2026-10-29"
+  },
+  "courtReporters": [],
+  "decision": null,
+  "summary": null,
+  "textContent": "<p>\n<strong>\n<!-- -->Sygn. akt I Ca 407/26</strong>\n</p>\n    <div>\n      <h2>UZASADNIENIE</h2>\n      <p>Powód <span class=\"anon-block\">(...)</span> spółka z ograniczoną odpowiedzialnością z siedzibą w <span class=\"anon-block\">L.</span> wystąpił przeciwko <span class=\"anon-block\">(...)</span> Spółce Akcyjnej z siedzibą w <span class=\"anon-block\">C.</span> z pozwem o zapłatę kwoty 36.168,21 zł wraz z ustawowymi odsetkami za opóźnienie liczonymi od dnia 19 sierpnia 2025 r. do dnia zapłaty. Jednocześnie powód domagał się zasądzenia od pozwanego na swoją rzecz zwrotu kosztów procesu, w tym kosztów zastępstwa procesowego według norm przepisanych.</p>\n      <p>Pozwany <span class=\"anon-block\">(...)</span> S.A. z siedzibą w <span class=\"anon-block\">C.</span> wniósł o oddalenie powództwa w całości i zasądzenie od powoda na jego rzecz zwrotu kosztów procesu, w tym kosztów zastępstwa procesowego według norm przepisanych.</p>\n      <p>\n<strong>\n<!-- -->Wyrokiem z dnia 31 lipca 2026 r. Sąd Rejonowy w Suwałkach w sprawie sygn. akt I C 340/26</strong> (k. 110) zasądził od pozwanego <span class=\"anon-block\">(...)</span> <span class=\"anon-block\">(...)</span> z siedzibą w <span class=\"anon-block\">C.</span> na rzecz powoda <span class=\"anon-block\">(...)</span> sp. z o.o. z siedzibą w <span class=\"anon-block\">L.</span> kwotę 36.168,21 zł z odsetkami ustawowymi za opóźnienie od dnia 19 sierpnia 2025 r. do dnia zapłaty (pkt 1) oraz kwotę 5.426,00 zł wraz z odsetkami ustawowymi za opóźnienie od dnia uprawomocnienia się orzeczenia do dnia zapłaty tytułem zwrotu kosztów procesu (pkt 2).</p>\n      <p>\n<strong>\n<!-- -->Apelację od powyższego wyroku wywiódł pozwany</strong>, zaskarżając go w całości i zarzucając mu naruszenie:</p>\n      <p>1. przepisów prawa procesowego, tj. <a href=\"http://isap.sejm.gov.pl/DetailsServlet?id=WDU19640430296\" title=\"Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego - Dz. U. z 1964 r. Nr 43, poz. 296 (art. 233;art. 233 § 1)\">art. 233 § 1 k.p.c.</",
+  "legalBases": [],
+  "referencedRegulations": [
+   {
+    "journalTitle": "Ustawa z dnia 12 maja 2011 r. o kredycie konsumenckim",
+    "journalNo": 126,
+    "journalYear": 2011,
+    "journalEntry": 715,
+    "text": "Ustawa z dnia 12 maja 2011 r. o kredycie konsumenckim (Dz. U. z 2011 r. Nr 126, poz. 715 - art. 30; art. 30 ust. 1; art. 30 ust. 1 pkt. 6)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego",
+    "journalNo": 43,
+    "journalYear": 1964,
+    "journalEntry": 296,
+    "text": "Ustawa z dnia 17 listopada 1964 r. - Kodeks postępowania cywilnego (Dz. U. z 1964 r. Nr 43, poz. 296 - art. 233; art. 233 § 1; art. 382; art. 385; art. 509; art. 98; art. n)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny",
+    "journalNo": 88,
+    "journalYear": 1997,
+    "journalEntry": 553,
+    "text": "Ustawa z dnia 6 czerwca 1997 r. - Kodeks karny (Dz. U. z 1997 r. Nr 88, poz. 553 - art. 10; art. 10 ust. 2; art. 10 ust. 2 lit. f; art. 10 ust. 2 lit. g; art. 23; art. 3; art. 3 ust. 1; art. 3 ust. 2; art. 3 ust. 2 pkt. 1 u; art. 30; art. 30 u; art. 30 ust. 1; art. 30 ust. 1 pkt. 10 u; art. 30 ust. 1 pkt. 6; art. 30 ust. 1 pkt. 6 u; art. 30 ust. 1 pkt. 7 u; art. 30 ust. 1 u; art. 45; art. 45 u; art. 45 ust. 1; art. 45 ust. 1 u; art. 45 ust. 5 u; art. 5; art. 5 pkt. 10 u; art. 5 pkt. 12 u; art. 5 pkt. 6 u; art. 5 pkt. 7 u; art. 5 pkt. 8 u)"
+   },
+   {
+    "journalTitle": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny",
+    "journalNo": 16,
+    "journalYear": 1964,
+    "journalEntry": 93,
+    "text": "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny (Dz. U. z 1964 r. Nr 16, poz. 93 - art. 117; art. 117 § 1; art. 117 § 2; art. 118; art. 120; art. 22(1); art. 353(1); art. 385(1); art. 385(1) § 1; art. 385(1) § 2; art. 385(1) § 3; art. 405; art. 410; art. 410 § 1; art. 410 § 2; art. 411; art. 411 pkt. 4; art. 481; art. 481 § 1; art. 510; art. 510 § 2; art. 58; art. 58 § 2; art. 6)"
+   }
+  ],
+  "keywords": [],
+  "referencedCourtCases": [],
+  "receiptDate": "",
+  "meansOfAppeal": null,
+  "judgmentResult": null,
+  "lowerCourtJudgments": [],
+  "division": {
+   "id": 298,
+   "name": "I Wydział Cywilny",
+   "href": "https://www.saos.org.pl/api/ccDivisions/298",
+   "code": "0000503",
+   "type": "Cywilny",
+   "court": {
+    "href": "https://www.saos.org.pl/api/commonCourts/49",
+    "id": 49,
+    "name": "Sąd Okręgowy w Suwałkach",
+    "code": "15052000",
+    "type": "REGIONAL"
+   }
+  }
+ }
+}
