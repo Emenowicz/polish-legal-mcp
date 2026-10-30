@@ -110,3 +110,16 @@ async def test_live_transposition_of_procurement_directive(settings):
     await eli.aclose()
     pzp = next(m for m in result.measures if m.eli == "DU/2019/2019")
     assert pzp.eli_title and "zamówień publicznych" in pzp.eli_title
+
+
+async def test_live_pending_bills_for_civil_code(settings):
+    from polish_legal_mcp.clients.sejm import SejmClient
+    from polish_legal_mcp.services.legislation import LegislationService
+
+    client = SejmClient(settings)
+    result = await LegislationService(client).pending_bills(
+        "DU/1964/93", "Ustawa z dnia 23 kwietnia 1964 r. - Kodeks cywilny"
+    )
+    await client.aclose()
+    assert result.term >= 10 and result.pending_scanned > 0
+    assert all(i.sejm_url.startswith("https://www.sejm.gov.pl/") for i in result.items)

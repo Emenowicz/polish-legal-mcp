@@ -327,6 +327,35 @@ class EuActSearchResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class LegislativeProcess(BaseModel):
+    number: str = Field(description="Numer procesu (druku) w Sejmie danej kadencji.")
+    title: str
+    document_type: str | None = None
+    start_date: date | None = None
+    current_stage: str | None = Field(
+        default=None, description="Ostatni etap według API Sejmu, z datą i decyzją."
+    )
+    description: str | None = Field(default=None, description="Opis projektu z API Sejmu.")
+    government_draft_url: str | None = Field(
+        default=None, description="Projekt rządowy w RCL (legislacja.gov.pl), jeśli podany."
+    )
+    sejm_url: str
+    api_url: str
+
+
+class PendingBillsResult(BaseModel):
+    term: int
+    act_eli: str | None = None
+    act_title: str | None = None
+    matched_phrases: list[str] = Field(
+        default_factory=list, description="Nazwy aktu szukane w tytułach projektów."
+    )
+    query: str | None = None
+    pending_scanned: int = Field(description="Liczba projektów w toku przejrzanych w kadencji.")
+    items: list[LegislativeProcess]
+    warnings: list[str] = Field(default_factory=list)
+
+
 class TranspositionMeasure(BaseModel):
     title: str | None = Field(default=None, description="Tytuł podany w zgłoszeniu do Komisji.")
     act_type: str | None = None

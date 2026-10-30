@@ -88,6 +88,29 @@ pkt 7). Pseudo-CELEX `…_RES` rows are ignored. Recent decisions often lack art
 
 No registration or key. EUR-Lex pages: `https://eur-lex.europa.eu/legal-content/PL/TXT/?uri=CELEX:{CELEX}`.
 
+## Sejm API — `https://api.sejm.gov.pl/sejm` (verified 2026-10-30)
+
+| Capability | Endpoint | Notes |
+|---|---|---|
+| Terms | `GET /term` | list; the current one has `current: true` (term 10 since 2023-11-13). |
+| Processes | `GET /term{N}/processes?limit=1000&offset=…` | 1764 processes in term 10 (~0.9 MB per 1000, ~0.4 s); no text search. Pending = `passed: false` and no `closureDate` (493). Passed ones carry `ELI`. |
+| Process | `GET /term{N}/processes/{num}` | `stages[]` (`stageName`, `date`, `decision`, `children[]`), `description`, `rclLink`, `urgencyStatus`. |
+
+Bills name amended acts only in the title ("o zmianie ustawy – Kodeks cywilny", also genitive
+"o zmianie Kodeksu cywilnego"). Not available: RCL (legislacja.gov.pl) has no API (robots.txt
+disallows generic crawlers, `/api` returns a WAF block) — only `rclLink` from the Sejm API.
+
+## Sources checked without an official machine-readable interface (2026-10-30)
+
+- **CBOSA (WSA/NSA)**: no API or open-data dataset (dane.gov.pl search: none); robots.txt and
+  terms of use could not be fetched (timeout / HTTP 500). KIDP asked the NSA President for an API
+  (podatki.biz, 2025-10-08). Not integrated: HTML scraping is out of scope.
+- **Eureka (tax interpretations)**: no documented API; the site is a SPA on undocumented internal
+  endpoints (used by third-party scrapers). Not integrated.
+- **Local law and ministerial journals** (dziennikiurzedowe.gov.pl, e-dzienniki of voivodeships):
+  no documented API found (WAF "Request Rejected"); dane.gov.pl has no such dataset. ELI covers
+  only Dziennik Ustaw and Monitor Polski.
+
 ## FastMCP / MCP (PyPI, 2026-10-29)
 
 fastmcp 4.1.4 (depends on `mcp` 2.3.0 → `httpx2` internally), pydantic 2.14.1,

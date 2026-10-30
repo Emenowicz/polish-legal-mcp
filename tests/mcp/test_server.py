@@ -22,6 +22,7 @@ EXPECTED_TOOLS = {
     "search_cjeu_judgments",
     "search_eu_acts",
     "get_eu_transposition",
+    "find_pending_bills",
     "get_cjeu_judgment",
 }
 

@@ -30,6 +30,7 @@ from polish_legal_mcp import __version__
 from polish_legal_mcp.clients.eli import EliClient
 from polish_legal_mcp.clients.eurlex import EurLexClient
 from polish_legal_mcp.clients.saos import SaosClient
+from polish_legal_mcp.clients.sejm import SejmClient
 from polish_legal_mcp.config import Settings
 from polish_legal_mcp.errors import LegalMcpError
 from polish_legal_mcp.logging_setup import AccessLog
@@ -45,6 +46,7 @@ from polish_legal_mcp.models import (
     JudgmentSearchResult,
     LegalActDetails,
     LegalBasisResult,
+    PendingBillsResult,
     ProvisionJudgmentsResult,
     ProvisionResult,
     SearchActsResult,
@@ -55,6 +57,7 @@ from polish_legal_mcp.services.cjeu import CjeuService
 from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
 from polish_legal_mcp.services.legal import LegalService
+from polish_legal_mcp.services.legislation import LegislationService
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +82,7 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
 - Szukając podstawy prawnej, najpierw sam wskaż kandydujące akty i przepisy (np. ustawa o ochronie
   praw lokatorów, Kodeks cywilny), a następnie zweryfikuj je search_legal_acts i
   get_legal_provision. find_legal_basis dopasowuje tylko słowa – traktuj go pomocniczo.
+- Zmiany w przygotowaniu (projekty ustaw w Sejmie): find_pending_bills – projekt nie jest prawem.
 - Wynik nie jest opinią prawną.
 """
 
@@ -271,6 +275,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     legal = LegalService(eli, eu=eu_law)
     judgments = JudgmentService(saos)
     cjeu = CjeuService(eurlex)
+    sejm = SejmClient(settings, backoff_base=backoff_base)
+    legislation = LegislationService(sejm)
 
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
@@ -281,6 +287,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             await eli.aclose()
             await saos.aclose()
             await eurlex.aclose()
+            await sejm.aclose()
 
     middleware: list[Middleware] = [
         RateLimitingMiddleware(
@@ -616,6 +623,44 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
                 legal_base,
             )
         )
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def find_pending_bills(
+        act_id: Annotated[
+            str | None,
+            Field(
+                default=None,
+                min_length=5,
+                max_length=60,
+                description="Ustawa, której zmian szukać: ELI 'DU/1964/93' (także tekst "
+                "jednolity) lub adres 'Dz.U. 1964 nr 16 poz. 93'.",
+            ),
+        ] = None,
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                min_length=3,
+                max_length=200,
+                description="Fraza z tytułu projektu, np. 'najmie' albo 'sygnalistów'.",
+            ),
+        ] = None,
+        limit: Annotated[int, Field(ge=1, le=10, description="Liczba projektów.")] = 10,
+    ) -> PendingBillsResult:
+        """Projekty ustaw w toku w Sejmie bieżącej kadencji (API Sejmu), które w tytule wymieniają
+        daną ustawę (np. 'o zmianie ustawy – Kodeks cywilny') lub zawierają frazę – z bieżącym
+        etapem, datą wniesienia, opisem i linkami (Sejm, RCL). Pozwala ostrzec przed zmianami
+        w przygotowaniu; projekt nie jest obowiązującym prawem. Pomija projekty zmieniające ustawę
+        bez wymienienia jej w tytule."""
+
+        async def call() -> PendingBillsResult:
+            eli, title = None, None
+            if act_id:
+                base, title = await legal.base_act(ActId.parse(act_id))
+                eli = base.eli
+            return await legislation.pending_bills(eli, title, query, limit)
+
+        return await _run(call)
 
     @mcp.tool(annotations=READ_ONLY)
     async def find_judgments_for_provision(

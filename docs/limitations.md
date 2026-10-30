@@ -38,6 +38,11 @@
   General Court decisions are often missing. Treaties and the Charter (CELEX sector 1) cannot be
   used as the act in `search_cjeu_judgments`.
 
+## Legislative process
+- `find_pending_bills` matches the act's name in bill titles (current term only); bills amending
+  "niektórych innych ustaw" without naming the act are missed, and government drafts before they
+  reach the Sejm (RCL) are not covered.
+
 ## Search
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems
   work better ("zakwaterowa", "gospodarce nieruchomo").
