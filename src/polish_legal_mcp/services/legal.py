@@ -1383,8 +1383,10 @@ def issue_terms(text: str) -> list[str]:
 
 def _stem(word: str) -> str:
     # ponytail: crude stemming (drop up to 3 trailing letters, keep 5, or 6 for words of 8+ so
-    # 'zachowek' does not become 'zacho' and match 'Zachodni'); a Polish stemmer would also
-    # handle alternations such as spadek → spadku.
+    # 'zachowek' does not become 'zacho' and match 'Zachodni'), plus the fleeting e of '-ek'
+    # nouns (spadek → spadk-u, podatek → podatk-u). Full morphology would need a dictionary.
+    if len(word) >= 6 and word.endswith("ek"):
+        return word[:-2] + "k"
     return word[: max(5 if len(word) < 8 else 6, len(word) - 3)]
 
 

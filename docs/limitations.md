@@ -7,8 +7,8 @@
   (`VERIFIED`), changed or new ones are read automatically from the PDF and stay `UNVERIFIED`
   (check the PDF page given). Grouped units such as "Art. 164–179. (uchylone)" resolve
   any article in the range (HTML struct node `arti_164-179` and PDF). Tables and annexes
-  (załączniki) are not extracted from PDFs (not implemented: plain text extraction does not keep
-  table layout) – use the PDF link. The first read of a large code takes several seconds
+  (załączniki) are not extracted from PDFs: text extraction breaks table layout (stamp duty act
+  DU/2025/1154: "616 zł" glued to the next row) – use the PDF link. The first read of a large code takes several seconds
   on a Raspberry Pi (then cached for an hour).
 - The *tekst ujednolicony* (type `U`) files are informational compilations, not official texts;
   they are listed with `official: false` and never used as a wording source.
@@ -64,7 +64,8 @@
   not change `VERIFIED`, because ELI does not show whether such an act changed this act earlier.
 - Staged entry into force of the act itself is detected heuristically from its entry-into-force
   clause; unparseable periods ("pierwszego dnia miesiąca następującego…") keep results `UNVERIFIED`.
-- Transitional provisions are not analysed.
+- Transitional provisions are not analysed: `get_legal_provision` only points to the act's
+  transitional chapters (with article range) and, for codes, the introducing act.
 
 ## Operations
 - Single process, in-memory cache (per container, ≤32 HTML documents). No horizontal scaling

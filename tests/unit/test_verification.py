@@ -133,3 +133,11 @@ def test_stem_match_needs_six_shared_letters_for_long_words():
     assert not _stem_match("zachowek", "zachodniopomorskie")
     assert _stem_match("wywłaszczenie", "wywłaszczenia")
     assert _stem_match("lokalu", "lokal")
+
+
+def test_stem_handles_fleeting_e():
+    from polish_legal_mcp.services.legal import _stem
+
+    assert _stem("spadek") == "spadk" and "spadk" in "o podatku od spadków i darowizn"
+    assert _stem("podatek") == "podatk"
+    assert _stem("wywłaszczenie") == "wywłaszcze"

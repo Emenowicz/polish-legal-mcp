@@ -8,7 +8,7 @@ from polish_legal_mcp.services.eu_law import title_terms
 
 
 def test_title_terms_use_long_prefixes_and_drop_stop_words():
-    assert title_terms("Ochrona danych osobowych") == ["ochron*", "danych", "osobowy*"]
+    assert title_terms("Ochrona danych osobowych") == ["ochron*", "danych*", "osobowy*"]
     assert title_terms("zamówienia publiczne w sprawie UE") == ["zamówie*", "publicz*"]
     assert title_terms("dyrektywa 2014/24/UE") == ["dyrekty*"]
     assert title_terms("a i w") == []
@@ -23,3 +23,14 @@ async def test_search_ranks_base_legislative_acts_first(eu_law, eurlex_mock):
     assert result.total_matched >= len(result.items)
     with pytest.raises(InvalidInputError):
         await eu_law.search_acts("w i 2016")
+
+
+def test_title_terms_fleeting_e():
+    assert title_terms("podatek od wartości dodanej") == ["podatk*", "wartoś*", "dodane*"]
+    assert title_terms("wspólny system podatku") == ["wspóln*", "system*", "podatk*"]
+    # Only the three longest (most selective) words are used.
+    assert title_terms("wspólny system podatku od wartości dodanej") == [
+        "wspóln*",
+        "podatk*",
+        "wartoś*",
+    ]

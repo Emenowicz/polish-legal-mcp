@@ -210,7 +210,9 @@ _STOPWORDS = {
     "europejskiej",
 }
 ACT_TYPES = {"rozporządzenie": "R", "dyrektywa": "L", "decyzja": "D"}
-MAX_TERMS = 6
+# Each extra prefix multiplies the endpoint's work (5 prefixes: ~12 s); the longest words are
+# the most selective.
+MAX_TERMS = 3
 
 
 _LEGISLATIVE_RE = re.compile(
@@ -222,23 +224,30 @@ _AMENDING_RE = re.compile(r"\d{4}\s*r\.\s+(?:zmieniając|w sprawie zmiany|uchyla
 
 
 def title_terms(query: str) -> list[str]:
-    """Virtuoso full-text terms (crude Polish stemming by prefix): words of 7–8 letters keep 6
-    ('ochrona' → 'ochron*'), longer ones drop 3 but keep at least 7 ('zamówienia' → 'zamówie*',
-    'publiczne' → 'publicz*'); shorter words must match exactly. Shorter prefixes such as
-    'public*' expand to thousands of words and take 15+ s on the endpoint."""
+    """Virtuoso full-text terms (crude Polish stemming by prefix): words of 4–6 letters are
+    prefixes as a whole ('system*'), 7–8 letters keep 6 ('ochrona' → 'ochron*'), longer ones
+    drop 3 but keep at least 7 ('zamówienia' → 'zamówie*', 'publiczne' → 'publicz*'), '-ek'
+    nouns lose the fleeting e ('podatek' → 'podatk*'). Shorter prefixes such as 'public*'
+    expand to thousands of words and take 15+ s on the endpoint."""
     terms: list[str] = []
+    lengths: dict[str, int] = {}
     for word in _WORD_RE.findall(query.lower()):
         if len(word) < 3 or word in _STOPWORDS:
             continue
-        if len(word) <= 6:
-            term = word
+        if len(word) >= 6 and word.endswith("ek"):
+            term = f"{word[:-2]}k*"  # fleeting e: podatek → podatku, podatkowy
+        elif len(word) <= 6:
+            # whole word as prefix (system → systemu); Virtuoso needs ≥4 letters before '*'
+            term = f"{word}*" if len(word) >= 4 else word
         elif len(word) <= 8:
             term = f"{word[:6]}*"
         else:
             term = f"{word[: max(7, len(word) - 3)]}*"
         if term not in terms:
             terms.append(term)
-    return terms[:MAX_TERMS]
+            lengths[term] = len(word)
+    longest = sorted(terms, key=lambda t: -lengths[t])[:MAX_TERMS]
+    return [t for t in terms if t in longest]
 
 
 def _rank(summary: EuActSummary) -> tuple[int, int, int, int, int]:
