@@ -174,6 +174,44 @@ class JudgmentService:
             coverage_note=COVERAGE_NOTE,
         )
 
+    async def cited_acts(
+        self, query: str, judgments: int = 10
+    ) -> tuple[list[tuple[ActId, int, str]], int]:
+        """Acts cited in the most relevant SAOS judgments for a phrase, by number of judgments
+        citing them: [(act, judgments citing it, title)], judgments checked."""
+        data = await self._saos.search({"all": query.strip(), "pageSize": judgments})
+        ids = [int(i["id"]) for i in data["items"] if i.get("id")]
+
+        async def details(judgment_id: int) -> dict[str, Any] | None:
+            try:
+                return await self._saos.judgment(judgment_id)
+            except LegalMcpError:
+                return None
+
+        fetched = [
+            d for d in await gather_limited([lambda i=i: details(i) for i in ids], limit=4) if d
+        ]
+        counts: dict[tuple[int, int], int] = {}
+        titles: dict[tuple[int, int], str] = {}
+        for judgment in fetched:
+            cited = {
+                (reg["journalYear"], reg["journalEntry"]): str(reg.get("journalTitle") or "")
+                for reg in judgment.get("referencedRegulations") or []
+                if isinstance(reg.get("journalYear"), int)
+                and isinstance(reg.get("journalEntry"), int)
+            }
+            for key, title in cited.items():
+                counts[key] = counts.get(key, 0) + 1
+                titles[key] = title
+        ranked = sorted(counts.items(), key=lambda kv: -kv[1])
+        acts = []
+        for (year, entry), count in ranked:
+            try:
+                acts.append((ActId("DU", year, entry), count, titles[(year, entry)]))
+            except InvalidInputError:
+                continue
+        return acts, len(fetched)
+
     async def for_provision(
         self,
         act: ActId,

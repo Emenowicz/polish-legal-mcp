@@ -50,7 +50,10 @@
   work better ("zakwaterowa", "gospodarce nieruchomo").
 - `find_legal_basis` is lexical (ELI keyword vocabulary + title stems). It misses acts whose
   titles/keywords do not contain the words (e.g. zakwaterowanie provisions inside *ustawa o
-  obronie Ojczyzny*). Treat results as candidates only.
+  obronie Ojczyzny*). `include_case_law` adds acts cited in the 10 most relevant SAOS judgments
+  (procedural acts such as k.p.c. and fee regulations excluded, repealed acts dropped): it finds
+  e.g. k.c. for "zachowek" or u.g.n. for "wywłaszczenie", costs ~6–9 s, and inherits SAOS
+  coverage (no WSA/NSA). Treat results as candidates only.
 
 ## Verification
 - Amendment lists come from ELI metadata; completeness is not provable.

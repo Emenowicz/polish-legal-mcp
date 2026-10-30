@@ -56,7 +56,7 @@ from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodi
 from polish_legal_mcp.services.cjeu import CjeuService
 from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
-from polish_legal_mcp.services.legal import LegalService
+from polish_legal_mcp.services.legal import LegalService, issue_terms
 from polish_legal_mcp.services.legislation import LegislationService
 
 logger = logging.getLogger(__name__)
@@ -560,14 +560,30 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         ],
         as_of_date: AsOfDate = None,
         limit: Annotated[int, Field(ge=1, le=30, description="Liczba kandydatów.")] = 10,
+        include_case_law: Annotated[
+            bool,
+            Field(
+                description="Dodaj akty powoływane w orzeczeniach SAOS znalezionych dla opisu "
+                "(wolniej: ok. 5–10 s)."
+            ),
+        ] = False,
     ) -> LegalBasisResult:
         """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując słowa opisu do haseł
         przedmiotowych ELI i tytułów aktów obowiązujących. To dopasowanie leksykalne, nie
         semantyczne i nie porada prawna: każdego kandydata zweryfikuj get_legal_act /
         get_legal_provision. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
         (np. RODO), użyj search_eu_acts / get_eu_provision zamiast podsuwać niepowiązane akty
-        krajowe."""
-        return await _run(lambda: legal.find_legal_basis(issue_description, as_of_date, limit))
+        krajowe. Opcja include_case_law dokłada akty, na które najczęściej powołują się sądy w
+        orzeczeniach pasujących do opisu."""
+
+        async def call() -> LegalBasisResult:
+            cited = None
+            if include_case_law:
+                terms = " ".join(issue_terms(issue_description)[:6])
+                cited = await judgments.cited_acts(terms) if terms else None
+            return await legal.find_legal_basis(issue_description, as_of_date, limit, cited)
+
+        return await _run(call)
 
     @mcp.tool(annotations=READ_ONLY)
     async def search_judgments(

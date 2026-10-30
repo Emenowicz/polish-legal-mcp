@@ -36,7 +36,7 @@ case numbers.
 | `get_eu_provision` | EU law (e.g. RODO) by CELEX, act number or alias: most current Polish wording from the EUR-Lex consolidated version (amendments + corrigenda), OJ citation, verification report. |
 | `get_legal_act_amendments` | Amending acts with ELI dates, pending amendments, amendments after the latest consolidated text, TK rulings. |
 | `verify_legal_citation` | Parse a citation ("art. 61 § 1 k.p.a.", "… (Dz. U. z 2025 r. poz. 817)"), resolve the act, check unit, wording and date. |
-| `find_legal_basis` | Lexical candidate discovery (ELI keyword vocabulary + title stems). Not semantic, not advice. |
+| `find_legal_basis` | Candidate acts: ELI keyword vocabulary + title stems, optionally (`include_case_law`) acts most cited in SAOS judgments matching the description. Not semantic, not advice. |
 | `search_judgments` | SAOS search (common courts, Supreme Court, Constitutional Tribunal, KIO) with paging. |
 | `get_judgment` | Judgment metadata, legal bases, referenced regulations, paged text, phrase excerpts. |
 | `search_cjeu_judgments` | CJEU / General Court decisions interpreting an EU act (optionally one article, e.g. RODO art. 17), newest first, from EU Publications Office metadata. |

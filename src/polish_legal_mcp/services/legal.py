@@ -66,6 +66,18 @@ SEARCH_WINDOW = 100
 MAX_PROVISION_CHARS = 12_000
 MAX_CONSOLIDATED_TEXTS_SCANNED = 15
 MAX_PENDING_CHECKED = 5
+MAX_CITED_ACTS = 6
+# Cited in most civil judgments whatever the subject (procedure, court and attorney fees):
+# noise for "which act governs this issue". Original Dz.U. entries, as SAOS indexes them.
+PROCEDURAL_ACTS = {
+    "DU/1964/296",  # Kodeks postępowania cywilnego
+    "DU/2005/1398",  # ustawa o kosztach sądowych w sprawach cywilnych
+    "DU/2002/1348",  # rozporządzenie w sprawie opłat za czynności adwokackie (2002)
+    "DU/2002/1349",  # rozporządzenie w sprawie opłat za czynności radców prawnych (2002)
+    "DU/2015/1800",  # rozporządzenie w sprawie opłat za czynności adwokackie (2015)
+    "DU/2015/1804",  # rozporządzenie w sprawie opłat za czynności radców prawnych (2015)
+    "DU/1997/555",  # Kodeks postępowania karnego
+}
 AMENDING = "Akty zmieniające"
 TK_RULINGS = "Orzeczenie TK"
 CONSOLIDATED_TEXTS = "Inf. o tekście jednolitym"
@@ -1212,10 +1224,16 @@ class LegalService:
     # ------------------------------------------------------------------- legal basis
 
     async def find_legal_basis(
-        self, issue: str, as_of: date | None = None, limit: int = 10
+        self,
+        issue: str,
+        as_of: date | None = None,
+        limit: int = 10,
+        cited: tuple[list[tuple[ActId, int, str]], int] | None = None,
     ) -> LegalBasisResult:
+        """Lexical candidates; ``cited`` adds acts cited in SAOS judgments found for the issue
+        (from JudgmentService.cited_acts) as a second, case-law signal."""
         today = self._today()
-        terms = _terms(issue)
+        terms = issue_terms(issue)
         if not terms:
             raise InvalidInputError("Opis nie zawiera słów, na podstawie których można szukać.")
         vocabulary = await self._eli.keywords()
@@ -1249,10 +1267,36 @@ class LegalService:
                 title = act.title.lower()
                 entry[3].update(t for t in terms if _stem(t) in title)
 
+        case_law: dict[str, int] = {}
+
+        async def add_cited(act_id: ActId, count: int, checked: int) -> None:
+            try:
+                meta = await self._eli.act(act_id)
+            except LegalMcpError:
+                return
+            act = summarize_act(meta)
+            if (
+                act.is_amending_act
+                or act.act_type not in ("Ustawa", "Rozporządzenie", "Konstytucja")
+                or act.status in ONE_OFF_STATUSES
+                or (in_force_filter and act.in_force == "NOT_IN_FORCE")
+            ):
+                return
+            entry = found.setdefault(act.eli, (act, set(), set(), set()))
+            entry[1].add(f"powołany w {count} z {checked} orzeczeń SAOS")
+            entry[2].add("orzecznictwo SAOS")
+            case_law[act.eli] = count
+
         searches = [
             lambda k=k: collect({"keyword": k}, k, "hasło ELI", _covered_terms(k, terms))
             for k in matched
         ]
+        if cited:
+            acts, checked = cited
+            relevant = [(a, n) for a, n, _ in acts if a.eli not in PROCEDURAL_ACTS and n >= 2][
+                :MAX_CITED_ACTS
+            ]
+            searches += [lambda a=a, n=n: add_cited(a, n, checked) for a, n in relevant]
         title_terms = sorted(terms, key=len, reverse=True)[:3]
         searches += [
             lambda t=t: collect({"title": _stem(t)}, t, "fragment tytułu", {t}) for t in title_terms
@@ -1261,14 +1305,27 @@ class LegalService:
 
         ranked = sorted(
             found.values(),
-            # ponytail: rank by number of description words covered; no semantic relevance.
-            key=lambda e: (-len(e[3]), -len(e[1]), e[0].act_type != "Ustawa", -(e[0].year)),
+            # ponytail: rank by description words covered plus 3–4 points for acts cited in
+            # case law (cited in ≥2 judgments); no semantic relevance.
+            key=lambda e: (
+                -(len(e[3]) + (min(case_law[e[0].eli], 3) + 1 if e[0].eli in case_law else 0)),
+                -len(e[1]),
+                e[0].act_type != "Ustawa",
+                -(e[0].year),
+            ),
         )
         warnings = [
             "Dopasowanie leksykalne (słowa opisu ↔ hasła ELI i tytuły aktów), nie semantyczne. "
             "Wyniki to kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej.",
             *STANDARD_WARNINGS[:1],
         ]
+        if cited:
+            warnings.append(
+                "Sygnał z orzecznictwa: akty powoływane w orzeczeniach SAOS znalezionych dla słów "
+                "opisu (bez aktów proceduralnych, np. k.p.c., opłat sądowych). Częstość powołań "
+                "nie oznacza, że akt jest podstawą prawną w tej sprawie; SAOS nie obejmuje "
+                "WSA/NSA, a metadane dotyczą głównie sądów powszechnych."
+            )
         if not in_force_filter:
             warnings.append(
                 "Dla daty innej niż dzisiejsza nie filtrowano po statusie obowiązywania – "
@@ -1303,7 +1360,7 @@ def _reference(ref: dict[str, Any], relation: str, ref_date: date | None) -> Act
 _WORD_RE = re.compile(r"[a-ząćęłńóśźż]+", re.IGNORECASE)
 
 
-def _terms(text: str) -> list[str]:
+def issue_terms(text: str) -> list[str]:
     seen: list[str] = []
     for word in _WORD_RE.findall(text.lower()):
         if len(word) >= 4 and word not in STOPWORDS and word not in seen:
@@ -1312,8 +1369,10 @@ def _terms(text: str) -> list[str]:
 
 
 def _stem(word: str) -> str:
-    # ponytail: crude stemming (drop up to 3 trailing letters); a Polish stemmer would be better.
-    return word[: max(5, len(word) - 3)]
+    # ponytail: crude stemming (drop up to 3 trailing letters, keep 5, or 6 for words of 8+ so
+    # 'zachowek' does not become 'zacho' and match 'Zachodni'); a Polish stemmer would also
+    # handle alternations such as spadek → spadku.
+    return word[: max(5 if len(word) < 8 else 6, len(word) - 3)]
 
 
 def _stem_match(a: str, b: str) -> bool:
