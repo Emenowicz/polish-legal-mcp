@@ -100,18 +100,18 @@ def google_settings() -> Settings:
         google_client_id="123.apps.googleusercontent.com",
         google_client_secret="test-secret",
         jwt_signing_key="k" * 48,
-        allowed_emails="Angela@example.com",
+        allowed_emails="Anna@example.com",
     )
 
 
 def test_google_allowlist_requires_verified_email():
     check = allowlist_check(google_settings())
     # tokeninfo returns "true" as a string, userinfo v2 a boolean
-    assert check(_ctx(email="angela@example.com", email_verified="true"))  # type: ignore[arg-type]
-    assert check(_ctx(email="ANGELA@example.com", email_verified=True))  # type: ignore[arg-type]
-    assert not check(_ctx(email="angela@example.com", email_verified="false"))  # type: ignore[arg-type]
+    assert check(_ctx(email="anna@example.com", email_verified="true"))  # type: ignore[arg-type]
+    assert check(_ctx(email="ANNA@example.com", email_verified=True))  # type: ignore[arg-type]
+    assert not check(_ctx(email="anna@example.com", email_verified="false"))  # type: ignore[arg-type]
     assert not check(_ctx(email="other@example.com", email_verified="true"))  # type: ignore[arg-type]
-    assert not check(_ctx(login="angela@example.com"))  # type: ignore[arg-type]
+    assert not check(_ctx(login="anna@example.com"))  # type: ignore[arg-type]
 
 
 async def test_google_mode_serves_oauth_discovery(tmp_path, monkeypatch):

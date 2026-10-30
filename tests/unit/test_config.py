@@ -51,12 +51,12 @@ GOOD_GOOGLE = {
     "auth_mode": "google",
     "google_client_id": "123.apps.googleusercontent.com",
     "google_client_secret": "secret",
-    "allowed_emails": "angela@example.com, me@example.com",
+    "allowed_emails": "anna@example.com, me@example.com",
 }
 
 
 def test_google_production_config():
-    assert make(**GOOD_GOOGLE).allowed_emails == ["angela@example.com", "me@example.com"]
+    assert make(**GOOD_GOOGLE).allowed_emails == ["anna@example.com", "me@example.com"]
 
 
 @pytest.mark.parametrize("missing", ["google_client_id", "google_client_secret", "allowed_emails"])

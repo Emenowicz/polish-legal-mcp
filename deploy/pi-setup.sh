@@ -77,7 +77,7 @@ PLMCP_ALLOWED_GOOGLE_DOMAINS=$domains"
     github)
       read -rp "GitHub OAuth App client ID: " client_id
       read -rsp "GitHub OAuth App client secret (hidden): " client_secret; echo
-      read -rp "Allowed GitHub logins, comma-separated [Emenowicz]: " allowed; allowed=${allowed:-Emenowicz}
+      read -rp "Allowed GitHub logins, comma-separated: " allowed
       allow_line="PLMCP_ALLOWED_GITHUB_LOGINS=$allowed"
       ;;
     *) echo "Unknown provider: $provider" >&2; exit 1 ;;

@@ -54,14 +54,14 @@ the date, temporal applicability of the wording, amendment completeness (always 
 and substantive relevance (always `UNVERIFIED`). Full semantics:
 [docs/legal-verification.md](docs/legal-verification.md).
 
-Example (real data, 2026-10-29): art. 61 § 1 k.p.a. → wording read from consolidated text
-Dz. U. 2024 poz. 572 (`exact_wording: VERIFIED`), but the current consolidated text Dz. U. 2025
-poz. 1691 exists only as PDF and an amendment followed → `temporal_applicability: UNVERIFIED`.
+Example (real data, 2026-10-30): art. 61 § 1 k.p.a. → wording read from the current consolidated
+text Dz. U. 2025 poz. 1691 (PDF only) and confirmed against the last official HTML text →
+`exact_wording` and `temporal_applicability: VERIFIED`; `amendment_completeness: UNVERIFIED`.
 
 ## Requirements
 - Python 3.12+ (3.13 pinned in `.python-version`), [uv](https://docs.astral.sh/uv/)
 - Docker (for container deployment); a Raspberry Pi 4/5 with 64-bit OS for the reference setup
-- For remote use: Tailscale account (free) and a GitHub OAuth App (free)
+- For remote use: Tailscale account (free) and a Google OAuth client or GitHub OAuth App (free)
 
 ## Quick start (local)
 ```bash
@@ -75,7 +75,7 @@ Environment variables with prefix `PLMCP_` (see [.env.example](.env.example)):
 
 | Variable | Default | Notes |
 |---|---|---|
-| `PLMCP_ENV` | `development` | `production` requires GitHub OAuth or refuses to start. |
+| `PLMCP_ENV` | `development` | `production` requires Google or GitHub OAuth or refuses to start. |
 | `PLMCP_HOST` / `PLMCP_PORT` | `127.0.0.1` / `8000` | Docker image sets `0.0.0.0`. |
 | `PLMCP_AUTH_MODE` | `none` | `google` or `github` for remote use. |
 | `PLMCP_BASE_URL` | – | Public HTTPS URL without `/mcp`. |
@@ -118,7 +118,7 @@ Hosts without Docker can use the hardened systemd unit and installer in [deploy/
 ## Claude integration (incl. mobile)
 1. claude.ai → Settings → Connectors → **Add custom connector** (the Free plan allows one).
 2. URL `https://<pi>.<tailnet>.ts.net/mcp`; leave OAuth client ID/secret empty.
-3. Connect → consent page → sign in with an allowlisted GitHub account.
+3. Connect → consent page → sign in with an allowlisted Google or GitHub account.
 4. Enable the connector in a chat and ask in Polish, e.g.:
    - „Znajdź ustawę o gospodarce nieruchomościami."
    - „Podaj artykuły dotyczące zakwaterowania żołnierzy."
@@ -134,7 +134,7 @@ No Anthropic API key and no running Claude Code are needed after deployment. The
 guarantee Claude's final wording — it supplies evidence; check the statuses.
 
 ## Security
-HTTPS via Funnel, OAuth 2.1 (DCR/CIMD, PKCE) with GitHub sign-in and a login allowlist, fail-closed
+HTTPS via Funnel, OAuth 2.1 (DCR/CIMD, PKCE) with Google or GitHub sign-in and an allowlist, fail-closed
 production config, Host guard, per-user rate limits, bounded inputs/outputs, no arbitrary URL
 fetching, no logging of tool arguments, hardened container. Details: [docs/security.md](docs/security.md).
 
@@ -144,17 +144,17 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
   automatically from the PDF and marked `UNVERIFIED` with the page number to check.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
 - Search is lexical (titles/keywords), not full-text or semantic.
-- EU law: provisions by act number/CELEX/alias only (no topic search); wording comes from the
-  EUR-Lex consolidated version, which is informational — the Official Journal text is binding.
+- EU law: acts are found by number/CELEX/alias or words of the Polish title (no full-text search);
+  wording comes from the EUR-Lex consolidated version, which is informational — the Official
+  Journal text is binding. CJEU decisions in Polish are translations.
 - Amendment completeness, staged entry into force of amending acts and transitional provisions
   are not verified.
 
 See [docs/limitations.md](docs/limitations.md).
 
 ## Roadmap
-Next: CJEU case law, judgments citing a given provision, EU act search by title, weekly live
-checks against the official APIs. Full list with sources and blockers:
-[docs/roadmap.md](docs/roadmap.md).
+Delivered items, sources blocked for lack of an official API (e.g. WSA/NSA) and deliberate
+non-goals: [docs/roadmap.md](docs/roadmap.md).
 
 ## Documentation
 [architecture](docs/architecture.md) · [API research](docs/api-research.md) ·
@@ -164,4 +164,4 @@ checks against the official APIs. Full list with sources and blockers:
 
 ## License
 MIT — see [LICENSE](LICENSE). Legal texts and judgments come from public official sources
-(api.sejm.gov.pl, saos.org.pl).
+(api.sejm.gov.pl, saos.org.pl, publications.europa.eu).

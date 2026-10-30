@@ -55,7 +55,7 @@ real target), **NOT EXECUTED** (requires infrastructure/accounts not available t
 - [x] Fixed: installer did not reinstall the app on source-only updates
 - [x] Fixed: Gmail allowlist entries now ignore dots (Google returns the dotted address)
 - [x] Real OAuth sign-in round trip — **VERIFIED** 2026-10-29 with Google sign-in via the Claude
-      connector (CIMD), allowlisted account — **NOT EXECUTED** (pending the Claude connector sign-in)
+      connector (CIMD), allowlisted account
 
 ## Phase 6 — Claude and mobile validation — VERIFIED
 - [x] Claude custom connector added and authenticated — **VERIFIED** 2026-10-29 (Google sign-in,

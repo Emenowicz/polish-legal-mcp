@@ -9,7 +9,7 @@ sized). Current gaps: [limitations.md](limitations.md). Evidence for every sourc
 
 ## Now
 Nothing pending: release 0.2.0 (b011701) is deployed on the Pi (2026-10-30). Deploy later
-releases with `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'` and check `/health` for the version.
+releases with `sudo bash deploy/pi-setup.sh` and check `/health` for the version.
 
 ## Done (2026-10-30)
 | Item | Tool / change | Notes |

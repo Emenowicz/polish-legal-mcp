@@ -64,7 +64,7 @@ PLMCP_BASE_URL=https://pi.tail1234.ts.net
 PLMCP_GITHUB_CLIENT_ID=Ov23...
 PLMCP_GITHUB_CLIENT_SECRET=...
 PLMCP_JWT_SIGNING_KEY=<48+ random chars>
-PLMCP_ALLOWED_GITHUB_LOGINS=Emenowicz
+PLMCP_ALLOWED_GITHUB_LOGINS=your-github-login
 ```
 `chmod 600 .env`.
 

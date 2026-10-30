@@ -7,6 +7,8 @@ from typing import Annotated, Literal
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from polish_legal_mcp import __version__
+
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
@@ -41,7 +43,9 @@ class Settings(BaseSettings):
     http_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
     http_max_retries: int = Field(default=3, ge=0, le=5)
     http_max_response_bytes: int = Field(default=10_000_000, ge=100_000)
-    user_agent: str = "polish-legal-mcp/0.1 (+https://github.com/Emenowicz/polish-legal-mcp)"
+    user_agent: str = (
+        f"polish-legal-mcp/{__version__} (+https://github.com/Emenowicz/polish-legal-mcp)"
+    )
     cache_ttl_seconds: int = Field(default=3600, ge=0)
     # Texts of a published act (ELI struct/HTML/PDF, EUR-Lex documents) do not change once
     # published, unlike metadata (status, amendments), so they are kept longer.
