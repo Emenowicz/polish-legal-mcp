@@ -125,3 +125,11 @@ def test_act_not_applicable_propagates():
 def test_act_level_uncertainty_blocks_verified():
     act = CheckResult(status=VS.UNVERIFIED, detail="brak daty")
     assert assess_temporal(inputs(act_check=act)).status == VS.UNVERIFIED
+
+
+def test_stem_match_needs_six_shared_letters_for_long_words():
+    from polish_legal_mcp.services.legal import _stem_match
+
+    assert not _stem_match("zachowek", "zachodniopomorskie")
+    assert _stem_match("wywłaszczenie", "wywłaszczenia")
+    assert _stem_match("lokalu", "lokal")

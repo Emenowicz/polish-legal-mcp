@@ -1381,7 +1381,8 @@ def _stem_match(a: str, b: str) -> bool:
         if x != y:
             break
         shared += 1
-    return shared >= max(5, min(len(a), len(b)) - 3)
+    shorter = min(len(a), len(b))
+    return shared >= max(5 if shorter < 8 else 6, shorter - 3)
 
 
 def _covered_terms(keyword: str, terms: list[str]) -> set[str]:
