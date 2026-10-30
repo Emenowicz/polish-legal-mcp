@@ -28,6 +28,9 @@
   2014/24 as of 2026-05-10) make the result `UNVERIFIED`; the wording is then possibly outdated.
 - Older documents without article markup are not parsed (the tool says so and links EUR-Lex).
 - Directives bind Member States; for domestic cases the Polish implementing act usually applies.
+- `get_eu_transposition` lists measures as notified by Poland: no article-level mapping, notices
+  can lack a Dz.U. number (then no ELI id) and include amending acts; it does not prove complete
+  or correct transposition.
 - CJEU case law: links between decisions and acts/articles are CELLAR metadata and can be
   incomplete (article annotations are often missing for recent decisions). The Polish text is a
   translation; the language of the case is authentic. Old translations without numbered

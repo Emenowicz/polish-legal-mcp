@@ -327,6 +327,28 @@ class EuActSearchResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class TranspositionMeasure(BaseModel):
+    title: str | None = Field(default=None, description="Tytuł podany w zgłoszeniu do Komisji.")
+    act_type: str | None = None
+    journal: str | None = None
+    publication: str | None = Field(default=None, description="Numer publikacji, np. '2016/1125'.")
+    eli: str | None = Field(default=None, description="Identyfikator ELI (Dziennik Ustaw).")
+    eli_title: str | None = Field(
+        default=None, description="Oficjalny tytuł tej pozycji w ELI – do porównania z title."
+    )
+    eli_status: str | None = None
+    cellar_ids: list[str] = Field(default_factory=list, description="CELEX zgłoszenia (sektor 7).")
+
+
+class TranspositionResult(BaseModel):
+    act_celex: str
+    country: str = "PL"
+    measures: list[TranspositionMeasure]
+    total_measures: int
+    eurlex_url: str = Field(description="Strona aktu UE w EUR-Lex (zakładka transpozycji).")
+    warnings: list[str] = Field(default_factory=list)
+
+
 class EuProvisionResult(BaseModel):
     requested_act: str
     celex: str | None = None

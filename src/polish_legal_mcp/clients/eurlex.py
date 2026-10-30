@@ -181,6 +181,26 @@ class EurLexClient:
             " ORDER BY DESC(?date) LIMIT 300"
         )
 
+    async def national_measures(self, celex: str, country: str = "POL") -> list[dict[str, str]]:
+        """National implementing measures notified to the Commission (one row per measure and
+        CELEX alias: a measure implementing several directives has one CELEX per directive)."""
+        celex = validate_celex(celex)
+        if not re.fullmatch(r"[A-Z]{3}", country):
+            raise InvalidInputError("Nieprawidłowy kod państwa.")
+        mne = "cdm:measure_national_implementing_"
+        return await self._select(
+            _PREFIX + f"# plmcp:national_measures {celex}\n"
+            "SELECT ?m ?id ?title ?journal ?number ?type WHERE {"
+            f' ?d cdm:resource_legal_id_celex "{celex}"{_STRING} .'
+            f" ?m {mne}implements_resource_legal ?d ; {mne}implemented_by_country"
+            f" <http://publications.europa.eu/resource/authority/country/{country}> ."
+            " OPTIONAL { ?m cdm:resource_legal_id_celex ?id }"
+            ' OPTIONAL { ?m cdm:work_title ?title . FILTER(LANG(?title) = "pl") }'
+            f" OPTIONAL {{ ?m {mne}name_official_journal ?journal }}"
+            f" OPTIONAL {{ ?m {mne}number_official_journal ?number }}"
+            f" OPTIONAL {{ ?m {mne}type_act ?type }} }} LIMIT 1000"
+        )
+
     # ------------------------------------------------------------------ case law (CJEU)
 
     async def case_law_celex(

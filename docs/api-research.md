@@ -65,6 +65,15 @@ stemming and no relevance ranking (we rank base legislative acts in force first)
 ≥4 leading letters (`'dan*'` → HTTP 500) and short prefixes are slow: `'zamówie*' AND 'public*'`
 15.9 s vs `'zamówie*' AND 'publiczn*'` 4.1 s; exact words ~0.3–0.6 s.
 
+National implementing measures (verified 2026-10-30): works of type
+`cdm:measure_national_implementing` linked by `…_implements_resource_legal` to the directive and
+`…_implemented_by_country` `authority/country/POL`; `cdm:work_title` (pl),
+`…_name_official_journal` ("Dziennik Ustaw"), `…_number_official_journal` ("2016/1125" = Dz.U.
+2016 poz. 1125), `…_type_act`; `…_date_official_journal` is often the placeholder `1001-01-01`.
+One measure has one sector-7 CELEX per directive it implements (`72014L0024POL_240044`). Directive
+2014/24: 15 distinct measures; 2019/1937 (whistleblowers): the 2024 act notified twice with
+journal "Dziennik Urzędowy (Official journal)" and no number.
+
 CJEU case law (verified 2026-10-30): documents `GET /resource/celex/6YYYY{C|T}{J|O|C}NNNN`
 (J judgment, O order, C Advocate General's opinion) in Polish XHTML; numbered paragraphs are
 top-level two-cell tables with `p.count` (2008–2013) or `p.coj-count` (2014+), the operative part

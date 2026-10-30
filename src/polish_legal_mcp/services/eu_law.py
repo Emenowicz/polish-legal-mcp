@@ -13,6 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
 
+from polish_legal_mcp.clients.eli import EliClient
 from polish_legal_mcp.clients.eurlex import (
     CELEX_RE,
     EURLEX_PAGE,
@@ -25,6 +26,7 @@ from polish_legal_mcp.errors import (
     UpstreamUnavailableError,
 )
 from polish_legal_mcp.models import (
+    ActId,
     CheckResult,
     CitationVerificationResult,
     EuActSearchResult,
@@ -32,6 +34,8 @@ from polish_legal_mcp.models import (
     EuDocumentLink,
     EuProvisionResult,
     ParsedCitation,
+    TranspositionMeasure,
+    TranspositionResult,
     VerificationReport,
 )
 from polish_legal_mcp.models import VerificationStatus as VS
@@ -41,6 +45,7 @@ from polish_legal_mcp.services.legal import (
     COMPLETENESS_UNVERIFIED,
     NOT_ASSESSED_RELEVANCE,
     STANDARD_WARNINGS,
+    gather_limited,
     unit_designation,
     warsaw_today,
 )
@@ -249,9 +254,85 @@ def _rank(summary: EuActSummary) -> tuple[int, int, int, int, int]:
 
 
 class EuLawService:
-    def __init__(self, client: EurLexClient, today: Callable[[], date] = warsaw_today) -> None:
+    def __init__(
+        self,
+        client: EurLexClient,
+        today: Callable[[], date] = warsaw_today,
+        eli: EliClient | None = None,
+    ) -> None:
         self._client = client
         self._today = today
+        self._eli = eli
+
+    async def transposition(self, act: str, limit: int = 30) -> TranspositionResult:
+        """Polish national implementing measures notified to the Commission, with the ELI title
+        of each Dziennik Ustaw position for cross-checking (notifications are not verified)."""
+        celex = resolve_eu_act(act)
+        if celex is None:
+            raise InvalidInputError(
+                f"Nie rozpoznano aktu UE: {act!r}. Podaj CELEX (np. 32019L1937), numer dyrektywy "
+                "(np. dyrektywa 2019/1937/UE) albo skrót RODO."
+            )
+        measures: dict[str, TranspositionMeasure] = {}
+        for row in await self._client.national_measures(celex):
+            # The same act is sometimes notified twice (e.g. 2024 whistleblower act).
+            title = (row.get("title") or "").strip().lower()
+            key = f"{title}|{row.get('number') or ''}" if title else row["m"]
+            measure = measures.get(key)
+            if measure is None:
+                number = row.get("number")
+                journal = row.get("journal")
+                eli = None
+                match = re.fullmatch(r"(\d{4})/(\d{1,5})", (number or "").strip())
+                if match and journal == "Dziennik Ustaw":
+                    eli = f"DU/{match.group(1)}/{int(match.group(2))}"
+                measure = measures[key] = TranspositionMeasure(
+                    title=row.get("title"),
+                    act_type=row.get("type"),
+                    journal=journal,
+                    publication=number,
+                    eli=eli,
+                )
+            if row.get("id") and row["id"] not in measure.cellar_ids:
+                measure.cellar_ids.append(row["id"])
+        ordered = sorted(
+            measures.values(),
+            key=lambda m: tuple(int(p) for p in m.eli.split("/")[1:]) if m.eli else (0, 0),
+            reverse=True,
+        )
+        shown = ordered[:limit]
+
+        async def check(measure: TranspositionMeasure) -> None:
+            if self._eli is None or measure.eli is None:
+                return
+            try:
+                meta = await self._eli.act(ActId.parse(measure.eli))
+            except LegalMcpError:
+                return
+            measure.eli_title = str(meta.get("title") or "") or None
+            measure.eli_status = str(meta.get("status") or "") or None
+
+        await gather_limited([lambda m=m: check(m) for m in shown], limit=4)
+        warnings = [
+            "Lista pochodzi ze zgłoszeń Polski do Komisji Europejskiej (EUR-Lex, krajowe środki "
+            "wykonawcze): obejmuje też akty zmieniające i teksty jednolite, nie wskazuje, które "
+            "przepisy dyrektywy wdrażają, i nie dowodzi pełnej ani prawidłowej transpozycji. "
+            "Porównaj title z eli_title; aktualne brzmienie: get_legal_provision."
+        ]
+        if not measures:
+            warnings.append(
+                "EUR-Lex nie wykazuje polskich środków wykonawczych dla tego aktu (rozporządzenia "
+                "stosuje się bezpośrednio; dla dyrektyw zgłoszenie mogło nie zostać zarejestrowane)."
+            )
+        if len(ordered) > limit:
+            warnings.append(f"Pokazano {limit} z {len(ordered)} zgłoszonych aktów (najnowsze).")
+        return TranspositionResult(
+            act_celex=celex,
+            measures=shown,
+            total_measures=len(ordered),
+            eurlex_url=f"https://eur-lex.europa.eu/legal-content/PL/NIM/?uri=CELEX:{celex}",
+            warnings=warnings,
+        )
 
     async def search_acts(
         self, query: str, act_type: str | None = None, limit: int = 10

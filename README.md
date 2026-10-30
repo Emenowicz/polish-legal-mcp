@@ -32,6 +32,7 @@ case numbers.
 | `get_legal_act` | Metadata, status, dates, text formats, consolidated texts, paged table of contents. |
 | `get_legal_provision` | Exact wording of art./ust./§/pkt/lit. from official HTML, citation, later amendments, verification report. |
 | `search_eu_acts` | EU regulations/directives/decisions by words of the Polish title (EUR-Lex metadata); base legislative acts in force first. |
+| `get_eu_transposition` | Polish acts implementing an EU directive as notified to the Commission (EUR-Lex national implementing measures), mapped to ELI with the official ELI title for cross-checking. |
 | `get_eu_provision` | EU law (e.g. RODO) by CELEX, act number or alias: most current Polish wording from the EUR-Lex consolidated version (amendments + corrigenda), OJ citation, verification report. |
 | `get_legal_act_amendments` | Amending acts with ELI dates, pending amendments, amendments after the latest consolidated text, TK rulings. |
 | `verify_legal_citation` | Parse a citation ("art. 61 § 1 k.p.a.", "… (Dz. U. z 2025 r. poz. 817)"), resolve the act, check unit, wording and date. |

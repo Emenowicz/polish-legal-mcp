@@ -48,6 +48,7 @@ from polish_legal_mcp.models import (
     ProvisionJudgmentsResult,
     ProvisionResult,
     SearchActsResult,
+    TranspositionResult,
 )
 from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
 from polish_legal_mcp.services.cjeu import CjeuService
@@ -266,7 +267,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     eli = EliClient(settings, backoff_base=backoff_base)
     saos = SaosClient(settings, backoff_base=backoff_base)
     eurlex = EurLexClient(settings, backoff_base=backoff_base)
-    eu_law = EuLawService(eurlex)
+    eu_law = EuLawService(eurlex, eli=eli)
     legal = LegalService(eli, eu=eu_law)
     judgments = JudgmentService(saos)
     cjeu = CjeuService(eurlex)
@@ -435,6 +436,17 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         obowiązujące są pierwsze. Brzmienie przepisów: get_eu_provision; orzecznictwo:
         search_cjeu_judgments."""
         return await _run(lambda: eu_law.search_acts(query, act_type, limit))
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def get_eu_transposition(
+        act: EuActStr,
+        limit: Annotated[int, Field(ge=1, le=50, description="Liczba aktów (najnowsze).")] = 30,
+    ) -> TranspositionResult:
+        """Polskie akty wdrażające dyrektywę UE (krajowe środki wykonawcze zgłoszone przez Polskę
+        Komisji Europejskiej, dane EUR-Lex) – z adresem w Dzienniku Ustaw, identyfikatorem ELI i
+        oficjalnym tytułem z ELI do porównania. Lista obejmuje też nowelizacje i teksty
+        jednolite, nie wskazuje wdrażanych przepisów i nie dowodzi pełnej transpozycji."""
+        return await _run(lambda: eu_law.transposition(act, limit))
 
     @mcp.tool(annotations=READ_ONLY)
     async def search_cjeu_judgments(

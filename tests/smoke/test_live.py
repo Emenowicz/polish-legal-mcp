@@ -97,3 +97,16 @@ async def test_live_eu_act_search_finds_rodo(settings):
     result = await EuLawService(client).search_acts("ochrona danych osobowych", limit=5)
     await client.aclose()
     assert "32016R0679" in [i.celex for i in result.items]
+
+
+async def test_live_transposition_of_procurement_directive(settings):
+    from polish_legal_mcp.clients.eli import EliClient
+    from polish_legal_mcp.clients.eurlex import EurLexClient
+    from polish_legal_mcp.services.eu_law import EuLawService
+
+    eurlex, eli = EurLexClient(settings), EliClient(settings)
+    result = await EuLawService(eurlex, eli=eli).transposition("dyrektywa 2014/24/UE", limit=50)
+    await eurlex.aclose()
+    await eli.aclose()
+    pzp = next(m for m in result.measures if m.eli == "DU/2019/2019")
+    assert pzp.eli_title and "zamówień publicznych" in pzp.eli_title

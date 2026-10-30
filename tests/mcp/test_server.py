@@ -21,6 +21,7 @@ EXPECTED_TOOLS = {
     "find_judgments_for_provision",
     "search_cjeu_judgments",
     "search_eu_acts",
+    "get_eu_transposition",
     "get_cjeu_judgment",
 }
 
