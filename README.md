@@ -143,19 +143,15 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
 See [docs/limitations.md](docs/limitations.md).
 
 ## Roadmap
-- Optional PDF text extraction for 2025+ consolidated texts (always marked `UNVERIFIED`).
-- EU law: topic search, CJEU case law, links from directives to Polish implementing acts.
-- Additional official sources: Sejm API (legislative process), RCL (government drafts),
-  GUGiK/Geoportal (parcels), GUS REGON (entities), administrative case law if an official API appears.
-- Hybrid legal retrieval (RAG) only after evaluating completeness, licensing, update cadence and
-  the risk of outdated versions.
-- Drafting helpers for official letters with explicit verification warnings.
+Next: CJEU case law, judgments citing a given provision, EU act search by title, weekly live
+checks against the official APIs. Full list with sources and blockers:
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Documentation
 [architecture](docs/architecture.md) · [API research](docs/api-research.md) ·
 [legal verification](docs/legal-verification.md) · [security](docs/security.md) ·
 [deployment](docs/deployment.md) · [limitations](docs/limitations.md) ·
-[progress](docs/implementation-progress.md)
+[progress](docs/implementation-progress.md) · [roadmap](docs/roadmap.md)
 
 ## License
 MIT — see [LICENSE](LICENSE). Legal texts and judgments come from public official sources

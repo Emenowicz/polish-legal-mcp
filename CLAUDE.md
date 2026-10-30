@@ -49,7 +49,7 @@ docker compose up -d --build              # container (needs .env)
 - Mark deliberate shortcuts with a `ponytail:` comment naming the ceiling and upgrade path.
 
 ## Security requirements
-- Production (`PLMCP_ENV=production`) must fail closed without GitHub OAuth, https base URL,
+- Production (`PLMCP_ENV=production`) must fail closed without OAuth (Google or GitHub), https base URL,
   ≥32-char JWT key and a non-empty login allowlist. Keep the `AuthMiddleware` allowlist.
 - Never log tool arguments, search phrases or upstream query strings.
 - Keep the container non-root, read-only, loopback-published.

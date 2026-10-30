@@ -40,10 +40,7 @@
 - Staged entry into force of the act itself is detected heuristically from its entry-into-force
   clause; unparseable periods ("pierwszego dnia miesiąca następującego…") keep results `UNVERIFIED`.
 - Transitional provisions are not analysed.
-- Articles with superscript numbering (e.g. art. 98¹) are not parsed from citations.
 
 ## Operations
 - Single process, in-memory cache (per container, ≤32 HTML documents). No horizontal scaling
   concerns at expected load; the HTTP transport is stateless, so replicas are possible.
-- Remote deployment, Claude connector and mobile access were not executed by the implementer
-  (see implementation-progress.md).
