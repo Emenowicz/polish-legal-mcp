@@ -77,15 +77,15 @@ Reproducible steps: `deployment.md` §3–4.
 - [x] Tests on real documents (RODO OJ + consolidated, directive 2014/24 consolidated 2026-01-01)
 - [x] Deployed to the Pi (fd459ec) and tried from Claude — **VERIFIED** 2026-10-29
 
-## PDF consolidated texts — DONE locally / deployment pending
+## PDF consolidated texts — DONE, deployed
 - [x] `pypdf` reading with font-size filtering (headers, footnotes, superscripts), unit lookup in
       numbering order, HTML cross-check (`html_confirmed_by_pdf`) and automatic reads (`pdf_automatic`)
 - [x] Superscript article numbers (art. 22¹) in input, HTML, PDF and citations
 - [x] Live: art. 5 k.c. and art. 61 § 1 k.p.a. now `VERIFIED` against 2026/2025 PDFs; art. 187 k.c.
       returns the amended wording as an automatic read
-- [ ] Deployed to the Pi — pending
+- [x] Deployed to the Pi with the roadmap release (b011701) — **VERIFIED** 2026-10-30
 
-## Roadmap for legal practice (2026-10-30) — DONE locally / deployment pending
+## Roadmap for legal practice (2026-10-30) — DONE, deployed
 - [x] CJEU: `get_cjeu_judgment`, `search_cjeu_judgments` (live: C-311/18 pkt 134, RODO art. 17)
 - [x] `find_judgments_for_provision` (live: art. 415 k.c. from the 2026 consolidated text)
 - [x] `search_eu_acts`, `get_eu_transposition` (live: RODO by title; directive 2014/24 → Prawo
@@ -94,10 +94,12 @@ Reproducible steps: `deployment.md` §3–4.
 - [x] Google Workspace domain allowlist, single-flight cache, grouped units, pending/staged
       amendment note, case-law signal in `find_legal_basis`, SAOS maintenance handling
 - [x] Weekly live workflow (`live.yml`) — first run green 2026-10-30
-- [ ] Deployed to the Pi — pending (owner's sudo)
+- [x] Deployed to the Pi — **VERIFIED** 2026-10-30: `pi-setup.sh` run by the owner, service active
+      on b011701, public `/health` reports 0.2.0, 401 + `resource_metadata` unchanged, journal
+      shows authenticated tool calls reaching EUR-Lex (SPARQL, RODO consolidated text)
 
 ## Quality gates (local, 2026-10-30)
-- `uv run pytest`: 218 passed (offline); `uv run pytest -m live`: 10 passed (real APIs)
+- `uv run pytest`: 228 passed (offline); `uv run pytest -m live`: 10 passed (real APIs)
 - `ruff check`, `ruff format --check`, `pyright`: clean
 
 ## Quality gates (local, 2026-10-29)

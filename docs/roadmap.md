@@ -8,8 +8,8 @@ sized). Current gaps: [limitations.md](limitations.md). Evidence for every sourc
 [api-research.md](api-research.md).
 
 ## Now
-- **Deploy to the Pi**: `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'` (needs the owner's sudo),
-  then tick "Deployed to the Pi" in [implementation-progress.md](implementation-progress.md).
+Nothing pending: release 0.2.0 (b011701) is deployed on the Pi (2026-10-30). Deploy later
+releases with `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'` and check `/health` for the version.
 
 ## Done (2026-10-30)
 | Item | Tool / change | Notes |
