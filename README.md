@@ -160,7 +160,7 @@ non-goals: [docs/roadmap.md](docs/roadmap.md).
 [architecture](docs/architecture.md) · [API research](docs/api-research.md) ·
 [legal verification](docs/legal-verification.md) · [security](docs/security.md) ·
 [deployment](docs/deployment.md) · [limitations](docs/limitations.md) ·
-[progress](docs/implementation-progress.md) · [roadmap](docs/roadmap.md)
+[roadmap](docs/roadmap.md)
 
 ## License
 MIT — see [LICENSE](LICENSE). Legal texts and judgments come from public official sources
