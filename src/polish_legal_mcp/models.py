@@ -388,6 +388,69 @@ class JudgmentSearchResult(BaseModel):
     coverage_note: str
 
 
+class CjeuParagraph(BaseModel):
+    number: int = Field(description="Numer punktu uzasadnienia (cytuj jako 'pkt N').")
+    text: str
+
+
+class CjeuInterpretedAct(BaseModel):
+    celex: str
+    provisions: list[str] = Field(
+        default_factory=list,
+        description="Przepisy wskazane w metadanych CELLAR, np. 'art. 17 ust. 1 lit. d'; "
+        "lista bywa niepełna.",
+    )
+    eurlex_url: str
+
+
+class CjeuJudgmentSummary(BaseModel):
+    celex: str
+    document_type: str = Field(
+        description="wyrok, postanowienie albo opinia rzecznika generalnego."
+    )
+    court: str
+    case_number: str | None = None
+    decision_date: date | None = None
+    ecli: str | None = None
+    title: str | None = None
+    parties: str | None = None
+    provisions: list[str] = Field(
+        default_factory=list, description="Interpretowane przepisy aktu (metadane CELLAR)."
+    )
+    eurlex_url: str
+
+
+class CjeuSearchResult(BaseModel):
+    act_celex: str
+    article: str | None = None
+    items: list[CjeuJudgmentSummary]
+    warnings: list[str] = Field(default_factory=list)
+
+
+class CjeuJudgmentResult(CjeuJudgmentSummary):
+    language_of_case: str | None = Field(
+        default=None,
+        description="Język postępowania – jedyna autentyczna wersja; polska jest tłumaczeniem.",
+    )
+    subject: str | None = Field(default=None, description="Hasła/przedmiot sprawy z tytułu.")
+    interpreted_acts: list[CjeuInterpretedAct] = Field(default_factory=list)
+    paragraph_count: int = Field(description="Liczba numerowanych punktów uzasadnienia.")
+    paragraphs: list[CjeuParagraph] = Field(default_factory=list)
+    matches: list[CjeuParagraph] = Field(
+        default_factory=list, description="Punkty zawierające szukaną frazę (fragmenty)."
+    )
+    operative_part: str | None = Field(default=None, description="Sentencja (rozstrzygnięcie).")
+    other_documents: list[str] = Field(
+        default_factory=list,
+        description="Inne dokumenty tej sprawy (CELEX), np. opinia rzecznika generalnego (…CC…).",
+    )
+    citation: str | None = Field(
+        default=None, description="Sformatowany cytat; brak bez metadanych."
+    )
+    source_url: str
+    warnings: list[str] = Field(default_factory=list)
+
+
 class ProvisionJudgment(JudgmentSummary):
     matched_references: list[str] = Field(
         description="Pozycje z listy przepisów powołanych w orzeczeniu (metadane SAOS), które "

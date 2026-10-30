@@ -59,6 +59,18 @@ citing *Prawo zamówień publicznych* are linked to the 2004 act (`2004/177`).
 | Document | `GET /resource/celex/{CELEX}` with `Accept: application/xhtml+xml`, `Accept-Language: pol` | 303 redirects within the host to the Polish manifestation. OJ format: `div#art_28`, paragraphs `div#028.003`, points in two-cell tables, header `oj-hd-oj` "L 119/1", `oj-hd-date`. Consolidated (`0…-YYYYMMDD`): `div.norm` + `span.no-parag`, `grid-container` lists, header table of modifiers (`p.arrow a[title=CELEX]` ►C1/►M1). Older acts (e.g. 32001R1049 OJ) have no article ids. |
 | Metadata | `GET /webapi/rdf/sparql` (`Accept: application/sparql-results+json`, 406 for plain JSON) | `cdm:resource_legal_id_celex`, `…_date_entry-into-force` (several: entry into force + application), `…_date_end-of-validity` (9999-12-31 = none), `…_in-force`, `…_eli`, `cdm:expression_title` (POL), consolidated versions by CELEX prefix `0…-`, corrigenda `{CELEX}R(nn)` with a Polish expression, amending acts via `cdm:resource_legal_amends_resource_legal`. |
 
+CJEU case law (verified 2026-10-30): documents `GET /resource/celex/6YYYY{C|T}{J|O|C}NNNN`
+(J judgment, O order, C Advocate General's opinion) in Polish XHTML; numbered paragraphs are
+top-level two-cell tables with `p.count` (2008–2013) or `p.coj-count` (2014+), the operative part
+follows "orzeka, co następuje"; the 1964 translation of 6/64 has no numbered paragraphs.
+SPARQL: `cdm:expression_case-law_identifier_case "Sprawa C-311/18"` (typed `xsd:string`, ~0.3 s;
+misses e.g. C-73/07 and joined cases, so the fallback is `bif:contains '"C-316/23"'` on Polish
+identifiers, ~0.8 s), `cdm:case-law_ecli`, `cdm:work_date_document`, Polish `expression_title`
+("heading#parties#procedure#keywords#Sprawa …"), `cdm:case-law_interpretes_resource_legal`
+(decision → act) with the article on a reified `owl:Axiom`
+(`ann:reference_to_modified_location`, e.g. `A17P1LD` = art. 17 ust. 1 lit. d, `A04PT7` = art. 4
+pkt 7). Pseudo-CELEX `…_RES` rows are ignored. Recent decisions often lack article annotations.
+
 No registration or key. EUR-Lex pages: `https://eur-lex.europa.eu/legal-content/PL/TXT/?uri=CELEX:{CELEX}`.
 
 ## FastMCP / MCP (PyPI, 2026-10-29)

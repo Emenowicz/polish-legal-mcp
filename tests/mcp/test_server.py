@@ -19,6 +19,8 @@ EXPECTED_TOOLS = {
     "search_judgments",
     "get_judgment",
     "find_judgments_for_provision",
+    "search_cjeu_judgments",
+    "get_cjeu_judgment",
 }
 
 

@@ -27,7 +27,12 @@
   2014/24 as of 2026-05-10) make the result `UNVERIFIED`; the wording is then possibly outdated.
 - Older documents without article markup are not parsed (the tool says so and links EUR-Lex).
 - Directives bind Member States; for domestic cases the Polish implementing act usually applies.
-- No CJEU case law.
+- CJEU case law: links between decisions and acts/articles are CELLAR metadata and can be
+  incomplete (article annotations are often missing for recent decisions). The Polish text is a
+  translation; the language of the case is authentic. Old translations without numbered
+  paragraphs (e.g. 6/64) return metadata and the operative part only; Polish versions of
+  General Court decisions are often missing. Treaties and the Charter (CELEX sector 1) cannot be
+  used as the act in `search_cjeu_judgments`.
 
 ## Search
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems

@@ -113,12 +113,19 @@ async def judgments(settings: Settings) -> Any:
 EU = "https://publications.europa.eu"
 _SPARQL_MARKER = re.compile(r"# plmcp:(\w+)")
 _SPARQL_CELEX = re.compile(r'"0?(\d{5}[RLD]\d{4})')
+_SPARQL_KEY = re.compile(r"# plmcp:(\w+) (\S+)")
 
 
 def eurlex_fixture_response(request: httpx.Request) -> httpx.Response:
     """Serve tests/fixtures/eurlex: SPARQL by query marker + CELEX, documents by CELEX."""
     if request.url.path == "/webapi/rdf/sparql":
         query = request.url.params["query"]
+        keyed = _SPARQL_KEY.search(query)
+        if keyed:
+            path = FIXTURES / "eurlex" / f"sparql_{keyed.group(1)}_{keyed.group(2)}.json"
+            if path.exists():
+                return httpx.Response(200, content=path.read_bytes())
+            return httpx.Response(200, json={"head": {"vars": []}, "results": {"bindings": []}})
         marker = _SPARQL_MARKER.search(query)
         celex = _SPARQL_CELEX.search(query)
         if marker and celex:

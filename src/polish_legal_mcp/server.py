@@ -37,6 +37,8 @@ from polish_legal_mcp.models import (
     ActId,
     AmendmentsResult,
     CitationVerificationResult,
+    CjeuJudgmentResult,
+    CjeuSearchResult,
     EuProvisionResult,
     JudgmentDetails,
     JudgmentSearchResult,
@@ -47,6 +49,7 @@ from polish_legal_mcp.models import (
     SearchActsResult,
 )
 from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
+from polish_legal_mcp.services.cjeu import CjeuService
 from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
 from polish_legal_mcp.services.legal import LegalService
@@ -69,6 +72,8 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
   zaznacz to przy cytowaniu. Wyszukiwania aktów UE po temacie nie ma: potrzebny numer aktu
   (np. 2016/679, 2014/24/UE), CELEX lub skrót RODO; akty krajowe szukaj w ELI.
+- Orzecznictwo TSUE: search_cjeu_judgments (orzeczenia do aktu/artykułu UE) i get_cjeu_judgment
+  (sentencja, punkty uzasadnienia, cytat z ECLI). Cytując punkt, podawaj „pkt N”.
 - Szukając podstawy prawnej, najpierw sam wskaż kandydujące akty i przepisy (np. ustawa o ochronie
   praw lokatorów, Kodeks cywilny), a następnie zweryfikuj je search_legal_acts i
   get_legal_provision. find_legal_basis dopasowuje tylko słowa – traktuj go pomocniczo.
@@ -119,6 +124,15 @@ ActIdStr = Annotated[
         min_length=5,
         max_length=60,
         description="Identyfikator aktu: ELI 'DU/1960/168' albo adres 'Dz.U. 1960 nr 30 poz. 168'.",
+    ),
+]
+EuActStr = Annotated[
+    str,
+    Field(
+        min_length=2,
+        max_length=300,
+        description="Akt UE: numer CELEX (np. 32016R0679), oznaczenie (np. "
+        "'rozporządzenie (UE) 2016/679', 'dyrektywa 2014/24/UE') lub skrót 'RODO'.",
     ),
 ]
 AsOfDate = Annotated[
@@ -254,6 +268,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     eu_law = EuLawService(eurlex)
     legal = LegalService(eli, eu=eu_law)
     judgments = JudgmentService(saos)
+    cjeu = CjeuService(eurlex)
 
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
@@ -380,15 +395,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
 
     @mcp.tool(annotations=READ_ONLY)
     async def get_eu_provision(
-        act: Annotated[
-            str,
-            Field(
-                min_length=2,
-                max_length=300,
-                description="Akt UE: numer CELEX (np. 32016R0679), oznaczenie (np. "
-                "'rozporządzenie (UE) 2016/679', 'dyrektywa 2014/24/UE') lub skrót 'RODO'.",
-            ),
-        ],
+        act: EuActStr,
         article: ArticleStr,
         paragraph: ParagraphStr = None,
         point: PointStr = None,
@@ -402,6 +409,69 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         Tekst skonsolidowany ma charakter informacyjny – wiążący jest Dz. Urz. UE."""
         return await _run(
             lambda: eu_law.get_provision(act, article, paragraph, point, letter, as_of_date)
+        )
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def search_cjeu_judgments(
+        act: EuActStr,
+        article: Annotated[
+            str | None,
+            Field(
+                default=None,
+                max_length=10,
+                pattern=r"^\s*(art\.?\s*)?\d{1,3}\s*$",
+                description="Numer artykułu aktu, np. '17' (filtr według adnotacji CELLAR).",
+            ),
+        ] = None,
+        limit: Annotated[int, Field(ge=1, le=20, description="Liczba orzeczeń.")] = 10,
+    ) -> CjeuSearchResult:
+        """Orzeczenia TSUE (Trybunał Sprawiedliwości, Sąd UE) interpretujące dany akt UE – od
+        najnowszych, opcjonalnie dla konkretnego artykułu (np. RODO art. 17). Zwraca sygnatury,
+        daty, ECLI, strony i interpretowane przepisy z metadanych Urzędu Publikacji UE (EUR-Lex).
+        Metadane bywają niepełne (zwłaszcza dla najnowszych orzeczeń) – brak wyniku nie dowodzi
+        braku orzecznictwa. Treść orzeczenia: get_cjeu_judgment."""
+        return await _run(lambda: cjeu.search_for_act(act, article, limit))
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def get_cjeu_judgment(
+        case: Annotated[
+            str,
+            Field(
+                min_length=3,
+                max_length=40,
+                description="Sygnatura (np. 'C-311/18', 'T-604/18'), ECLI "
+                "('ECLI:EU:C:2020:559') lub CELEX ('62018CJ0311').",
+            ),
+        ],
+        paragraphs: Annotated[
+            str | None,
+            Field(
+                default=None,
+                max_length=40,
+                description="Punkty uzasadnienia: numer, zakres lub lista, np. '134', '134-136' "
+                "(maks. 10).",
+            ),
+        ] = None,
+        search_text: Annotated[
+            str | None,
+            Field(
+                default=None,
+                max_length=200,
+                description="Fraza – zwraca numery punktów, w których występuje, z fragmentami.",
+            ),
+        ] = None,
+        include_operative_part: Annotated[
+            bool, Field(description="Czy dołączyć sentencję.")
+        ] = True,
+    ) -> CjeuJudgmentResult:
+        """Pobiera orzeczenie TSUE po polsku z oficjalnego serwisu Urzędu Publikacji UE
+        (EUR-Lex): sygnaturę, datę, ECLI, strony, sentencję, wybrane punkty uzasadnienia lub
+        punkty z szukaną frazą, interpretowane przepisy oraz gotowy cytat (np. 'wyrok Trybunału
+        Sprawiedliwości z dnia 16 lipca 2020 r., …, C-311/18, EU:C:2020:559, pkt 134'). Wersja
+        polska jest tłumaczeniem – autentyczny jest język postępowania (podany w wyniku). Nie
+        zwraca całego wyroku."""
+        return await _run(
+            lambda: cjeu.get_judgment(case, paragraphs, search_text, include_operative_part)
         )
 
     @mcp.tool(annotations=READ_ONLY)

@@ -73,3 +73,17 @@ async def test_live_judgments_for_civil_code_article(live_legal, live_judgments)
     assert base.eli == "DU/1964/93"
     result = await live_judgments.for_provision(base, title, "415")
     assert result.items and all("art. 415" in j.matched_references for j in result.items)
+
+
+async def test_live_cjeu_judgment_and_case_law_for_rodo(settings):
+    from polish_legal_mcp.clients.eurlex import EurLexClient
+    from polish_legal_mcp.services.cjeu import CjeuService
+
+    client = EurLexClient(settings)
+    service = CjeuService(client)
+    judgment = await service.get_judgment("C-311/18", paragraphs="134")
+    found = await service.search_for_act("RODO", "17", 3)
+    await client.aclose()
+    assert judgment.citation and "EU:C:2020:559, pkt 134" in judgment.citation
+    assert judgment.paragraphs and judgment.operative_part
+    assert found.items and found.items[0].ecli
