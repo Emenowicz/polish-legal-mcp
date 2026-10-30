@@ -55,6 +55,7 @@ from polish_legal_mcp.parsers.legal_html import (
     find_unit,
     iter_toc,
     parse_html,
+    transitional_sections,
 )
 from polish_legal_mcp.parsers.pdf_text import find_pdf_unit, repeal_marker, same_wording
 
@@ -79,6 +80,7 @@ PROCEDURAL_ACTS = {
     "DU/1997/555",  # Kodeks postępowania karnego
 }
 AMENDING = "Akty zmieniające"
+INTRODUCING = "Przepisy wprowadzające"
 TK_RULINGS = "Orzeczenie TK"
 CONSOLIDATED_TEXTS = "Inf. o tekście jednolitym"
 CONSOLIDATED_TEXT_OF = "Tekst jednolity dla aktu"
@@ -764,6 +766,7 @@ class LegalService:
         paragraph_kind: str | None = None
         staged: StagedEntry | None = None
         unit_found = False
+        transitional: list[str] = []
 
         if not source.has_html:
             reason = (
@@ -799,6 +802,7 @@ class LegalService:
                     )
                     promulgation = _date(base_meta.get("promulgation"))
                     staged = find_staged_entry(act_body_text(doc, struct), promulgation)
+                    transitional = transitional_sections(struct)
             except UnitLookupError as exc:
                 status = VS.NOT_FOUND if exc.reason == "not_found" else VS.UNVERIFIED
                 unit_check = CheckResult(status=status, detail=exc.message)
@@ -924,6 +928,16 @@ class LegalService:
             )
         )
 
+        introducing = [r["id"] for r in _refs(base_meta, INTRODUCING) if r.get("id")]
+        transitional += [f"Przepisy wprowadzające: {eli}" for eli in introducing]
+        if transitional:
+            warnings.append(
+                "Akt zawiera przepisy przejściowe: "
+                + "; ".join(transitional)
+                + ". Mogą one wyłączać lub zmieniać stosowanie tego przepisu (np. do spraw "
+                "wszczętych wcześniej) – sprawdź je. Przepisy przejściowe nowelizacji są w aktach "
+                "zmieniających."
+            )
         pending_note = await self._pending_note(base_meta, as_of)
         if pending_note:
             warnings.append(pending_note)
@@ -987,6 +1001,7 @@ class LegalService:
             wording_source=current.source_document(),
             latest_official_consolidated_text=latest_doc,
             changes_after_source=changes + undated,
+            transitional_provisions=transitional,
             citation=citation,
             verification=VerificationReport(
                 source_authenticity=OFFICIAL_SOURCE,

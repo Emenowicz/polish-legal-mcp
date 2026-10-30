@@ -253,3 +253,13 @@ async def test_pending_amendments_flag_staged_amending_acts(legal):
         in note
     )
     assert "DU/2025/603 (zmiany tego aktu od 2025-05-23)." in note
+
+
+async def test_transitional_chapter_is_pointed_out(legal, eli_mock):
+    result = await legal.get_provision(ActId.parse("DU/2015/1322"), "11", "1")
+    assert result.transitional_provisions == [
+        "Rozdział 9 - Przepisy przejściowe, dostosowujące i końcowe (art. 120–138)"
+    ]
+    assert any(
+        w.startswith("Akt zawiera przepisy przejściowe: Rozdział 9") for w in result.warnings
+    )

@@ -201,6 +201,31 @@ def find_unit(
     return UnitMatch(node_id=str(node["id"]), path=path, paragraph_kind=paragraph_kind)
 
 
+def transitional_sections(struct: list[dict[str, Any]]) -> list[str]:
+    """Chapters/sections of transitional provisions with their article range, e.g.
+    'Rozdział 9 - Przepisy przejściowe, dostosowujące i końcowe (art. 120–138)'."""
+    found: list[str] = []
+
+    def walk(nodes: list[dict[str, Any]]) -> None:
+        for node in nodes:
+            if _is_notice_part(node) or node.get("type") not in CONTAINER_TYPES:
+                continue
+            if "przejściow" in str(node.get("title") or "").lower():
+                articles = [n for n, _ in _top_units(_children(node), "arti", [])]
+                label = _label(node)
+                if articles:
+                    first, last = (
+                        display_name(str(a.get("name", ""))) for a in (articles[0], articles[-1])
+                    )
+                    label += f" (art. {first}–{last})" if first != last else f" (art. {first})"
+                found.append(label)
+            else:
+                walk(_children(node))
+
+    walk(struct)
+    return found
+
+
 def iter_toc(struct: list[dict[str, Any]], max_depth: int = 6):
     """Flatten struct into (id, type, label, depth), skipping notice text and sub-article units."""
 

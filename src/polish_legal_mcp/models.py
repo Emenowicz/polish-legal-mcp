@@ -260,6 +260,10 @@ class ProvisionResult(BaseModel):
     )
     wording_source: SourceDocument | None = None
     latest_official_consolidated_text: SourceDocument | None = None
+    transitional_provisions: list[str] = Field(
+        default_factory=list,
+        description="Rozdziały z przepisami przejściowymi aktu z zakresem artykułów – do sprawdzenia.",
+    )
     changes_after_source: list[ActReference] = Field(
         default_factory=list,
         description="Zmiany/orzeczenia TK z datą między stanem tekstu a żądaną datą.",
