@@ -52,16 +52,14 @@ class EurLexClient:
     async def document(self, celex: str) -> str:
         """Polish XHTML: the act as published in the OJ, or a consolidated version (0…-date)."""
         celex = validate_celex(celex, allow_consolidated=True)
-        cached = self._documents.get(celex)
-        if cached is not None:
-            return cached
-        text = await self._http.get_text(
-            f"/resource/celex/{celex}",
-            accept="application/xhtml+xml;q=1, text/html;q=0.9",
-            headers={"Accept-Language": "pol"},
+        return await self._documents.get_or_load(
+            celex,
+            lambda: self._http.get_text(
+                f"/resource/celex/{celex}",
+                accept="application/xhtml+xml;q=1, text/html;q=0.9",
+                headers={"Accept-Language": "pol"},
+            ),
         )
-        self._documents.set(celex, text)
-        return text
 
     async def _select(self, query: str) -> list[dict[str, str]]:
         data = await self._http.get_json(
@@ -83,9 +81,9 @@ class EurLexClient:
         Returns None when the Publications Office knows no such CELEX number.
         """
         celex = validate_celex(celex)
-        cached = self._metadata.get(celex)
-        if cached is not None:
-            return cached
+        return await self._metadata.get_or_load(celex, lambda: self._load_metadata(celex))
+
+    async def _load_metadata(self, celex: str) -> dict[str, Any] | None:
         work = f'?w cdm:resource_legal_id_celex "{celex}"{_STRING} .'
         prefix = "PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>\n"
         facts = await self._select(
@@ -136,5 +134,4 @@ class EurLexClient:
             "corrigenda": [(row["celex"], row.get("date")) for row in corrigenda],
             "amendments": [(row["celex"], row.get("force")) for row in amendments],
         }
-        self._metadata.set(celex, result)
         return result

@@ -38,55 +38,49 @@ class EliClient:
         return data
 
     async def act(self, act_id: ActId) -> dict[str, Any]:
-        cached = self._meta.get(act_id.eli)
-        if cached is not None:
-            return cached
-        data = await self._http.get_json(act_id.api_path)
-        if not isinstance(data, dict) or "title" not in data:
-            raise UpstreamBadResponseError("ELI: nieoczekiwany format metadanych aktu.")
-        self._meta.set(act_id.eli, data)
-        return data
+        async def load() -> dict[str, Any]:
+            data = await self._http.get_json(act_id.api_path)
+            if not isinstance(data, dict) or "title" not in data:
+                raise UpstreamBadResponseError("ELI: nieoczekiwany format metadanych aktu.")
+            return data
+
+        return await self._meta.get_or_load(act_id.eli, load)
 
     async def struct(self, act_id: ActId) -> list[dict[str, Any]]:
-        cached = self._struct.get(act_id.eli)
-        if cached is not None:
-            return cached
-        data = await self._http.get_json(f"{act_id.api_path}/struct")
-        if not isinstance(data, list):
-            raise UpstreamBadResponseError("ELI: nieoczekiwany format struktury aktu.")
-        self._struct.set(act_id.eli, data)
-        return data
+        async def load() -> list[dict[str, Any]]:
+            data = await self._http.get_json(f"{act_id.api_path}/struct")
+            if not isinstance(data, list):
+                raise UpstreamBadResponseError("ELI: nieoczekiwany format struktury aktu.")
+            return data
+
+        return await self._struct.get_or_load(act_id.eli, load)
 
     async def html(self, act_id: ActId) -> str:
-        cached = self._html.get(act_id.eli)
-        if cached is not None:
-            return cached
-        text = await self._http.get_text(f"{act_id.api_path}/text.html")
-        self._html.set(act_id.eli, text)
-        return text
+        return await self._html.get_or_load(
+            act_id.eli, lambda: self._http.get_text(f"{act_id.api_path}/text.html")
+        )
 
     async def pdf_text(self, act_id: ActId) -> PdfText:
         """Official PDF of the act, read into lines (in a worker thread: CPU-bound)."""
-        cached = self._pdf.get(act_id.eli)
-        if cached is not None:
-            return cached
-        data = await self._http.get_bytes(f"{act_id.api_path}/text.pdf", accept="application/pdf")
-        try:
-            parsed = await asyncio.to_thread(read_pdf, data)
-        except Exception as exc:  # pypdf raises many types on damaged files
-            raise UpstreamBadResponseError(
-                f"ELI: nie udało się odczytać PDF {act_id.eli}."
-            ) from exc
-        self._pdf.set(act_id.eli, parsed)
-        return parsed
+
+        async def load() -> PdfText:
+            data = await self._http.get_bytes(
+                f"{act_id.api_path}/text.pdf", accept="application/pdf"
+            )
+            try:
+                return await asyncio.to_thread(read_pdf, data)
+            except Exception as exc:  # pypdf raises many types on damaged files
+                raise UpstreamBadResponseError(
+                    f"ELI: nie udało się odczytać PDF {act_id.eli}."
+                ) from exc
+
+        return await self._pdf.get_or_load(act_id.eli, load)
 
     async def keywords(self) -> list[str]:
-        cached = self._keywords.get("all")
-        if cached is not None:
-            return cached
-        data = await self._http.get_json("/keywords")
-        if not isinstance(data, list):
-            raise UpstreamBadResponseError("ELI: nieoczekiwany format słownika haseł.")
-        words = [str(w) for w in data]
-        self._keywords.set("all", words)
-        return words
+        async def load() -> list[str]:
+            data = await self._http.get_json("/keywords")
+            if not isinstance(data, list):
+                raise UpstreamBadResponseError("ELI: nieoczekiwany format słownika haseł.")
+            return [str(w) for w in data]
+
+        return await self._keywords.get_or_load("all", load)

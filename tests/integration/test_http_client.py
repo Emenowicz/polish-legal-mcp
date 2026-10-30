@@ -1,11 +1,13 @@
 """Upstream error handling (synthetic responses)."""
 
+import asyncio
+
 import httpx
 import pytest
 import respx
 
 from polish_legal_mcp.clients.eli import EliClient
-from polish_legal_mcp.clients.http import UpstreamClient
+from polish_legal_mcp.clients.http import TTLCache, UpstreamClient
 from polish_legal_mcp.errors import (
     InvalidInputError,
     UpstreamBadResponseError,
@@ -117,3 +119,40 @@ async def test_unexpected_shape_rejected(settings):
     with pytest.raises(UpstreamBadResponseError):
         await eli.act(ActId("DU", 1960, 168))
     await eli.aclose()
+
+
+async def test_cache_loads_once_for_concurrent_callers_and_does_not_cache_failures():
+    cache = TTLCache(60, 4)
+    calls = 0
+
+    async def load():
+        nonlocal calls
+        calls += 1
+        await asyncio.sleep(0.01)
+        return "doc"
+
+    assert await asyncio.gather(*(cache.get_or_load("k", load) for _ in range(5))) == ["doc"] * 5
+    assert calls == 1
+
+    async def fail():
+        raise UpstreamUnavailableError("x")
+
+    with pytest.raises(UpstreamUnavailableError):
+        await cache.get_or_load("bad", fail)
+    assert await cache.get_or_load("bad", load) == "doc"  # retried, not cached
+
+
+async def test_cancelled_caller_does_not_cancel_shared_load():
+    cache = TTLCache(60, 4)
+    started = asyncio.Event()
+
+    async def load():
+        started.set()
+        await asyncio.sleep(0.02)
+        return "doc"
+
+    first = asyncio.create_task(cache.get_or_load("k", load))
+    await started.wait()
+    second = asyncio.create_task(cache.get_or_load("k", load))
+    first.cancel()
+    assert await second == "doc"

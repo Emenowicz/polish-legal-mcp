@@ -28,11 +28,11 @@ class SaosClient:
     async def judgment(self, judgment_id: int) -> dict[str, Any]:
         if judgment_id <= 0:
             raise InvalidInputError("Identyfikator orzeczenia musi być dodatnią liczbą całkowitą.")
-        cached = self._judgments.get(str(judgment_id))
-        if cached is not None:
-            return cached
-        data = await self._http.get_json(f"/judgments/{judgment_id}")
-        if not isinstance(data, dict) or not isinstance(data.get("data"), dict):
-            raise UpstreamBadResponseError("SAOS: nieoczekiwany format orzeczenia.")
-        self._judgments.set(str(judgment_id), data["data"])
-        return data["data"]
+
+        async def load() -> dict[str, Any]:
+            data = await self._http.get_json(f"/judgments/{judgment_id}")
+            if not isinstance(data, dict) or not isinstance(data.get("data"), dict):
+                raise UpstreamBadResponseError("SAOS: nieoczekiwany format orzeczenia.")
+            return data["data"]
+
+        return await self._judgments.get_or_load(str(judgment_id), load)

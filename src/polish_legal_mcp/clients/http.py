@@ -7,9 +7,9 @@ import json
 import logging
 import time
 from collections import OrderedDict
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from email.utils import parsedate_to_datetime
-from typing import Any
+from typing import Any, TypeVar
 
 import httpx
 
@@ -23,19 +23,41 @@ from polish_legal_mcp.errors import (
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
 RETRYABLE_STATUSES = {429, 500, 502, 503, 504}
 MAX_RETRY_AFTER_SECONDS = 10.0
 
 
 class TTLCache:
-    """Small in-process LRU cache with per-entry TTL."""
-
-    # ponytail: no per-key locking; concurrent misses may fetch the same document twice.
+    """Small in-process LRU cache with per-entry TTL and single-flight loading."""
 
     def __init__(self, ttl_seconds: float, max_entries: int) -> None:
         self._ttl = ttl_seconds
         self._max = max_entries
         self._data: OrderedDict[str, tuple[float, Any]] = OrderedDict()
+        self._loading: dict[str, asyncio.Future[Any]] = {}
+
+    async def get_or_load(self, key: str, load: Callable[[], Awaitable[T]]) -> T:
+        """Cached value, or one load shared by all concurrent callers of the same key.
+
+        Claude often asks for several provisions of one act at once; without this each would
+        download and parse the same PDF (seconds of CPU on a Pi). Failures and None results
+        are not cached. A cancelled caller does not cancel the load for the others.
+        """
+        cached = self.get(key)
+        if cached is not None:
+            return cached
+        task = self._loading.get(key)
+        if task is None:
+            task = asyncio.ensure_future(load())
+            self._loading[key] = task
+            task.add_done_callback(lambda done: self._loaded(key, done))
+        return await asyncio.shield(task)
+
+    def _loaded(self, key: str, task: asyncio.Future[Any]) -> None:
+        self._loading.pop(key, None)
+        if not task.cancelled() and task.exception() is None and task.result() is not None:
+            self.set(key, task.result())
 
     def get(self, key: str) -> Any | None:
         item = self._data.get(key)
