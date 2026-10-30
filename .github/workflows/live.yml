@@ -1,0 +1,26 @@
+name: Live upstream checks
+
+# Weekly run against the real ELI, SAOS and EU Publications Office APIs: catches upstream format
+# changes and newly published CVEs without a code change. Separate from CI so upstream outages
+# never block merges.
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.6"
+      - run: uv sync --locked
+      - name: Live smoke tests (real APIs)
+        run: uv run pytest -m live
+      - name: Dependency vulnerability audit
+        run: uvx pip-audit --strict --desc -r <(uv export --frozen --no-dev --no-hashes --no-emit-project)
