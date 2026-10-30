@@ -16,7 +16,7 @@ import respx
 
 from polish_legal_mcp.models import ActId
 from polish_legal_mcp.models import VerificationStatus as VS
-from tests.conftest import ELI, eli_fixture_response
+from tests.conftest import ELI, eli_fixture_response, load_json
 
 
 async def test_1_existing_provision_verified(legal, eli_mock):
@@ -235,3 +235,21 @@ async def test_change_on_consolidated_state_date_counts_as_included(legal):
     exclusive, _ = await legal._changes(meta, lo, hi, include_lo=False)
     assert [c.eli for c in inclusive] == ["DU/2026/184"]
     assert exclusive == []
+
+
+async def test_pending_amendments_flag_staged_amending_acts(legal):
+    # Synthetic: DU/2024/1907 made to enter into force on 2024-11-01 while ELI dates its change of
+    # DU/2015/1322 on 2025-01-01 (real date) – i.e. an amending act entering in stages.
+    staged = load_json("eli/DU_2024_1907.json") | {"entryIntoForce": "2024-11-01"}
+    with respx.mock(assert_all_called=False) as router:
+        router.get(f"{ELI}/acts/DU/2024/1907").respond(json=staged)
+        router.get(url__regex=rf"^{re.escape(ELI)}/acts/").mock(side_effect=eli_fixture_response)
+        result = await legal.get_provision(
+            ActId.parse("DU/2015/1322"), "11", "1", as_of=date(2024, 12, 1)
+        )
+    note = next(w for w in result.warnings if w.startswith("Zmiany oczekujące"))
+    assert (
+        "DU/2024/1907 (zmiany tego aktu od 2025-01-01) – ustawa zmieniająca obowiązuje już od 2024-11-01"
+        in note
+    )
+    assert "DU/2025/603 (zmiany tego aktu od 2025-05-23)." in note

@@ -52,8 +52,11 @@
 
 ## Verification
 - Amendment lists come from ELI metadata; completeness is not provable.
-- The ELI date of an amending act is a single date; staged entry into force of amending acts is
-  not modelled.
+- The ELI date of an amending act is a single date per amended act; staged entry into force of
+  amending acts is not modelled in the temporal rule. `get_legal_provision` lists amendments dated
+  after the requested date and flags amending acts already in force whose changes to this act are
+  dated later (staged entry: check their final provisions); the flag is informational and does
+  not change `VERIFIED`, because ELI does not show whether such an act changed this act earlier.
 - Staged entry into force of the act itself is detected heuristically from its entry-into-force
   clause; unparseable periods ("pierwszego dnia miesiąca następującego…") keep results `UNVERIFIED`.
 - Transitional provisions are not analysed.

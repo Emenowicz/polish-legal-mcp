@@ -65,6 +65,7 @@ WARSAW = ZoneInfo("Europe/Warsaw")
 SEARCH_WINDOW = 100
 MAX_PROVISION_CHARS = 12_000
 MAX_CONSOLIDATED_TEXTS_SCANNED = 15
+MAX_PENDING_CHECKED = 5
 AMENDING = "Akty zmieniające"
 TK_RULINGS = "Orzeczenie TK"
 CONSOLIDATED_TEXTS = "Inf. o tekście jednolitym"
@@ -645,6 +646,51 @@ class LegalService:
         dated.sort(key=lambda r: r.effective_date or date.min)
         return dated, undated
 
+    async def _pending_note(self, base_meta: dict[str, Any], as_of: date) -> str | None:
+        """Amendments of this act dated after ``as_of``, flagging staged amending acts.
+
+        ELI gives one date per amended act. When the amending act itself is already in force on
+        ``as_of`` but its changes to this act are dated later, it enters into force in stages;
+        ELI does not show whether some changes to this act took effect earlier, so the user is
+        told to check its final provisions. Informational only: it never widens VERIFIED.
+        """
+        pending = sorted(
+            (
+                (d, act_id)
+                for r in _refs(base_meta, AMENDING)
+                if (d := _date(r.get("date")))
+                and d > as_of
+                and (act_id := _act_id_or_none(r["id"]))
+            ),
+            key=lambda pair: pair[0],
+        )[:MAX_PENDING_CHECKED]
+        if not pending:
+            return None
+
+        async def entry(act_id: ActId) -> date | None:
+            try:
+                meta = await self._eli.act(act_id)
+            except LegalMcpError:
+                return None
+            return _date(meta.get("entryIntoForce"))
+
+        entries = await gather_limited([lambda a=a: entry(a) for _, a in pending])
+        parts = []
+        for (when, act_id), started in zip(pending, entries, strict=True):
+            part = f"{act_id.eli} (zmiany tego aktu od {when.isoformat()})"
+            if started and started <= as_of:
+                part += (
+                    f" – ustawa zmieniająca obowiązuje już od {started.isoformat()} (etapowe wejście "
+                    "w życie): sprawdź w jej przepisach końcowych, czy nie zmieniła tego przepisu "
+                    "wcześniej"
+                )
+            parts.append(part)
+        return (
+            f"Zmiany oczekujące na wejście w życie po {as_of.isoformat()}: "
+            + "; ".join(parts)
+            + "."
+        )
+
     # ------------------------------------------------------------------- provisions
 
     async def get_provision(
@@ -867,6 +913,10 @@ class LegalService:
                 wording_verified=wording_check.status == VS.VERIFIED,
             )
         )
+
+        pending_note = await self._pending_note(base_meta, as_of)
+        if pending_note:
+            warnings.append(pending_note)
 
         latest_doc = latest_official.source_document() if latest_official else None
         if latest_official and latest_official.act_id != current.act_id:
