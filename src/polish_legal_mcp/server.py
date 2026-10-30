@@ -62,8 +62,9 @@ from polish_legal_mcp.services.legislation import LegislationService
 logger = logging.getLogger(__name__)
 
 INSTRUCTIONS = """\
-Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Kancelarii Sejmu
-(Dziennik Ustaw, Monitor Polski) oraz orzeczenia z SAOS. Zasady:
+Serwer udostępnia oficjalne źródła prawa: akty prawne z API ELI Kancelarii Sejmu (Dziennik Ustaw,
+Monitor Polski), projekty ustaw z API Sejmu, orzeczenia z SAOS oraz prawo UE i orzecznictwo TSUE
+z Urzędu Publikacji UE (EUR-Lex). Zasady:
 - Cytuj wyłącznie treść zwróconą przez narzędzia wraz z linkiem do źródła.
 - Statusy weryfikacji są cząstkowe (VERIFIED, UNVERIFIED, NOT_FOUND, NOT_APPLICABLE,
   SOURCE_UNAVAILABLE). Twierdzenia, które nie mają statusu VERIFIED, oznaczaj wyraźnie jako
@@ -76,12 +77,14 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
 - Prawo UE (np. RODO): get_eu_provision zwraca najbardziej aktualne brzmienie z wersji
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
   zaznacz to przy cytowaniu. Akty UE po słowach z tytułu: search_eu_acts (zwraca CELEX); akty
-  krajowe szukaj w ELI (search_legal_acts).
+  krajowe szukaj w ELI (search_legal_acts). Polskie akty wdrażające dyrektywę:
+  get_eu_transposition.
 - Orzecznictwo TSUE: search_cjeu_judgments (orzeczenia do aktu/artykułu UE) i get_cjeu_judgment
   (sentencja, punkty uzasadnienia, cytat z ECLI). Cytując punkt, podawaj „pkt N”.
 - Szukając podstawy prawnej, najpierw sam wskaż kandydujące akty i przepisy (np. ustawa o ochronie
   praw lokatorów, Kodeks cywilny), a następnie zweryfikuj je search_legal_acts i
-  get_legal_provision. find_legal_basis dopasowuje tylko słowa – traktuj go pomocniczo.
+  get_legal_provision. find_legal_basis dopasowuje słowa (opcjonalnie z sygnałem z orzecznictwa
+  SAOS) – traktuj go pomocniczo.
 - Zmiany w przygotowaniu (projekty ustaw w Sejmie): find_pending_bills – projekt nie jest prawem.
 - Wynik nie jest opinią prawną.
 """

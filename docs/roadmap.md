@@ -1,46 +1,47 @@
 # Roadmap
 
 Ordered by value for legal work (lawyers, public-administration staff) × feasibility from
-**official** sources. No dates: items move up when their source is confirmed. The rules in
-[CLAUDE.md](../CLAUDE.md) and [legal-verification.md](legal-verification.md) apply to every item
-(official sources only, no fabricated data, `VERIFIED` only when positively established, no
-database/LLM, Raspberry Pi sized). Current gaps: [limitations.md](limitations.md).
+**official** sources. The rules in [CLAUDE.md](../CLAUDE.md) and
+[legal-verification.md](legal-verification.md) apply to every item (official sources only, no
+fabricated data, `VERIFIED` only when positively established, no database/LLM, Raspberry Pi
+sized). Current gaps: [limitations.md](limitations.md). Evidence for every source decision:
+[api-research.md](api-research.md).
 
 ## Now
-- **Deploy PDF reading (f10b23f) to the Pi**: `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'`, check
-  the journal for the PDF path, tick "Deployed to the Pi" in
-  [implementation-progress.md](implementation-progress.md).
+- **Deploy to the Pi**: `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'` (needs the owner's sudo),
+  then tick "Deployed to the Pi" in [implementation-progress.md](implementation-progress.md).
 
-## Next — official source confirmed
-| Item | Who it helps | Source / status | Notes |
-|---|---|---|---|
-| **CJEU case law** (`get_cjeu_judgment`: judgment by case number/CELEX/ECLI, paragraph by number) | anyone applying EU law (RODO, public procurement, consumer law) | CELLAR, CELEX sector 6. Verified 2026-10-30: `62018CJ0311` (Schrems II) returns Polish XHTML with numbered paragraphs (`coj-count`) | Same client as `get_eu_provision`. Older (pre-2004) judgments may lack a Polish version → `NOT_FOUND` in Polish, link to EUR-Lex. To verify: SPARQL for "judgments interpreting act X". |
-| **Judgments citing a given provision** (in `get_legal_provision` / `search_judgments`) | litigators: "how do courts read art. X" | SAOS. `legal_base` / `referenced_regulation` filters exist; search items carry **no** `referencedRegulations`, so confirming the article needs one `/judgments/{id}` fetch per hit | Cap at ~10 fetches per call (rate limits, Pi). Result is a candidate list, never "complete case law". |
-| **Weekly live smoke run** (GitHub Actions cron, `pytest -m live`) | maintainers | ELI, SAOS, CELLAR | Catches upstream format changes before users do. |
-| **EU act search by title** (`search_eu_acts`) | users who don't know the CELEX/number | CELLAR SPARQL (titles already queried for metadata) | Today `get_eu_provision` needs the number or an alias. |
-| **Allowlist by Google Workspace domain** (`hd` claim) | a law firm/office giving access to all staff | Google OIDC | Keep email allowlist; domain is an additional option. |
+## Done (2026-10-30)
+| Item | Tool / change | Notes |
+|---|---|---|
+| CJEU case law | `get_cjeu_judgment`, `search_cjeu_judgments` | CELLAR: Polish text, numbered paragraphs, operative part, language of the case, citation with ECLI and "pkt N"; decisions interpreting an act/article from CELLAR annotations. |
+| Judgments citing a provision | `find_judgments_for_provision` | SAOS act + "art. N" search, each judgment confirmed against its cited-provision metadata. |
+| EU act search by title | `search_eu_acts` | Virtuoso full text on Polish titles, base legislative acts in force first. |
+| Directive → Polish implementing acts | `get_eu_transposition` | National implementing measures notified by Poland, mapped to ELI and cross-checked with the ELI title. |
+| Pending bills in the Sejm | `find_pending_bills` | API Sejmu (current term), matched by the act's name in bill titles, with the current stage. |
+| Weekly live checks | `.github/workflows/live.yml` | Real-API smoke tests + dependency audit every Monday. |
+| Google Workspace domain allowlist | `PLMCP_ALLOWED_GOOGLE_DOMAINS` | Only accounts managed by the domain (`hd` claim matching the e-mail). |
+| Single-flight cache | `TTLCache.get_or_load` | Parallel requests share one download/PDF parse (Pi CPU). |
+| Grouped units | HTML + PDF | Any article in "Art. 164–179. (uchylone)" resolves to the group (repealed). |
+| Staged amending acts | `get_legal_provision` warning | Pending amendments listed; amending acts already in force whose change of this act is dated later are flagged (informational, never widens `VERIFIED`). |
+| Case-law signal for legal basis | `find_legal_basis(include_case_law=True)` | Acts most cited in matching SAOS judgments (procedural acts excluded); longer stems. |
+| Maintenance pages | `UpstreamClient` | SAOS "Przerwa techniczna" (200 + HTML) → `SOURCE_UNAVAILABLE`, not "bad JSON". |
 
-## Later — known gaps in current tools
-- **Staged entry into force of amending acts** (each amending provision's own date) and
-  **transitional provisions**: today only warned about. Needs parsing the amending act's final
-  provisions; acts since 2025 are PDF-only, so results stay `UNVERIFIED`.
-- **PDF: annexes, tables and grouped units** ("Art. 102–119") — not split out today.
-- **`find_legal_basis`**: Polish stemmer instead of the crude suffix cut (`ponytail:` in
-  `services/legal.py`); optionally use SAOS judgments' referenced regulations as a signal.
-- **Per-key cache locking** so concurrent misses don't fetch the same document twice
-  (`ponytail:` in `clients/http.py`) — only if load grows.
+## Later — known limits of current tools
+- **Transitional provisions** and a full model of staged entry into force: needs reading the
+  amending acts' final provisions (PDF-only since 2025), so it would stay `UNVERIFIED`; the
+  temporal rule is deliberately not widened.
+- **PDF annexes and tables** (załączniki): text extraction does not keep table layout; the PDF
+  link is returned instead.
+- **Polish morphology** in `find_legal_basis` / `search_eu_acts` (alternations such as
+  spadek → spadku): needs a stemmer dependency; prefix stems are used today.
 
-## Needs research — official source not confirmed
-- **Administrative courts (WSA/NSA)**: CBOSA (orzeczenia.nsa.gov.pl) is NSA's official database
-  but has **no API**. Scraping its HTML is out of scope unless explicitly decided (fragile,
-  terms of use). Biggest gap for administrative and tax law.
-- **EU directive → Polish implementing act** (national transposition measures): check whether
-  CELLAR exposes them for Poland in machine-readable form.
-- **Tax interpretations** (Eureka, Ministry of Finance), **ministerial official journals** and
-  **local law** (voivodeship official journals): no unified official API known; each needs
-  research before any work.
-- **Other official sources**: Sejm API (legislative process — pending amendments), RCL
-  (government drafts), GUS REGON, GUGiK/Geoportal — for the public-administration use case.
+## Blocked — no official machine-readable source (checked 2026-10-30)
+- **Administrative courts (WSA/NSA)**: CBOSA has no API or open-data set; HTML scraping is out
+  of scope. Biggest remaining gap for administrative and tax law.
+- **RCL government drafts** (legislacja.gov.pl): no API; only the `rclLink` of bills in the Sejm.
+- **Tax interpretations** (Eureka): only undocumented internal endpoints.
+- **Local law and ministerial journals**: no unified official API; ELI covers Dz.U. and M.P. only.
 
 ## Not planned
 - **Commentaries, doctrine, case notes (glosy)**: no official open source; licensed databases

@@ -85,6 +85,21 @@ Reproducible steps: `deployment.md` §3–4.
       returns the amended wording as an automatic read
 - [ ] Deployed to the Pi — pending
 
+## Roadmap for legal practice (2026-10-30) — DONE locally / deployment pending
+- [x] CJEU: `get_cjeu_judgment`, `search_cjeu_judgments` (live: C-311/18 pkt 134, RODO art. 17)
+- [x] `find_judgments_for_provision` (live: art. 415 k.c. from the 2026 consolidated text)
+- [x] `search_eu_acts`, `get_eu_transposition` (live: RODO by title; directive 2014/24 → Prawo
+      zamówień publicznych DU/2019/2019)
+- [x] `find_pending_bills` (live: 3 pending bills naming the Civil Code, term 10)
+- [x] Google Workspace domain allowlist, single-flight cache, grouped units, pending/staged
+      amendment note, case-law signal in `find_legal_basis`, SAOS maintenance handling
+- [x] Weekly live workflow (`live.yml`) — first run green 2026-10-30
+- [ ] Deployed to the Pi — pending (owner's sudo)
+
+## Quality gates (local, 2026-10-30)
+- `uv run pytest`: 218 passed (offline); `uv run pytest -m live`: 10 passed (real APIs)
+- `ruff check`, `ruff format --check`, `pyright`: clean
+
 ## Quality gates (local, 2026-10-29)
 - `uv run pytest`: 119 passed (offline); `uv run pytest -m live`: 3 passed (real APIs)
 - `ruff check`, `ruff format --check`, `pyright`: clean
