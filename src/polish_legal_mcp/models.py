@@ -307,6 +307,26 @@ class EuDocumentLink(BaseModel):
     eurlex_url: str
 
 
+class EuActSummary(BaseModel):
+    celex: str
+    title: str
+    act_date: date | None = None
+    in_force: bool | None = Field(default=None, description="Według metadanych EUR-Lex.")
+    legislative: bool = Field(
+        description="Akt Parlamentu Europejskiego i Rady albo Rady (nie akt wykonawczy/delegowany "
+        "Komisji)."
+    )
+    amending: bool = Field(description="Tytuł wskazuje akt zmieniający inny akt.")
+    eurlex_url: str
+
+
+class EuActSearchResult(BaseModel):
+    query_terms: list[str]
+    total_matched: int = Field(description="Trafienia w tytułach (pobrano maks. 300).")
+    items: list[EuActSummary]
+    warnings: list[str] = Field(default_factory=list)
+
+
 class EuProvisionResult(BaseModel):
     requested_act: str
     celex: str | None = None

@@ -153,6 +153,34 @@ class EurLexClient:
         }
         return result
 
+    async def search_titles(
+        self, terms: list[str], act_type: str | None = None
+    ) -> list[dict[str, str]]:
+        """Acts (sector 3) whose Polish title contains all terms (Virtuoso full text, no ranking).
+
+        terms: letters only (validated here); a trailing '*' is a prefix match of ≥4 letters.
+        """
+        if not terms or any(
+            not re.fullmatch(r"[^\W\d_]{4,30}\*?|[^\W\d_]{2,30}", t) for t in terms
+        ):
+            raise InvalidInputError("Nieprawidłowe słowa wyszukiwania.")
+        if act_type not in (None, "R", "L", "D"):
+            raise InvalidInputError("Nieprawidłowy rodzaj aktu UE.")
+        expression = " AND ".join(f"'{t}'" for t in terms)
+        kind = act_type or "RLD"
+        return await self._select(
+            _PREFIX + "# plmcp:title_search " + "-".join(t.rstrip("*") for t in terms) + "\n"
+            "SELECT DISTINCT ?celex ?title ?date ?force WHERE {"
+            f" ?e cdm:expression_title ?title ; cdm:expression_uses_language {_POL} ;"
+            " cdm:expression_belongs_to_work ?w ."
+            f' ?title bif:contains "{expression}" .'
+            " ?w cdm:resource_legal_id_celex ?celex ."
+            " OPTIONAL { ?w cdm:work_date_document ?date }"
+            " OPTIONAL { ?w cdm:resource_legal_in-force ?force }"
+            f' FILTER(REGEX(STR(?celex), "^3[0-9]{{4}}[{kind}][0-9]{{4}}$")) }}'
+            " ORDER BY DESC(?date) LIMIT 300"
+        )
+
     # ------------------------------------------------------------------ case law (CJEU)
 
     async def case_law_celex(

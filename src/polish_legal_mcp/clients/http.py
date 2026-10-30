@@ -136,6 +136,11 @@ class UpstreamClient:
         try:
             return json.loads(body)
         except ValueError as exc:
+            # SAOS answers maintenance windows with 200 and an HTML "Przerwa techniczna" page.
+            if b"Przerwa techniczna" in body[:2000]:
+                raise UpstreamUnavailableError(
+                    f"{self.name}: przerwa techniczna serwisu – spróbuj później."
+                ) from exc
             raise UpstreamBadResponseError(
                 f"{self.name}: odpowiedź nie jest poprawnym JSON-em."
             ) from exc

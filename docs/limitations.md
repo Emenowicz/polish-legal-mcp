@@ -19,8 +19,9 @@
   "Cited" is not "interpreted"; an empty result is not proof that there is no case law.
 
 ## EU law
-- `get_eu_provision` needs the act's number, CELEX or a known alias (RODO); there is no topic
-  search for EU acts and `find_legal_basis` covers Polish acts only.
+- `search_eu_acts` matches words of Polish titles with crude prefix stemming (no relevance
+  ranking; nominative forms of short words such as "dane" do not match "danych");
+  `find_legal_basis` covers Polish acts only.
 - The wording comes from the newest EUR-Lex consolidated version valid on the date. Consolidated
   texts are informational; the Official Journal (with corrigenda) is binding.
 - Amendments that EUR-Lex has not consolidated yet (e.g. directive 2026/806 amending directive

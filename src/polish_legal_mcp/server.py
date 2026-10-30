@@ -39,6 +39,7 @@ from polish_legal_mcp.models import (
     CitationVerificationResult,
     CjeuJudgmentResult,
     CjeuSearchResult,
+    EuActSearchResult,
     EuProvisionResult,
     JudgmentDetails,
     JudgmentSearchResult,
@@ -70,8 +71,8 @@ Serwer udostępnia oficjalne źródła prawa polskiego: akty prawne z API ELI Ka
   do konkretnego przepisu (np. art. 5 k.c.): find_judgments_for_provision.
 - Prawo UE (np. RODO): get_eu_provision zwraca najbardziej aktualne brzmienie z wersji
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
-  zaznacz to przy cytowaniu. Wyszukiwania aktów UE po temacie nie ma: potrzebny numer aktu
-  (np. 2016/679, 2014/24/UE), CELEX lub skrót RODO; akty krajowe szukaj w ELI.
+  zaznacz to przy cytowaniu. Akty UE po słowach z tytułu: search_eu_acts (zwraca CELEX); akty
+  krajowe szukaj w ELI (search_legal_acts).
 - Orzecznictwo TSUE: search_cjeu_judgments (orzeczenia do aktu/artykułu UE) i get_cjeu_judgment
   (sentencja, punkty uzasadnienia, cytat z ECLI). Cytując punkt, podawaj „pkt N”.
 - Szukając podstawy prawnej, najpierw sam wskaż kandydujące akty i przepisy (np. ustawa o ochronie
@@ -412,6 +413,30 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         )
 
     @mcp.tool(annotations=READ_ONLY)
+    async def search_eu_acts(
+        query: Annotated[
+            str,
+            Field(
+                min_length=3,
+                max_length=200,
+                description="Słowa z tytułu aktu UE, np. 'ochrona danych osobowych', "
+                "'zamówienia publiczne', 'sygnaliści'.",
+            ),
+        ],
+        act_type: Annotated[
+            Literal["rozporządzenie", "dyrektywa", "decyzja"] | None,
+            Field(default=None, description="Rodzaj aktu UE."),
+        ] = None,
+        limit: Annotated[int, Field(ge=1, le=30, description="Liczba wyników.")] = 10,
+    ) -> EuActSearchResult:
+        """Wyszukuje akty prawa UE (rozporządzenia, dyrektywy, decyzje) po słowach z polskiego
+        tytułu w oficjalnych metadanych Urzędu Publikacji UE (EUR-Lex). Zwraca CELEX, tytuł, datę
+        i status obowiązywania; akty Parlamentu Europejskiego i Rady, niezmieniające i
+        obowiązujące są pierwsze. Brzmienie przepisów: get_eu_provision; orzecznictwo:
+        search_cjeu_judgments."""
+        return await _run(lambda: eu_law.search_acts(query, act_type, limit))
+
+    @mcp.tool(annotations=READ_ONLY)
     async def search_cjeu_judgments(
         act: EuActStr,
         article: Annotated[
@@ -521,7 +546,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         przedmiotowych ELI i tytułów aktów obowiązujących. To dopasowanie leksykalne, nie
         semantyczne i nie porada prawna: każdego kandydata zweryfikuj get_legal_act /
         get_legal_provision. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
-        (np. RODO), użyj get_eu_provision zamiast podsuwać niepowiązane akty krajowe."""
+        (np. RODO), użyj search_eu_acts / get_eu_provision zamiast podsuwać niepowiązane akty
+        krajowe."""
         return await _run(lambda: legal.find_legal_basis(issue_description, as_of_date, limit))
 
     @mcp.tool(annotations=READ_ONLY)

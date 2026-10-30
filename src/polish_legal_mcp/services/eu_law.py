@@ -27,6 +27,8 @@ from polish_legal_mcp.errors import (
 from polish_legal_mcp.models import (
     CheckResult,
     CitationVerificationResult,
+    EuActSearchResult,
+    EuActSummary,
     EuDocumentLink,
     EuProvisionResult,
     ParsedCitation,
@@ -189,10 +191,105 @@ def assess_eu_temporal(t: EuTemporalInputs) -> CheckResult:
     )
 
 
+_WORD_RE = re.compile(r"[^\W\d_]+")
+_STOPWORDS = {
+    "oraz",
+    "dla",
+    "przez",
+    "sprawie",
+    "dnia",
+    "lub",
+    "jest",
+    "art",
+    "unii",
+    "europejskiej",
+}
+ACT_TYPES = {"rozporządzenie": "R", "dyrektywa": "L", "decyzja": "D"}
+MAX_TERMS = 6
+
+
+_LEGISLATIVE_RE = re.compile(
+    r"^(?:Rozporządzenie|Dyrektywa|Decyzja)(?:\s+(?:nr\s+)?\d+/\d+(?:/\w+)?)?\s+"
+    r"(?:Parlamentu Europejskiego i Rady|Rady)\b"
+)
+# First words after the date: "… z dnia 4 października 2023 r. w sprawie zmiany decyzji …".
+_AMENDING_RE = re.compile(r"\d{4}\s*r\.\s+(?:zmieniając|w sprawie zmiany|uchylając|korygując)")
+
+
+def title_terms(query: str) -> list[str]:
+    """Virtuoso full-text terms (crude Polish stemming by prefix): words of 7–8 letters keep 6
+    ('ochrona' → 'ochron*'), longer ones drop 3 but keep at least 7 ('zamówienia' → 'zamówie*',
+    'publiczne' → 'publicz*'); shorter words must match exactly. Shorter prefixes such as
+    'public*' expand to thousands of words and take 15+ s on the endpoint."""
+    terms: list[str] = []
+    for word in _WORD_RE.findall(query.lower()):
+        if len(word) < 3 or word in _STOPWORDS:
+            continue
+        if len(word) <= 6:
+            term = word
+        elif len(word) <= 8:
+            term = f"{word[:6]}*"
+        else:
+            term = f"{word[: max(7, len(word) - 3)]}*"
+        if term not in terms:
+            terms.append(term)
+    return terms[:MAX_TERMS]
+
+
+def _rank(summary: EuActSummary) -> tuple[int, int, int, int, int]:
+    # ponytail: EUR-Lex SPARQL has no relevance ranking; prefer base legislative acts in force,
+    # then newest. A real ranking needs the EUR-Lex search API (registration required).
+    return (
+        0 if summary.legislative else 1,
+        1 if summary.amending else 0,
+        1 if summary.celex[5] == "D" else 0,  # regulations and directives before decisions
+        0 if summary.in_force else 1,
+        -summary.act_date.toordinal() if summary.act_date else 0,
+    )
+
+
 class EuLawService:
     def __init__(self, client: EurLexClient, today: Callable[[], date] = warsaw_today) -> None:
         self._client = client
         self._today = today
+
+    async def search_acts(
+        self, query: str, act_type: str | None = None, limit: int = 10
+    ) -> EuActSearchResult:
+        terms = title_terms(query)
+        if not terms:
+            raise InvalidInputError(
+                "Podaj słowa z tytułu aktu UE (co najmniej 3 litery), np. 'ochrona danych osobowych'."
+            )
+        rows = await self._client.search_titles(terms, ACT_TYPES.get(act_type or ""))
+        items: list[EuActSummary] = []
+        for row in rows:
+            title = re.sub(r"\s+", " ", row["title"]).strip()
+            items.append(
+                EuActSummary(
+                    celex=row["celex"],
+                    title=title[:400],
+                    act_date=_date(row.get("date")),
+                    in_force=row["force"] in ("1", "true") if "force" in row else None,
+                    legislative=bool(_LEGISLATIVE_RE.match(title)),
+                    amending=bool(_AMENDING_RE.search(title[:250])),
+                    eurlex_url=f"{EURLEX_PAGE}{row['celex']}",
+                )
+            )
+        items.sort(key=_rank)
+        warnings = [
+            "Wyszukiwanie po słowach z polskiego tytułu (EUR-Lex), bez rankingu trafności: "
+            "najpierw akty Parlamentu Europejskiego i Rady/Rady, niezmieniające, obowiązujące. "
+            "Brzmienie przepisu: get_eu_provision z numerem CELEX."
+        ]
+        if not items:
+            warnings.append(
+                "Brak trafień. Tytuły są odmienione (np. 'ochronie danych osobowych'); krótkie "
+                "słowa (do 4 liter) muszą pasować dokładnie – użyj formy z tytułu lub dłuższych słów."
+            )
+        return EuActSearchResult(
+            query_terms=terms, total_matched=len(rows), items=items[:limit], warnings=warnings
+        )
 
     async def get_provision(
         self,

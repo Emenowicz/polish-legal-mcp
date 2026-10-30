@@ -87,3 +87,13 @@ async def test_live_cjeu_judgment_and_case_law_for_rodo(settings):
     assert judgment.citation and "EU:C:2020:559, pkt 134" in judgment.citation
     assert judgment.paragraphs and judgment.operative_part
     assert found.items and found.items[0].ecli
+
+
+async def test_live_eu_act_search_finds_rodo(settings):
+    from polish_legal_mcp.clients.eurlex import EurLexClient
+    from polish_legal_mcp.services.eu_law import EuLawService
+
+    client = EurLexClient(settings)
+    result = await EuLawService(client).search_acts("ochrona danych osobowych", limit=5)
+    await client.aclose()
+    assert "32016R0679" in [i.celex for i in result.items]

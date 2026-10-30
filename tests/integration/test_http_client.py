@@ -156,3 +156,12 @@ async def test_cancelled_caller_does_not_cancel_shared_load():
     second = asyncio.create_task(cache.get_or_load("k", load))
     first.cancel()
     assert await second == "doc"
+
+
+@respx.mock
+async def test_maintenance_page_is_unavailable_not_bad_response(client):
+    # Real SAOS answer during maintenance on 2026-10-30 (200, text/html), shortened.
+    page = "<html><head><title>Przerwa techniczna</title></head><body><h1>Przerwa techniczna</h1>"
+    respx.get(URL).respond(200, text=page, headers={"Content-Type": "text/html"})
+    with pytest.raises(UpstreamUnavailableError, match="przerwa techniczna"):
+        await client.get_json("/acts/DU/1960/168")

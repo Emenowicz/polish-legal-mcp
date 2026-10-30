@@ -20,6 +20,7 @@ EXPECTED_TOOLS = {
     "get_judgment",
     "find_judgments_for_provision",
     "search_cjeu_judgments",
+    "search_eu_acts",
     "get_cjeu_judgment",
 }
 

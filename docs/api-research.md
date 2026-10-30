@@ -59,6 +59,12 @@ citing *Prawo zamówień publicznych* are linked to the 2004 act (`2004/177`).
 | Document | `GET /resource/celex/{CELEX}` with `Accept: application/xhtml+xml`, `Accept-Language: pol` | 303 redirects within the host to the Polish manifestation. OJ format: `div#art_28`, paragraphs `div#028.003`, points in two-cell tables, header `oj-hd-oj` "L 119/1", `oj-hd-date`. Consolidated (`0…-YYYYMMDD`): `div.norm` + `span.no-parag`, `grid-container` lists, header table of modifiers (`p.arrow a[title=CELEX]` ►C1/►M1). Older acts (e.g. 32001R1049 OJ) have no article ids. |
 | Metadata | `GET /webapi/rdf/sparql` (`Accept: application/sparql-results+json`, 406 for plain JSON) | `cdm:resource_legal_id_celex`, `…_date_entry-into-force` (several: entry into force + application), `…_date_end-of-validity` (9999-12-31 = none), `…_in-force`, `…_eli`, `cdm:expression_title` (POL), consolidated versions by CELEX prefix `0…-`, corrigenda `{CELEX}R(nn)` with a Polish expression, amending acts via `cdm:resource_legal_amends_resource_legal`. |
 
+EU act title search (verified 2026-10-30): Virtuoso full text on Polish titles,
+`?title bif:contains "'ochron*' AND 'danych' AND 'osobowy*'"` + CELEX regex for sector 3; no
+stemming and no relevance ranking (we rank base legislative acts in force first). Wildcards need
+≥4 leading letters (`'dan*'` → HTTP 500) and short prefixes are slow: `'zamówie*' AND 'public*'`
+15.9 s vs `'zamówie*' AND 'publiczn*'` 4.1 s; exact words ~0.3–0.6 s.
+
 CJEU case law (verified 2026-10-30): documents `GET /resource/celex/6YYYY{C|T}{J|O|C}NNNN`
 (J judgment, O order, C Advocate General's opinion) in Polish XHTML; numbered paragraphs are
 top-level two-cell tables with `p.count` (2008–2013) or `p.coj-count` (2014+), the operative part
