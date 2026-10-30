@@ -107,3 +107,26 @@ def test_html_superscript_numbers_not_glued():
     unit = extract_unit(doc, "arti_22_1")
     assert unit is not None
     assert unit.text == "Art. 22¹. Por. art. 22¹ i art. 221."
+
+
+def test_article_inside_grouped_repealed_range():
+    # Synthetic lines shaped like DU/2025/1691 (k.p.a.): "Art. 164–179. (uchylone)".
+    from polish_legal_mcp.parsers.legal_html import in_range
+    from polish_legal_mcp.parsers.pdf_text import PdfLine, PdfText
+
+    lines = [
+        PdfLine(10, 10, "Art. 163. Organ administracji publicznej może uchylić decyzję."),
+        PdfLine(10, 10, "Art. 164–179. (uchylone)"),
+        PdfLine(10, 10, "Art. 180."),
+        PdfLine(10, 10, "§ 1. W sprawach z zakresu ubezpieczeń społecznych stosuje się kodeks."),
+    ]
+    pdf = PdfText(lines=lines, footnotes=[], annex_start=0)
+    grouped = find_pdf_unit(pdf, "171")
+    assert grouped.text == "Art. 164–179. (uchylone)" and grouped.path == ["Art. 164–179."]
+    assert repeal_marker(grouped.text)
+    # The range ends the previous article.
+    assert find_pdf_unit(pdf, "163").text.endswith("uchylić decyzję.")
+    with pytest.raises(UnitLookupError):
+        find_pdf_unit(pdf, "181")
+    assert in_range("164-179", "164") and in_range("164-179", "179")
+    assert not in_range("164-179", "180") and not in_range("164-179", "170a")

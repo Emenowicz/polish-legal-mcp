@@ -26,6 +26,7 @@ from polish_legal_mcp.parsers.legal_html import (
     SUPERSCRIPT_DIGITS,
     UnitLookupError,
     display_name,
+    in_range,
     normalize_name,
 )
 
@@ -35,6 +36,9 @@ _HEADER_RE = re.compile(
 _ANNEX_RE = re.compile(r"^Załącznik do obwieszczenia")
 _ARTICLE_RE = re.compile(r"^Art\.\s*(\d+[a-z]*[⁰¹²³⁴⁵⁶⁷⁸⁹]*)\.\s*(.*)$")
 _TOP_PARA_RE = re.compile(r"^§\s*(\d+[a-z]*[⁰¹²³⁴⁵⁶⁷⁸⁹]*)\.\s*(.*)$")
+# Grouped units: "Art. 164–179. (uchylone)".
+_ARTICLE_RANGE_RE = re.compile(r"^Art\.\s*(\d+\s*[–-]\s*\d+)\.\s*(.*)$")
+_TOP_PARA_RANGE_RE = re.compile(r"^§\s*(\d+\s*[–-]\s*\d+)\.\s*(.*)$")
 _HEADING_RE = re.compile(
     r"^(?:Rozdział|ROZDZIAŁ|Dział|DZIAŁ|Tytuł|TYTUŁ|Księga|KSIĘGA|Oddział)\s+\S+$"
     r"|^Załącznik(?:i)?\s+(?:nr|do)\b"
@@ -217,6 +221,7 @@ def _render(lines: list[PdfLine]) -> str:
         text = line.text
         starts_unit = bool(
             _ARTICLE_RE.match(text)
+            or _ARTICLE_RANGE_RE.match(text)
             or _PASS_RE.match(text)
             or _PARA_RE.match(text)
             or _POINT_RE.match(text)
@@ -242,12 +247,20 @@ def find_pdf_unit(
     lines = pdf.lines[pdf.annex_start :]
     top_para = article.strip().startswith("§")
     pattern = _TOP_PARA_RE if top_para else _ARTICLE_RE
+    range_pattern = _TOP_PARA_RANGE_RE if top_para else _ARTICLE_RANGE_RE
     wanted = normalize_name(article)
     starts = [
         i
         for i, line in enumerate(lines)
         if (m := pattern.match(line.text)) and normalize_name(m.group(1)) == wanted
     ]
+    grouped = None
+    if not starts:
+        for i, line in enumerate(lines):
+            m = range_pattern.match(line.text)
+            if m and in_range(m.group(1).replace(" ", ""), wanted):
+                starts.append(i)
+                grouped = m.group(1).replace(" ", "")
     label = f"§ {display_name(wanted)}" if top_para else f"art. {display_name(wanted)}"
     if not starts:
         raise UnitLookupError("not_found", f"Nie znaleziono {label} w tekście PDF.")
@@ -256,13 +269,15 @@ def find_pdf_unit(
     begin = starts[0]
     end = begin + 1
     while end < len(lines) and not (
-        pattern.match(lines[end].text) or _HEADING_RE.match(lines[end].text)
+        pattern.match(lines[end].text)
+        or range_pattern.match(lines[end].text)
+        or _HEADING_RE.match(lines[end].text)
     ):
         end += 1
     unit_lines = list(lines[begin:end])
-    head = pattern.match(unit_lines[0].text)
+    head = (range_pattern if grouped else pattern).match(unit_lines[0].text)
     remainder = head.group(2) if head else ""
-    path = [f"{'§' if top_para else 'Art.'} {display_name(wanted)}."]
+    path = [f"{'§' if top_para else 'Art.'} {grouped or display_name(wanted)}."]
     scope = unit_lines
     if paragraph:
         body = (
@@ -361,7 +376,16 @@ def repeal_marker(text: str) -> str | None:
     if "\n" in text.strip():
         return None
     body = text.strip()
-    for pattern in (_ARTICLE_RE, _TOP_PARA_RE, _PASS_RE, _PARA_RE, _POINT_RE, _LETTER_RE):
+    for pattern in (
+        _ARTICLE_RE,
+        _ARTICLE_RANGE_RE,
+        _TOP_PARA_RE,
+        _TOP_PARA_RANGE_RE,
+        _PASS_RE,
+        _PARA_RE,
+        _POINT_RE,
+        _LETTER_RE,
+    ):
         match = pattern.match(body)
         if match:
             body = match.group(2)

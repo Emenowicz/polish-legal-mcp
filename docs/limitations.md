@@ -5,8 +5,10 @@
   0 of 1422 from 2026; 100 % of 2024). Current consolidated texts are therefore usually PDF-only.
   The server reads those PDFs: unchanged provisions are confirmed against the last HTML version
   (`VERIFIED`), changed or new ones are read automatically from the PDF and stay `UNVERIFIED`
-  (check the PDF page given). Tables, annexes (załączniki) and grouped units such as
-  "Art. 102–119" are not split out of PDFs. The first read of a large code takes several seconds
+  (check the PDF page given). Grouped units such as "Art. 164–179. (uchylone)" resolve
+  any article in the range (HTML struct node `arti_164-179` and PDF). Tables and annexes
+  (załączniki) are not extracted from PDFs: their layout does not survive text extraction (cells
+  run together), so they would not be reliable – use the PDF link. The first read of a large code takes several seconds
   on a Raspberry Pi (then cached for an hour).
 - The *tekst ujednolicony* (type `U`) files are informational compilations, not official texts;
   they are listed with `official: false` and never used as a wording source.

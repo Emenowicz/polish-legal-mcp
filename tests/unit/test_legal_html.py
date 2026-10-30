@@ -102,3 +102,21 @@ def test_original_text_skips_quoted_articles_of_other_acts():
     struct = load_json("eli/DU_2015_1322.struct.json")
     match = find_unit(struct, "2")
     assert match.node_id == "chpt_1-arti_2"
+
+
+def test_article_in_grouped_struct_node():
+    # Struct node as ELI serves it for DU/2024/572 (k.p.a.), captured 2026-10-30.
+    struct = [
+        {"id": "bran_III-arti_163", "type": "arti", "name": "163", "title": "Art. 163."},
+        {
+            "id": "bran_III-arti_164-179",
+            "type": "arti",
+            "name": "164-179",
+            "title": "Art. 164-179.",
+        },
+        {"id": "bran_III-arti_180", "type": "arti", "name": "180", "title": "Art. 180."},
+    ]
+    assert find_unit(struct, "171").node_id == "bran_III-arti_164-179"
+    assert find_unit(struct, "163").node_id == "bran_III-arti_163"
+    with pytest.raises(UnitLookupError):
+        find_unit(struct, "181")

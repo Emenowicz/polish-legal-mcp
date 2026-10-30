@@ -54,6 +54,17 @@ _SUPERSCRIPT_RE = re.compile(r"([⁰¹²³⁴⁵⁶⁷⁸⁹]+)$")
 _SUFFIX_FORMS_RE = re.compile(r"(?:\^|_)(\d+)$|\((\d+)\)$")
 
 
+_RANGE_RE = re.compile(r"^(\d+)\s*[-–]\s*(\d+)\.?$")
+
+
+def in_range(name: str, wanted: str) -> bool:
+    """Grouped units such as 'Art. 164-179. (uchylone)': is article 171 one of them?"""
+    match = _RANGE_RE.match(name.strip())
+    return bool(
+        match and wanted.isdigit() and int(match.group(1)) <= int(wanted) <= int(match.group(2))
+    )
+
+
 def normalize_name(value: str) -> str:
     """Canonical unit number as ELI's struct writes it: '22¹', '22^1', '22(1)' → '22_1'."""
     value = _PREFIX_RE.sub("", value.strip().lower()).replace(" ", "")
@@ -144,6 +155,12 @@ def find_unit(
         if normalize_name(str(node.get("name", ""))) == wanted
     ]
     top_label = "§" if top_type == "para" else "art."
+    if not candidates:
+        candidates = [
+            (node, path)
+            for node, path in _top_units(struct, top_type, [])
+            if in_range(str(node.get("name", "")), wanted)
+        ]
     if not candidates:
         hint = ""
         if (
