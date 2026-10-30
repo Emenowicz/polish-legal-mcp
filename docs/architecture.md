@@ -29,7 +29,9 @@ uvicorn ─ Starlette app (FastMCP http_app)
 | `parsers/citations.py` | Citation parsing, verified code aliases. |
 | `services/legal.py` | Version selection, verification rules, citations, amendments, search, lexical legal basis. |
 | `clients/eurlex.py`, `parsers/eu_html.py`, `services/eu_law.py` | EU law: CELLAR documents (redirects only within the host) and SPARQL metadata, OJ/consolidated article extraction, version choice, corrigenda/amendment checks. |
-| `services/judgments.py` | SAOS search/details normalisation, HTML stripping, paging, excerpts. |
+| `services/judgments.py` | SAOS search/details normalisation, HTML stripping, paging, excerpts; judgments citing a provision (confirmed per judgment); acts cited for an issue. |
+| `parsers/cjeu_html.py`, `services/cjeu.py` | CJEU decisions from CELLAR: numbered paragraphs, operative part, language of the case, citation with ECLI; decisions interpreting an act/article (SPARQL annotations). |
+| `clients/sejm.py`, `services/legislation.py` | API Sejmu: legislative processes of the current term, bills naming a given act, current stage. |
 | `server.py` | FastMCP server, Polish tool descriptions, auth, middleware, health. |
 | `main.py` | Entry point: logging, uvicorn with proxy headers and graceful shutdown. |
 

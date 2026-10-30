@@ -666,7 +666,7 @@ class LegalService:
         ELI does not show whether some changes to this act took effect earlier, so the user is
         told to check its final provisions. Informational only: it never widens VERIFIED.
         """
-        pending = sorted(
+        later = sorted(
             (
                 (d, act_id)
                 for r in _refs(base_meta, AMENDING)
@@ -675,7 +675,8 @@ class LegalService:
                 and (act_id := _act_id_or_none(r["id"]))
             ),
             key=lambda pair: pair[0],
-        )[:MAX_PENDING_CHECKED]
+        )
+        pending = later[:MAX_PENDING_CHECKED]
         if not pending:
             return None
 
@@ -697,11 +698,8 @@ class LegalService:
                     "wcześniej"
                 )
             parts.append(part)
-        return (
-            f"Zmiany oczekujące na wejście w życie po {as_of.isoformat()}: "
-            + "; ".join(parts)
-            + "."
-        )
+        more = f" (pokazano {len(pending)} z {len(later)})" if len(later) > len(pending) else ""
+        return f"Zmiany tego aktu datowane po {as_of.isoformat()}{more}: " + "; ".join(parts) + "."
 
     # ------------------------------------------------------------------- provisions
 

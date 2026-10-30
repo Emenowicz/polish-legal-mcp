@@ -247,7 +247,7 @@ async def test_pending_amendments_flag_staged_amending_acts(legal):
         result = await legal.get_provision(
             ActId.parse("DU/2015/1322"), "11", "1", as_of=date(2024, 12, 1)
         )
-    note = next(w for w in result.warnings if w.startswith("Zmiany oczekujące"))
+    note = next(w for w in result.warnings if w.startswith("Zmiany tego aktu datowane po"))
     assert (
         "DU/2024/1907 (zmiany tego aktu od 2025-01-01) – ustawa zmieniająca obowiązuje już od 2024-11-01"
         in note

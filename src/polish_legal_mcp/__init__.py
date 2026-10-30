@@ -1,3 +1,4 @@
-"""Remote MCP server for official Polish legislation (ELI) and case law (SAOS)."""
+"""Remote MCP server for official Polish and EU law (ELI, API Sejmu, EUR-Lex) and case law
+(SAOS, CJEU)."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

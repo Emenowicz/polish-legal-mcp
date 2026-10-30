@@ -74,6 +74,15 @@ async def test_judgment_tools(mcp, saos_mock):
         ("find_legal_basis", {"issue_description": "x" * 2001}),
         ("search_judgments", {"query": "abc", "court_type": "ADMINISTRATIVE"}),
         ("get_judgment", {"judgment_id": 0}),
+        (
+            "find_judgments_for_provision",
+            {"act_id": "DU/1964/93", "article": "5", "candidates_per_page": 21},
+        ),
+        ("get_cjeu_judgment", {"case": "C-311/18", "paragraphs": "x" * 41}),
+        ("search_cjeu_judgments", {"act": "RODO", "article": "17; DROP"}),
+        ("search_eu_acts", {"query": "ab"}),
+        ("get_eu_transposition", {"act": "RODO", "limit": 51}),
+        ("find_pending_bills", {"query": "ab"}),
     ],
 )
 async def test_invalid_or_oversized_input_rejected(mcp, tool, args):
