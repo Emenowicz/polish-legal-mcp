@@ -87,7 +87,9 @@ Environment variables with prefix `PLMCP_` (see [.env.example](.env.example)):
 | `PLMCP_ALLOWED_GOOGLE_DOMAINS` | – | Comma-separated Google Workspace domains: all accounts managed by the domain (Google mode). |
 | `PLMCP_RATE_LIMIT_PER_SECOND` / `_BURST` | `2` / `20` | Per user. |
 | `PLMCP_HTTP_TIMEOUT_SECONDS`, `PLMCP_HTTP_MAX_RETRIES` | `20`, `3` | Upstream calls. |
-| `PLMCP_CACHE_TTL_SECONDS`, `PLMCP_CACHE_MAX_DOCUMENTS` | `3600`, `32` | In-memory cache. |
+| `PLMCP_CACHE_TTL_SECONDS`, `PLMCP_CACHE_MAX_DOCUMENTS` | `3600`, `32` | In-memory cache (metadata TTL, max documents). |
+| `PLMCP_DOCUMENT_CACHE_TTL_SECONDS` | `86400` | Cache time for texts of published acts (ELI struct/HTML/PDF, EUR-Lex documents). |
+| `PLMCP_PREWARM_ACTS` | k.c., k.p.c., k.p.a., k.p. | Production: acts whose newest texts are loaded at start-up and every 6 h (empty = off). |
 
 ## Testing
 ```bash

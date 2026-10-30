@@ -43,13 +43,22 @@ class Settings(BaseSettings):
     http_max_response_bytes: int = Field(default=10_000_000, ge=100_000)
     user_agent: str = "polish-legal-mcp/0.1 (+https://github.com/Emenowicz/polish-legal-mcp)"
     cache_ttl_seconds: int = Field(default=3600, ge=0)
+    # Texts of a published act (ELI struct/HTML/PDF, EUR-Lex documents) do not change once
+    # published, unlike metadata (status, amendments), so they are kept longer.
+    document_cache_ttl_seconds: int = Field(default=24 * 3600, ge=0)
     cache_max_documents: int = Field(default=32, ge=1)
+    # Production only: newest texts of these acts are loaded at start-up and every 6 h, so the
+    # first question about a code does not wait seconds for a PDF to be read on the Pi.
+    prewarm_acts: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["DU/1964/93", "DU/1964/296", "DU/1960/168", "DU/1974/141"]
+    )
 
     @field_validator(
         "allowed_github_logins",
         "allowed_emails",
         "allowed_google_domains",
         "allowed_hosts",
+        "prewarm_acts",
         mode="before",
     )
     @classmethod

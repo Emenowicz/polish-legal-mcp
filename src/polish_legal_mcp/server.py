@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -270,6 +272,40 @@ def build_auth(
     return provider, store
 
 
+PREWARM_DELAY_SECONDS = 30
+PREWARM_INTERVAL_SECONDS = 6 * 3600
+
+
+@asynccontextmanager
+async def prewarm(legal: LegalService, settings: Settings) -> AsyncIterator[None]:
+    """Keep the newest texts of the most used codes cached (production only)."""
+    if settings.env != "production" or not settings.prewarm_acts:
+        yield
+        return
+
+    async def loop() -> None:
+        await asyncio.sleep(PREWARM_DELAY_SECONDS)  # let start-up and health checks finish
+        while True:
+            for eli_id in settings.prewarm_acts:
+                try:
+                    # Goes through metadata, struct/HTML and the newest PDF: warms every cache.
+                    await legal.get_provision(ActId.parse(eli_id), "1")
+                except Exception as exc:
+                    logger.warning(
+                        "prewarm failed",
+                        extra={"fields": {"act": eli_id, "error": type(exc).__name__}},
+                    )
+            await asyncio.sleep(PREWARM_INTERVAL_SECONDS)
+
+    task = asyncio.create_task(loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
 def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     eli = EliClient(settings, backoff_base=backoff_base)
     saos = SaosClient(settings, backoff_base=backoff_base)
@@ -284,7 +320,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
         try:
-            async with periodic_cull(oauth_store):
+            async with periodic_cull(oauth_store), prewarm(legal, settings):
                 yield
         finally:
             await eli.aclose()

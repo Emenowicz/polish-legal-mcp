@@ -19,14 +19,14 @@ class EliClient:
         self._http = UpstreamClient(
             "ELI (api.sejm.gov.pl)", ELI_API, settings, backoff_base=backoff_base
         )
-        ttl = settings.cache_ttl_seconds
-        self._meta = TTLCache(ttl, 512)
-        self._struct = TTLCache(ttl, settings.cache_max_documents)
-        # Act HTML is up to ~1 MB, hence the small bound (Raspberry Pi sized).
-        self._html = TTLCache(ttl, settings.cache_max_documents)
+        documents = settings.document_cache_ttl_seconds
+        self._meta = TTLCache(settings.cache_ttl_seconds, 512)
+        self._struct = TTLCache(documents, settings.cache_max_documents)
+        # Act HTML is up to ~3 MB (Civil Code), hence the small bound (Raspberry Pi sized).
+        self._html = TTLCache(documents, settings.cache_max_documents)
         self._keywords = TTLCache(KEYWORDS_TTL_SECONDS, 1)
-        # Parsed PDF texts (a large code is ~0.5 MB of text); parsing takes seconds on a Pi.
-        self._pdf = TTLCache(ttl, 8)
+        # Parsed PDF texts (Civil Code: ~2 MB in memory); parsing takes seconds on a Pi.
+        self._pdf = TTLCache(documents, 8)
 
     async def aclose(self) -> None:
         await self._http.aclose()

@@ -87,3 +87,35 @@ async def test_cull_removes_expired_entries(tmp_path):
     remaining = [p.name for p in (tmp_path / "oauth-store" / "tx").glob("*.json")]
     assert remaining == ["long.json"]
     assert await wrapped.get(key="long", collection="tx") == {"a": 2}
+
+
+async def test_prewarm_loads_configured_codes_in_production_only(monkeypatch):
+    from polish_legal_mcp import server
+    from tests.conftest import make_settings
+
+    called: list[str] = []
+
+    class FakeLegal:
+        async def get_provision(self, act_id, article):
+            called.append(act_id.eli)
+            if act_id.eli == "DU/1964/296":
+                raise RuntimeError("upstream down")  # one failure must not stop the others
+
+    monkeypatch.setattr(server, "PREWARM_DELAY_SECONDS", 0)
+    prod = make_settings(
+        **{
+            **prod_settings().model_dump(),
+            "prewarm_acts": ["DU/1964/93", "DU/1964/296", "DU/1960/168"],
+        }
+    )
+    async with server.prewarm(FakeLegal(), prod):  # type: ignore[arg-type]
+        for _ in range(50):
+            if len(called) == 3:
+                break
+            await asyncio.sleep(0.01)
+    assert called == ["DU/1964/93", "DU/1964/296", "DU/1960/168"]
+
+    called.clear()
+    async with server.prewarm(FakeLegal(), make_settings()):  # type: ignore[arg-type]
+        await asyncio.sleep(0.02)
+    assert called == []

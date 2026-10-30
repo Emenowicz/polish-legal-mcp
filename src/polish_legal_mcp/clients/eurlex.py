@@ -59,7 +59,9 @@ class EurLexClient:
             backoff_base=backoff_base,
             follow_redirects=True,
         )
-        self._documents = TTLCache(settings.cache_ttl_seconds, settings.cache_max_documents)
+        self._documents = TTLCache(
+            settings.document_cache_ttl_seconds, settings.cache_max_documents
+        )
         self._metadata = TTLCache(settings.cache_ttl_seconds, 256)
 
     async def aclose(self) -> None:
