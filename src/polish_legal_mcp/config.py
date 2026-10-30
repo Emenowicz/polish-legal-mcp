@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     google_client_secret: SecretStr | None = None
     # Only Google accounts whose e-mail is verified by Google are matched.
     allowed_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
+    # Google Workspace domains (``hd`` claim): every managed account of the domain is allowed.
+    allowed_google_domains: Annotated[list[str], NoDecode] = Field(default_factory=list)
     # Extra Host header values accepted besides the base_url host and loopback.
     allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
@@ -43,7 +45,13 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = Field(default=3600, ge=0)
     cache_max_documents: int = Field(default=32, ge=1)
 
-    @field_validator("allowed_github_logins", "allowed_emails", "allowed_hosts", mode="before")
+    @field_validator(
+        "allowed_github_logins",
+        "allowed_emails",
+        "allowed_google_domains",
+        "allowed_hosts",
+        mode="before",
+    )
     @classmethod
     def _split_csv(cls, value: object) -> object:
         if isinstance(value, str):
@@ -54,9 +62,12 @@ class Settings(BaseSettings):
     def _check_security(self) -> Settings:
         if self.auth_mode != "none":
             mode = self.auth_mode
-            allowlist = "allowed_github_logins" if mode == "github" else "allowed_emails"
-            required = ("base_url", f"{mode}_client_id", f"{mode}_client_secret", allowlist)
+            required = ("base_url", f"{mode}_client_id", f"{mode}_client_secret")
             missing = [name for name in required if not getattr(self, name)]
+            if mode == "github" and not self.allowed_github_logins:
+                missing.append("allowed_github_logins")
+            if mode == "google" and not (self.allowed_emails or self.allowed_google_domains):
+                missing.append("allowed_emails or allowed_google_domains")
             if missing:
                 raise ValueError(f"auth_mode={mode} requires: {', '.join(missing)}")
         if self.env == "production":

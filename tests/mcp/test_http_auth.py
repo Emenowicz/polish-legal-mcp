@@ -154,6 +154,38 @@ def test_denied_identity_logged_once(caplog):
     assert denied[0].fields["identity"] == "google:me@example.com"  # type: ignore[attr-defined]
 
 
+def test_google_workspace_domain_requires_matching_hd():
+    settings = make_settings(
+        **{
+            **google_settings().model_dump(),
+            "allowed_emails": [],
+            "allowed_google_domains": ["Firm.pl"],
+        }
+    )
+    check = allowlist_check(settings)
+
+    def ctx(email, hd=None):
+        return _ctx(email=email, email_verified="true", google_user_data={"hd": hd} if hd else {})
+
+    assert check(ctx("anna@firm.pl", "firm.pl"))  # type: ignore[arg-type]
+    # Personal Google account registered with a company address: no hd.
+    assert not check(ctx("anna@firm.pl"))  # type: ignore[arg-type]
+    # Managed account of another domain, or hd not matching the e-mail.
+    assert not check(ctx("anna@other.pl", "other.pl"))  # type: ignore[arg-type]
+    assert not check(ctx("anna@other.pl", "firm.pl"))  # type: ignore[arg-type]
+    unverified = _ctx(
+        email="anna@firm.pl", email_verified="false", google_user_data={"hd": "firm.pl"}
+    )
+    assert not check(unverified)  # type: ignore[arg-type]
+
+
+def test_google_mode_requires_emails_or_domains():
+    base = {**google_settings().model_dump(), "allowed_emails": []}
+    with pytest.raises(ValueError, match="allowed_emails or allowed_google_domains"):
+        make_settings(**base)
+    assert make_settings(**{**base, "allowed_google_domains": ["firm.pl"]}).allowed_google_domains
+
+
 def test_gmail_dots_are_ignored_but_other_domains_are_exact():
     settings = make_settings(
         **{

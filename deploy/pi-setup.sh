@@ -68,8 +68,11 @@ if [ ! -f "$ENV_FILE" ] || [ "$RECONFIGURE" = 1 ]; then
     google)
       read -rp "Google OAuth client ID: " client_id
       read -rsp "Google OAuth client secret (hidden): " client_secret; echo
-      read -rp "Allowed Google e-mail addresses, comma-separated: " allowed
-      allow_line="PLMCP_ALLOWED_EMAILS=$allowed"
+      read -rp "Allowed Google e-mail addresses, comma-separated: " emails
+      read -rp "Allowed Google Workspace domains (all managed accounts), comma-separated [none]: " domains
+      allowed="$emails$domains"
+      allow_line="PLMCP_ALLOWED_EMAILS=$emails
+PLMCP_ALLOWED_GOOGLE_DOMAINS=$domains"
       ;;
     github)
       read -rp "GitHub OAuth App client ID: " client_id

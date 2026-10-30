@@ -142,7 +142,8 @@ def canonical_email(email: str) -> str:
 
 
 def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
-    """Allow GitHub logins (case-insensitive) or Google e-mails verified by Google.
+    """Allow GitHub logins (case-insensitive), Google e-mails verified by Google, or managed
+    accounts of allowed Google Workspace domains (``hd`` from Google's userinfo).
 
     Denied identities are logged once per process: a signed-in account that is not on the
     allowlist otherwise just sees an empty tool list, which is hard to diagnose.
@@ -160,6 +161,7 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
 
     if settings.auth_mode == "google":
         emails = {canonical_email(email) for email in settings.allowed_emails}
+        domains = {domain.lower() for domain in settings.allowed_google_domains}
 
         def check_google(ctx: AuthContext) -> bool:
             claims = ctx.token.claims if ctx.token else {}
@@ -168,7 +170,18 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
                 return deny("google:<no e-mail claim>")
             if str(verified).lower() != "true":
                 return deny(f"google:{email} (e-mail not verified by Google)")
-            return canonical_email(email) in emails or deny(f"google:{email}")
+            if canonical_email(email) in emails:
+                return True
+            # hd is set only for Workspace-managed accounts; a personal account registered with a
+            # company address has none. Missing userinfo (fetch failed) means no hd → deny.
+            hd = (claims.get("google_user_data") or {}).get("hd")
+            if (
+                isinstance(hd, str)
+                and hd.lower() in domains
+                and email.lower().endswith("@" + hd.lower())
+            ):
+                return True
+            return deny(f"google:{email}")
 
         return check_google
     logins = {login.lower() for login in settings.allowed_github_logins}
