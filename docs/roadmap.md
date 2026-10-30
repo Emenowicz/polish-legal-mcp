@@ -27,6 +27,8 @@ releases with `ssh -t tradingpi 'sudo bash ~/pi-setup.sh'` and check `/health` f
 | Case-law signal for legal basis | `find_legal_basis(include_case_law=True)` | Acts most cited in matching SAOS judgments (procedural acts excluded); longer stems. |
 | Transitional provisions pointer | `get_legal_provision` (`transitional_provisions`) | Chapters of transitional provisions with their article range (from the struct) and the introducing act of codes (ELI "Przepisy wprowadzające", e.g. k.c. → DU/1964/94). |
 | Polish inflection in searches | `find_legal_basis`, `search_eu_acts` | Fleeting e of "-ek" nouns (podatek → podatku), whole short words as prefixes (system → systemu), three most selective words for EUR-Lex (VAT directive in 1 s instead of 12 s). |
+| Citations for SAOS judgments | `search_judgments`, `get_judgment`, `find_judgments_for_provision` (`citation`) | "wyrok Sądu Najwyższego z dnia 12 marca 2020 r., I CSK 123/19" built only from SAOS metadata (type, court, date, case number); none when a part is missing. |
+| Faster answers on the Pi | 24 h cache for published texts, prewarm | Texts (struct/HTML/PDF, EUR-Lex documents) cached 24 h, metadata 1 h; k.c., k.p.c., k.p.a., k.p. loaded at start-up and every 6 h (production). |
 | Maintenance pages | `UpstreamClient` | SAOS "Przerwa techniczna" (200 + HTML) → `SOURCE_UNAVAILABLE`, not "bad JSON". |
 
 ## Later

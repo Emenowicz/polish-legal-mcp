@@ -29,25 +29,12 @@ from polish_legal_mcp.models import (
 from polish_legal_mcp.parsers.cjeu_html import parse_cjeu
 from polish_legal_mcp.parsers.legal_html import normalize_name
 from polish_legal_mcp.services.eu_law import resolve_eu_act
+from polish_legal_mcp.services.legal import polish_date
 
 MAX_PARAGRAPHS = 10
 MAX_MATCHES = 10
 MATCH_RADIUS = 300
 MAX_OPERATIVE_CHARS = 8_000
-MONTHS = [
-    "stycznia",
-    "lutego",
-    "marca",
-    "kwietnia",
-    "maja",
-    "czerwca",
-    "lipca",
-    "sierpnia",
-    "września",
-    "października",
-    "listopada",
-    "grudnia",
-]
 DOCUMENT_TYPES = {"J": "wyrok", "O": "postanowienie", "C": "opinia rzecznika generalnego"}
 TRANSLATION_NOTE = (
     "Wersja polska orzeczenia TSUE jest tłumaczeniem; autentyczna jest wersja w języku "
@@ -133,9 +120,8 @@ def format_cjeu_citation(summary: CjeuJudgmentSummary) -> str | None:
         "Sąd": "Sądu",
         "Sąd Pierwszej Instancji": "Sądu Pierwszej Instancji",
     }[s.court]
-    d = s.decision_date
     return (
-        f"{s.document_type} {court} z dnia {d.day} {MONTHS[d.month - 1]} {d.year} r., "
+        f"{s.document_type} {court} z dnia {polish_date(s.decision_date)} r., "
         f"{s.parties}, {s.case_number}, {s.ecli.removeprefix('ECLI:')}"
     )
 

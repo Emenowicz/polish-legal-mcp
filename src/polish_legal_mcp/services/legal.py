@@ -156,6 +156,27 @@ STANDARD_WARNINGS = [
 ]
 
 
+MONTHS_GENITIVE = [
+    "stycznia",
+    "lutego",
+    "marca",
+    "kwietnia",
+    "maja",
+    "czerwca",
+    "lipca",
+    "sierpnia",
+    "września",
+    "października",
+    "listopada",
+    "grudnia",
+]
+
+
+def polish_date(value: date) -> str:
+    """'16 lipca 2020' – the date as Polish citations write it (followed by 'r.')."""
+    return f"{value.day} {MONTHS_GENITIVE[value.month - 1]} {value.year}"
+
+
 def warsaw_today() -> date:
     return datetime.now(WARSAW).date()
 

@@ -74,7 +74,8 @@ z Urzędu Publikacji UE (EUR-Lex). Zasady:
 - Brak wyniku nie dowodzi, że przepis lub orzeczenie nie istnieje.
 - Od 2025 r. ELI publikuje teksty tylko w PDF – brzmienie może pochodzić ze starszego tekstu
   jednolitego; zawsze sprawdź ostrzeżenia i listę późniejszych zmian.
-- Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych. Orzecznictwo
+- Orzeczenia nie są przepisami prawa. SAOS nie obejmuje sądów administracyjnych. Cytując
+  orzeczenie, używaj pola citation (zbudowanego z oficjalnych metadanych). Orzecznictwo
   do konkretnego przepisu (np. art. 5 k.c.): find_judgments_for_provision.
 - Prawo UE (np. RODO): get_eu_provision zwraca najbardziej aktualne brzmienie z wersji
   skonsolidowanej EUR-Lex (ze zmianami i sprostowaniami). Wiążący jest tekst w Dz. Urz. UE –
@@ -664,8 +665,9 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         ] = None,
     ) -> JudgmentSearchResult:
         """Wyszukuje orzeczenia sądów w SAOS (sądy powszechne, SN, TK, KIO) – zwraca sygnatury,
-        sąd, datę, fragment i link. SAOS nie zawiera wszystkich orzeczeń, w szczególności
-        orzeczeń sądów administracyjnych (WSA/NSA). Orzeczenie nie jest przepisem prawa."""
+        sąd, datę, fragment, gotowy cytat (citation) i link. SAOS nie zawiera wszystkich orzeczeń,
+        w szczególności orzeczeń sądów administracyjnych (WSA/NSA). Orzeczenie nie jest przepisem
+        prawa."""
         return await _run(
             lambda: judgments.search(
                 query,
@@ -784,8 +786,9 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         ] = None,
     ) -> JudgmentDetails:
         """Pobiera orzeczenie z SAOS: sygnatury, sąd, datę, rodzaj, sędziów, podstawy prawne,
-        powołane przepisy oraz stronicowaną treść (sentencja/uzasadnienie) i opcjonalnie fragmenty
-        z szukaną frazą. Zawiera link do strony orzeczenia w SAOS."""
+        powołane przepisy, stronicowaną treść (sentencja/uzasadnienie), opcjonalnie fragmenty
+        z szukaną frazą, gotowy cytat (citation, np. 'wyrok Sądu Najwyższego z dnia 12 marca
+        2020 r., I CSK 123/19') i link do strony orzeczenia w SAOS."""
         return await _run(lambda: judgments.get(judgment_id, text_offset, text_limit, search_text))
 
     return mcp

@@ -22,7 +22,7 @@ from polish_legal_mcp.models import (
     ReferencedRegulation,
 )
 from polish_legal_mcp.parsers.legal_html import display_name, normalize_name
-from polish_legal_mcp.services.legal import gather_limited
+from polish_legal_mcp.services.legal import gather_limited, polish_date
 
 DEFAULT_TEXT_LIMIT = 8_000
 MAX_EXCERPTS = 10
@@ -31,6 +31,22 @@ COURT_NAMES = {
     "SUPREME": "Sąd Najwyższy",
     "CONSTITUTIONAL_TRIBUNAL": "Trybunał Konstytucyjny",
     "NATIONAL_APPEAL_CHAMBER": "Krajowa Izba Odwoławcza",
+}
+JUDGMENT_TYPES = {
+    "SENTENCE": "wyrok",
+    "DECISION": "postanowienie",
+    "RESOLUTION": "uchwała",
+    "REGULATION": "zarządzenie",
+    # SAOS stores the reasons as a separate document; the decision type is not given.
+    "REASONS": "uzasadnienie orzeczenia",
+}
+COURT_GENITIVE = {
+    "Sąd Najwyższy": "Sądu Najwyższego",
+    "Sąd Apelacyjny": "Sądu Apelacyjnego",
+    "Sąd Okręgowy": "Sądu Okręgowego",
+    "Sąd Rejonowy": "Sądu Rejonowego",
+    "Trybunał Konstytucyjny": "Trybunału Konstytucyjnego",
+    "Krajowa Izba Odwoławcza": "Krajowej Izby Odwoławczej",
 }
 COVERAGE_NOTE = (
     "SAOS nie zawiera wszystkich orzeczeń w Polsce. W praktyce brak w nim orzeczeń sądów "
@@ -89,20 +105,47 @@ def _court(item: dict[str, Any]) -> tuple[str | None, str | None]:
     return name, division.get("name")
 
 
+def format_judgment_citation(
+    judgment_type: str | None,
+    court_name: str | None,
+    judgment_date: date | None,
+    case_numbers: list[str],
+) -> str | None:
+    """'wyrok Sądu Okręgowego w Suwałkach z dnia 12 marca 2020 r., I Ca 123/19' – only from
+    SAOS metadata; None when the type, court, date or case number is missing or unknown."""
+    kind = JUDGMENT_TYPES.get(judgment_type or "")
+    court = next(
+        (
+            genitive + (court_name or "")[len(nominative) :]
+            for nominative, genitive in COURT_GENITIVE.items()
+            if (court_name or "").startswith(nominative)
+        ),
+        None,
+    )
+    if not (kind and court and judgment_date and case_numbers):
+        return None
+    return f"{kind} {court} z dnia {polish_date(judgment_date)} r., {', '.join(case_numbers)}"
+
+
 def _summary(item: dict[str, Any]) -> JudgmentSummary:
     judgment_id = int(item["id"])
     court_name, division = _court(item)
     excerpt = html_to_text(str(item.get("textContent") or "")) or None
+    case_numbers = [c["caseNumber"] for c in item.get("courtCases") or [] if c.get("caseNumber")]
+    judgment_date = _date(item.get("judgmentDate"))
     return JudgmentSummary(
         judgment_id=judgment_id,
-        case_numbers=[c["caseNumber"] for c in item.get("courtCases") or [] if c.get("caseNumber")],
+        case_numbers=case_numbers,
         court_type=item.get("courtType"),
         court_name=court_name,
         division=division,
-        judgment_date=_date(item.get("judgmentDate")),
+        judgment_date=judgment_date,
         judgment_type=item.get("judgmentType"),
         excerpt=excerpt[:1000] if excerpt else None,
         keywords=[str(k) for k in item.get("keywords") or []],
+        citation=format_judgment_citation(
+            item.get("judgmentType"), court_name, judgment_date, case_numbers
+        ),
         source_url=f"{SAOS_PAGE}{judgment_id}",
         api_url=f"https://www.saos.org.pl/api/judgments/{judgment_id}",
     )
@@ -364,6 +407,12 @@ class JudgmentService:
             text_length_total=len(full_text),
             has_more=text_offset + text_limit < len(full_text),
             excerpts=excerpts,
+            citation=format_judgment_citation(
+                item.get("judgmentType"),
+                court_name,
+                _date(item.get("judgmentDate")),
+                [c["caseNumber"] for c in item.get("courtCases") or [] if c.get("caseNumber")],
+            ),
             source_url=f"{SAOS_PAGE}{item['id']}",
             original_source_url=source.get("judgmentUrl"),
             warnings=warnings,

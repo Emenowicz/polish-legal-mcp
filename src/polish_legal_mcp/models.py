@@ -450,6 +450,11 @@ class JudgmentSummary(BaseModel):
     judgment_type: str | None = None
     excerpt: str | None = Field(default=None, description="Fragment z wyszukiwarki SAOS.")
     keywords: list[str] = Field(default_factory=list)
+    citation: str | None = Field(
+        default=None,
+        description="Cytat z metadanych SAOS, np. 'wyrok Sądu Najwyższego z dnia 12 marca 2020 "
+        "r., I CSK 123/19'; brak, gdy metadanych nie wystarcza.",
+    )
     source_url: str
     api_url: str
 
@@ -581,6 +586,9 @@ class JudgmentDetails(BaseModel):
     has_more: bool
     excerpts: list[str] = Field(
         default_factory=list, description="Fragmenty zawierające szukaną frazę."
+    )
+    citation: str | None = Field(
+        default=None, description="Cytat z metadanych SAOS; brak, gdy metadanych nie wystarcza."
     )
     source_url: str = Field(description="Strona orzeczenia w SAOS.")
     original_source_url: str | None = Field(

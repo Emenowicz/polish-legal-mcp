@@ -72,3 +72,40 @@ async def test_missing_judgment(judgments, saos_mock):
 def test_html_to_text_keeps_anonymised_text():
     html = '<p>Powód <span class="anon-block">W. K.</span> wniósł <em>pozew</em>.</p><p>Drugi</p>'
     assert html_to_text(html) == "Powód W. K. wniósł pozew.\nDrugi"
+
+
+def test_citation_built_only_from_complete_metadata():
+    from polish_legal_mcp.services.judgments import format_judgment_citation
+
+    assert (
+        format_judgment_citation(
+            "SENTENCE",
+            "Sąd Rejonowy dla m. st. Warszawy w Warszawie",
+            date(2020, 3, 12),
+            ["I C 1/20"],
+        )
+        == "wyrok Sądu Rejonowego dla m. st. Warszawy w Warszawie z dnia 12 marca 2020 r., I C 1/20"
+    )
+    assert (
+        format_judgment_citation("RESOLUTION", "Sąd Najwyższy", date(2021, 1, 5), ["III CZP 1/20"])
+        == "uchwała Sądu Najwyższego z dnia 5 stycznia 2021 r., III CZP 1/20"
+    )
+    # Unknown court form, missing date or case number: no citation rather than a guess.
+    assert (
+        format_judgment_citation(
+            "SENTENCE", "Wojewódzki Sąd Administracyjny", date(2020, 1, 1), ["X"]
+        )
+        is None
+    )
+    assert format_judgment_citation("SENTENCE", "Sąd Najwyższy", None, ["I CSK 1/20"]) is None
+    assert format_judgment_citation("SENTENCE", "Sąd Najwyższy", date(2020, 1, 1), []) is None
+
+
+async def test_search_and_details_carry_citations(judgments, saos_mock):
+    found = await judgments.search("nieruchomości Skarbu Państwa", limit=3)
+    assert found.items[0].citation == (
+        "uzasadnienie orzeczenia Sądu Rejonowego w Świnoujściu z dnia 15 października 2026 r., "
+        "I C 101/26"
+    )
+    detail = await judgments.get(554287, text_limit=500)
+    assert detail.citation and detail.citation.endswith(", " + ", ".join(detail.case_numbers))

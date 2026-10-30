@@ -38,7 +38,7 @@ case numbers.
 | `verify_legal_citation` | Parse a citation ("art. 61 § 1 k.p.a.", "… (Dz. U. z 2025 r. poz. 817)"), resolve the act, check unit, wording and date. |
 | `find_legal_basis` | Candidate acts: ELI keyword vocabulary + title stems, optionally (`include_case_law`) acts most cited in SAOS judgments matching the description. Not semantic, not advice. |
 | `search_judgments` | SAOS search (common courts, Supreme Court, Constitutional Tribunal, KIO) with paging. |
-| `get_judgment` | Judgment metadata, legal bases, referenced regulations, paged text, phrase excerpts. |
+| `get_judgment` | Judgment metadata, legal bases, referenced regulations, paged text, phrase excerpts, citation built from SAOS metadata ("wyrok Sądu Najwyższego z dnia …, I CSK …"). |
 | `search_cjeu_judgments` | CJEU / General Court decisions interpreting an EU act (optionally one article, e.g. RODO art. 17), newest first, from EU Publications Office metadata. |
 | `get_cjeu_judgment` | CJEU decision in Polish by case number, ECLI or CELEX: operative part, selected numbered paragraphs or paragraphs matching a phrase, interpreted provisions, language of the case, citation with ECLI and "pkt N". |
 | `find_pending_bills` | Bills pending in the Sejm (current term) whose title names a given act or contains a phrase, with the current stage and links (Sejm, RCL). |
