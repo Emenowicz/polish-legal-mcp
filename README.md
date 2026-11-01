@@ -85,7 +85,10 @@ Environment variables with prefix `PLMCP_` (see [.env.example](.env.example)):
 | `PLMCP_GOOGLE_CLIENT_ID` / `_SECRET` | – | Google OAuth client (Web application). |
 | `PLMCP_ALLOWED_EMAILS` | – | Comma-separated allowlist of Google-verified e-mails (Google mode). |
 | `PLMCP_ALLOWED_GOOGLE_DOMAINS` | – | Comma-separated Google Workspace domains: all accounts managed by the domain (Google mode). |
+| `PLMCP_OPEN_REGISTRATION` | `false` | Public instance: any Google-verified e-mail / any GitHub login may use the tools; allowlists are ignored. Requires the daily cap below. |
+| `PLMCP_DAILY_TOOL_CALLS_PER_USER` | `0` (no cap) | Tool calls per account per UTC day (in memory, resets on restart). |
 | `PLMCP_RATE_LIMIT_PER_SECOND` / `_BURST` | `2` / `20` | Per user. |
+| `PLMCP_AUTHORIZE_PER_HOUR` / `PLMCP_REGISTER_PER_HOUR` | `60` / `20` | Global hourly caps on OAuth sign-ins and dynamic client registrations; raise before announcing a public instance. |
 | `PLMCP_HTTP_TIMEOUT_SECONDS`, `PLMCP_HTTP_MAX_RETRIES` | `20`, `3` | Upstream calls. |
 | `PLMCP_CACHE_TTL_SECONDS`, `PLMCP_CACHE_MAX_DOCUMENTS` | `3600`, `32` | In-memory cache (metadata TTL, max documents). |
 | `PLMCP_DOCUMENT_CACHE_TTL_SECONDS` | `86400` | Cache time for texts of published acts (ELI struct/HTML/PDF, EUR-Lex documents). |

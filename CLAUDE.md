@@ -50,7 +50,10 @@ docker compose up -d --build              # container (needs .env)
 
 ## Security requirements
 - Production (`PLMCP_ENV=production`) must fail closed without OAuth (Google or GitHub), https base URL,
-  ≥32-char JWT key and a non-empty login allowlist. Keep the `AuthMiddleware` allowlist.
+  ≥32-char JWT key and a non-empty login allowlist. Keep the `AuthMiddleware` allowlist. The only
+  exception is the explicit `PLMCP_OPEN_REGISTRATION=true` (public instance), which still requires
+  OAuth and a daily per-account cap (`PLMCP_DAILY_TOOL_CALLS_PER_USER`); an empty allowlist alone
+  never opens the server.
 - Never log tool arguments, search phrases or upstream query strings.
 - Keep the container non-root, read-only, loopback-published.
 

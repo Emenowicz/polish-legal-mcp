@@ -168,3 +168,9 @@ mcp.example.pl {
 ```
 Set `PLMCP_BASE_URL=https://mcp.example.pl` and the GitHub callback accordingly; open only
 ports 80/443 in the firewall.
+
+Public instance (anyone may sign in): `PLMCP_OPEN_REGISTRATION=true` plus
+`PLMCP_DAILY_TOOL_CALLS_PER_USER`; use a separate Google Cloud project (the consent screen and its
+publishing status are per project, and it must be "In production" for strangers to sign in). Do
+not join a public machine to a tailnet that holds other devices: by default every tailnet device
+can reach every other one.

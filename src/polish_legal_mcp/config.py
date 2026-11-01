@@ -36,6 +36,18 @@ class Settings(BaseSettings):
     # Extra Host header values accepted besides the base_url host and loopback.
     allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
+    # Public instance: every Google-verified e-mail / every GitHub login may use the tools (the
+    # allowlists are ignored), capped by daily_tool_calls_per_user. Explicit opt-in: an empty
+    # allowlist never means "open".
+    open_registration: bool = False
+    # Tool calls per signed-in account per UTC day; 0 = unlimited. Required with open_registration.
+    daily_tool_calls_per_user: int = Field(default=0, ge=0)
+
+    # Global hourly caps on OAuth endpoints that work before sign-in (security.RequestGuard).
+    # Claude uses CIMD and never calls /register; /authorize runs once per sign-in.
+    authorize_per_hour: int = Field(default=60, ge=1)
+    register_per_hour: int = Field(default=20, ge=1)
+
     rate_limit_per_second: float = Field(default=2.0, gt=0)
     rate_limit_burst: int = Field(default=20, ge=1)
 
@@ -77,9 +89,12 @@ class Settings(BaseSettings):
             mode = self.auth_mode
             required = ("base_url", f"{mode}_client_id", f"{mode}_client_secret")
             missing = [name for name in required if not getattr(self, name)]
-            if mode == "github" and not self.allowed_github_logins:
+            if self.open_registration:
+                if not self.daily_tool_calls_per_user:
+                    missing.append("daily_tool_calls_per_user (open_registration)")
+            elif mode == "github" and not self.allowed_github_logins:
                 missing.append("allowed_github_logins")
-            if mode == "google" and not (self.allowed_emails or self.allowed_google_domains):
+            elif mode == "google" and not (self.allowed_emails or self.allowed_google_domains):
                 missing.append("allowed_emails or allowed_google_domains")
             if missing:
                 raise ValueError(f"auth_mode={mode} requires: {', '.join(missing)}")

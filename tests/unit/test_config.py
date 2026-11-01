@@ -63,3 +63,18 @@ def test_google_production_config():
 def test_google_mode_requires_its_settings(missing):
     with pytest.raises(ValidationError, match=missing):
         make(**{**GOOD_GOOGLE, missing: ""})
+
+
+OPEN = {**GOOD_GOOGLE, "allowed_emails": "", "open_registration": True}
+
+
+def test_open_registration_needs_no_allowlist_but_a_daily_cap():
+    assert make(**OPEN, daily_tool_calls_per_user=200).open_registration
+    with pytest.raises(ValidationError, match="daily_tool_calls_per_user"):
+        make(**OPEN)
+
+
+@pytest.mark.parametrize("override", [{"auth_mode": "none"}, {"jwt_signing_key": "short"}])
+def test_open_registration_still_fails_closed(override):
+    with pytest.raises(ValidationError):
+        make(**{**OPEN, "daily_tool_calls_per_user": 200, **override})

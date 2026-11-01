@@ -199,3 +199,28 @@ def test_gmail_dots_are_ignored_but_other_domains_are_exact():
     assert check(_ctx(email="x.y@example.com", email_verified="true"))  # type: ignore[arg-type]
     assert not check(_ctx(email="xy@example.com", email_verified="true"))  # type: ignore[arg-type]
     assert not check(_ctx(email="jan.doe2@gmail.com", email_verified="true"))  # type: ignore[arg-type]
+
+
+def test_open_registration_admits_any_verified_account_without_logging_it(caplog):
+    google = make_settings(
+        **{
+            **google_settings().model_dump(),
+            "open_registration": True,
+            "daily_tool_calls_per_user": 100,
+        }
+    )
+    github = make_settings(
+        **{
+            **prod_settings().model_dump(),
+            "open_registration": True,
+            "daily_tool_calls_per_user": 100,
+        }
+    )
+    check_google, check_github = allowlist_check(google), allowlist_check(github)
+    with caplog.at_level("WARNING", logger="polish_legal_mcp.server"):
+        assert check_google(_ctx(email="stranger@example.com", email_verified="true"))  # type: ignore[arg-type]
+        assert not check_google(_ctx(email="stranger@example.com", email_verified="false"))  # type: ignore[arg-type]
+        assert not check_google(_ctx())  # type: ignore[arg-type]
+        assert check_github(_ctx(login="anyone"))  # type: ignore[arg-type]
+        assert not check_github(_ctx())  # type: ignore[arg-type]
+    assert "stranger@example.com" not in caplog.text

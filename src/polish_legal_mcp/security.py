@@ -30,24 +30,25 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 logger = logging.getLogger(__name__)
 
 MAX_BODY_BYTES = 64 * 1024
-# Global (not per client: all Funnel traffic arrives from loopback) hourly caps. Claude uses
-# CIMD and never calls /register; /authorize runs once per sign-in.
-UNAUTHENTICATED_WRITE_LIMITS = {("POST", "/register"): 20, ("GET", "/authorize"): 60}
 CULL_INTERVAL_SECONDS = 3600
 
 
 class RequestGuard:
-    """ASGI middleware: 413 for bodies over the cap, 429 above the hourly endpoint limits."""
+    """ASGI middleware: 413 for bodies over the cap, 429 above the hourly endpoint limits.
+
+    ``limits`` are global hourly caps per (method, path), not per client: all proxied traffic
+    arrives from loopback. Values come from Settings (authorize_per_hour, register_per_hour).
+    """
 
     def __init__(
         self,
         app: ASGIApp,
+        limits: dict[tuple[str, str], int],
         max_body_bytes: int = MAX_BODY_BYTES,
-        limits: dict[tuple[str, str], int] | None = None,
     ) -> None:
         self.app = app
         self.max_body_bytes = max_body_bytes
-        self.limits = UNAUTHENTICATED_WRITE_LIMITS if limits is None else limits
+        self.limits = limits
         # ponytail: fixed one-hour windows held in memory; reset on restart.
         self._windows: dict[tuple[str, str], tuple[int, int]] = {}
 

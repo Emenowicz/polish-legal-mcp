@@ -117,3 +117,36 @@ async def test_responses_are_bounded(mcp, eli_mock):
             "get_legal_act", {"publisher": "DU", "year": 2015, "position": 1322}
         )
     assert len(json.dumps(result.structured_content)) < 100_000
+
+
+async def test_daily_tool_quota(settings: Settings):
+    mcp = build_server(settings.model_copy(update={"daily_tool_calls_per_user": 2}))
+    async with Client(mcp) as client:
+        texts = [
+            str(
+                (
+                    await client.call_tool("search_eu_acts", {"query": "ab"}, raise_on_error=False)
+                ).content
+            )
+            for _ in range(3)
+        ]
+    assert ["dzienny limit" in text for text in texts] == [False, False, True]
+
+
+async def test_daily_usage_logged_as_aggregates_on_day_change(
+    settings: Settings, monkeypatch, caplog
+):
+    import polish_legal_mcp.server as server
+
+    day = "2026-11-01"
+    monkeypatch.setattr(server, "_utc_day", lambda: day)
+    mcp = build_server(settings.model_copy(update={"daily_tool_calls_per_user": 10}))
+    with caplog.at_level("INFO", logger="polish_legal_mcp.server"):
+        async with Client(mcp) as client:
+            for _ in range(2):
+                await client.call_tool("search_eu_acts", {"query": "ab"}, raise_on_error=False)
+            day = "2026-11-02"
+            await client.call_tool("search_eu_acts", {"query": "ab"}, raise_on_error=False)
+    usage = [r for r in caplog.records if r.getMessage() == "daily usage"]
+    assert len(usage) == 1
+    assert usage[0].fields == {"day": "2026-11-01", "accounts": 1, "tool_calls": 2}  # type: ignore[attr-defined]

@@ -7,7 +7,7 @@ import contextlib
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
@@ -18,11 +18,12 @@ from fastmcp.server.auth import AuthContext
 from fastmcp.server.auth.providers.github import GitHubProvider
 from fastmcp.server.auth.providers.google import GoogleProvider
 from fastmcp.server.dependencies import get_access_token
-from fastmcp.server.middleware import AuthMiddleware, Middleware
+from fastmcp.server.middleware import AuthMiddleware, CallNext, Middleware
 from fastmcp.server.middleware.middleware import MiddlewareContext
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.tools.base import ToolResult
 from key_value.aio.stores.filetree import FileTreeStore
-from mcp.types import ToolAnnotations
+from mcp.types import CallToolRequestParams, ToolAnnotations
 from pydantic import Field
 from starlette.middleware import Middleware as StarletteMiddleware
 from starlette.requests import Request
@@ -177,9 +178,11 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
     allowlist otherwise just sees an empty tool list, which is hard to diagnose.
     """
     denied_logged: set[str] = set()
+    is_open = settings.open_registration
 
     def deny(identity: str) -> bool:
-        if identity not in denied_logged:
+        # Open registration: strangers are expected, logging their e-mails diagnoses nothing.
+        if not is_open and identity not in denied_logged:
             denied_logged.add(identity)
             logger.warning(
                 "signed-in account not on allowlist; tools hidden",
@@ -198,7 +201,7 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
                 return deny("google:<no e-mail claim>")
             if str(verified).lower() != "true":
                 return deny(f"google:{email} (e-mail not verified by Google)")
-            if canonical_email(email) in emails:
+            if is_open or canonical_email(email) in emails:
                 return True
             # hd is set only for Workspace-managed accounts; a personal account registered with a
             # company address has none. Missing userinfo (fetch failed) means no hd → deny.
@@ -218,17 +221,68 @@ def allowlist_check(settings: Settings) -> Callable[[AuthContext], bool]:
         login = ctx.token.claims.get("login") if ctx.token else None
         if not isinstance(login, str):
             return deny("github:<no login claim>")
-        return login.lower() in logins or deny(f"github:{login}")
+        return is_open or login.lower() in logins or deny(f"github:{login}")
 
     return check_github
 
 
-def _rate_limit_key(context: MiddlewareContext) -> str:
+def _rate_limit_key(context: MiddlewareContext | None = None) -> str:
     token = get_access_token()
     if token is None:
         return "anonymous"
     user = token.claims.get("login") or token.claims.get("email")
     return f"user:{user}" if isinstance(user, str) else f"client:{token.client_id}"
+
+
+# ponytail: FastMCP keeps one token bucket per client forever; past this many they are all
+# dropped (refilled). LRU eviction if a mass reset ever matters.
+MAX_RATE_LIMITED_CLIENTS = 10_000
+
+
+def _utc_day() -> str:
+    return datetime.now(UTC).date().isoformat()
+
+
+class DailyToolQuota(Middleware):
+    """At most ``limit`` tool calls per account per UTC day (public instance)."""
+
+    def __init__(self, limit: int) -> None:
+        self.limit = limit
+        # ponytail: in memory, reset at UTC midnight and on restart (the restarted day's usage
+        # is lost); bounded by the accounts active in one day (sign-ins are capped per hour).
+        # Shared store if run as replicas.
+        self._day = ""
+        self._calls: dict[str, int] = {}
+
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[CallToolRequestParams],
+        call_next: CallNext[CallToolRequestParams, ToolResult],
+    ) -> ToolResult:
+        today = _utc_day()
+        if today != self._day:
+            if self._calls:
+                # Aggregates only, never who: the one usage metric of a public instance.
+                logger.info(
+                    "daily usage",
+                    extra={
+                        "fields": {
+                            "day": self._day,
+                            "accounts": len(self._calls),
+                            "tool_calls": sum(self._calls.values()),
+                        }
+                    },
+                )
+            self._day, self._calls = today, {}
+        key = _rate_limit_key()
+        calls = self._calls.get(key, 0)
+        if calls >= self.limit:
+            raise ToolError(
+                f"Wykorzystano dzienny limit {self.limit} wywołań narzędzi dla tego konta. "
+                "Limit odnawia się o północy UTC."
+            )
+        self._calls[key] = calls + 1
+        return await call_next(context)
 
 
 def build_auth(
@@ -329,13 +383,20 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             await eurlex.aclose()
             await sejm.aclose()
 
-    middleware: list[Middleware] = [
-        RateLimitingMiddleware(
-            max_requests_per_second=settings.rate_limit_per_second,
-            burst_capacity=settings.rate_limit_burst,
-            get_client_id=_rate_limit_key,
-        )
-    ]
+    def client_key(context: MiddlewareContext) -> str:
+        # Dropping the buckets only refills them: at most one extra burst per account.
+        if len(rate_limiter.limiters) > MAX_RATE_LIMITED_CLIENTS:
+            rate_limiter.limiters.clear()
+        return _rate_limit_key(context)
+
+    rate_limiter = RateLimitingMiddleware(
+        max_requests_per_second=settings.rate_limit_per_second,
+        burst_capacity=settings.rate_limit_burst,
+        get_client_id=client_key,
+    )
+    middleware: list[Middleware] = [rate_limiter]
+    if settings.daily_tool_calls_per_user:
+        middleware.append(DailyToolQuota(settings.daily_tool_calls_per_user))
     auth, oauth_store = build_auth(settings)
     if auth is not None:
         middleware.insert(0, AuthMiddleware(auth=allowlist_check(settings)))
@@ -808,7 +869,15 @@ def build_app(settings: Settings):
             allowed_origins.append(f"{url.scheme}://{url.netloc}")
     app = mcp.http_app(
         path="/mcp",
-        middleware=[StarletteMiddleware(RequestGuard)],
+        middleware=[
+            StarletteMiddleware(
+                RequestGuard,
+                limits={
+                    ("POST", "/register"): settings.register_per_hour,
+                    ("GET", "/authorize"): settings.authorize_per_hour,
+                },
+            )
+        ],
         stateless_http=True,
         host_origin_protection=True if allowed_hosts else "auto",
         allowed_hosts=allowed_hosts or None,

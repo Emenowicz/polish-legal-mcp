@@ -49,7 +49,7 @@ async def test_chunked_body_without_length_is_bounded():
     async def ok(scope, receive, send):
         await PlainTextResponse("ok")(scope, receive, send)
 
-    guard = RequestGuard(ok, max_body_bytes=1000)
+    guard = RequestGuard(ok, limits={}, max_body_bytes=1000)
 
     async def chunks():
         for _ in range(5):
@@ -119,3 +119,12 @@ async def test_prewarm_loads_configured_codes_in_production_only(monkeypatch):
     async with server.prewarm(FakeLegal(), make_settings()):  # type: ignore[arg-type]
         await asyncio.sleep(0.02)
     assert called == []
+
+
+async def test_oauth_endpoint_caps_come_from_settings(home):
+    settings = prod_settings().model_copy(update={"authorize_per_hour": 1, "register_per_hour": 1})
+    async with client_for(build_app(settings)) as http:
+        authorize = [(await http.get("/authorize")).status_code for _ in range(2)]
+        register = [(await http.post("/register", json=REGISTRATION)).status_code for _ in range(2)]
+    assert authorize[0] != 429 and authorize[1] == 429
+    assert register == [201, 429]
