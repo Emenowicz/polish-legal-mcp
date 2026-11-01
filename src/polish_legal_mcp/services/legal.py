@@ -122,7 +122,11 @@ GENITIVE = {
     "Konstytucja": "Konstytucji",
 }
 ONE_OFF_STATUSES = {"akt jednorazowy", "akt indywidualny", "tekst jednolity dla aktu jednorazowego"}
-AMENDING_TITLE_RE = re.compile(r"\bo zmianie\b|\bzmieniając", re.IGNORECASE)
+# "o zmianie" joined by "i"/"oraz" is a side subject of a base act ("… o ochronie praw lokatorów,
+# mieszkaniowym zasobie gminy i o zmianie Kodeksu cywilnego", "… o bonie energetycznym oraz o
+# zmianie niektórych ustaw"), not an amending act. Not anchored to the date: ELI titles carry
+# typos there ("z dnia 24 września 24 września 2010 r.", "dnia 7 kwietnia 2016 r.").
+AMENDING_TITLE_RE = re.compile(r"(?<!\bi )(?<!\boraz )\bo zmianie\b|\bzmieniając", re.IGNORECASE)
 STOPWORDS = {
     "który", "która", "które", "których", "którym", "oraz", "przez", "jest", "będzie", "była",
     "jakie", "jaki", "jaka", "dotyczy", "dotyczący", "dotycząca", "dotyczące", "dotyczącej",
