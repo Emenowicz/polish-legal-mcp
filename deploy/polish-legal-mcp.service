@@ -26,6 +26,10 @@ RestartSec=5
 TimeoutStopSec=15
 StateDirectory=polish-legal-mcp
 StateDirectoryMode=0700
+# Rebuildable act index (PLMCP_ACT_INDEX_PATH=/var/cache/polish-legal-mcp/act_index.sqlite),
+# ~100 MB of public ELI data: on the root disk, not on the size-capped state filesystem.
+CacheDirectory=polish-legal-mcp
+CacheDirectoryMode=0700
 UMask=0077
 
 # Resource limits: the host may run other workloads.

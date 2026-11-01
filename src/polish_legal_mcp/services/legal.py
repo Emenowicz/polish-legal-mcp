@@ -60,6 +60,7 @@ from polish_legal_mcp.parsers.legal_html import (
 from polish_legal_mcp.parsers.pdf_text import find_pdf_unit, repeal_marker, same_wording
 
 if TYPE_CHECKING:
+    from polish_legal_mcp.services.act_index import ActIndex
     from polish_legal_mcp.services.eu_law import EuLawService
 
 WARSAW = ZoneInfo("Europe/Warsaw")
@@ -205,6 +206,27 @@ def _act_id_or_none(value: str) -> ActId | None:
         return ActId.parse(value)
     except InvalidInputError:
         return None
+
+
+def is_basis_candidate(act: ActSummary) -> bool:
+    """Statute or regulation that can itself be a legal basis (no amending/one-off acts)."""
+    return not (
+        act.is_amending_act
+        or act.is_consolidated_text_notice
+        or act.act_type not in ("Ustawa", "Rozporządzenie")
+        or act.status in ONE_OFF_STATUSES
+    )
+
+
+def interleave(first: list[str], second: list[str]) -> list[str]:
+    merged = [e for pair in zip(first, second, strict=False) for e in pair]
+    return list(dict.fromkeys(merged + first[len(second) :] + second[len(first) :]))
+
+
+def lexical_first(lexical: list[str], others: list[str], keep: int = 3) -> list[str]:
+    """Top lexical hits stay on top; measured on 38 queries, RRF and plain interleaving lost
+    good index hits at ranks 6–7 (docs/architecture.md, decision 9)."""
+    return list(dict.fromkeys(lexical[:keep] + others + lexical[keep:]))
 
 
 def summarize_act(meta: dict[str, Any]) -> ActSummary:
@@ -497,6 +519,8 @@ class LegalService:
         self._eli = eli
         self._today = today
         self._eu = eu
+        # Set by the server's refresh task (production, PLMCP_ACT_INDEX); None = lexical only.
+        self.act_index: ActIndex | None = None
 
     # ----------------------------------------------------------------- search & details
 
@@ -1289,12 +1313,7 @@ class LegalService:
             data = await self._eli.search(params)
             for item in data["items"]:
                 act = summarize_act(item)
-                if (
-                    act.is_amending_act
-                    or act.is_consolidated_text_notice
-                    or act.act_type not in ("Ustawa", "Rozporządzenie")
-                    or act.status in ONE_OFF_STATUSES
-                ):
+                if not is_basis_candidate(act):
                     continue
                 if as_of and act.entry_into_force and act.entry_into_force > as_of:
                     continue
@@ -1352,11 +1371,52 @@ class LegalService:
                 -(e[0].year),
             ),
         )
-        warnings = [
+        method_note = (
+            "Hasła ze słownika ELI (/keywords) dopasowane do rdzeni słów opisu oraz "
+            "wyszukiwanie fragmentów najdłuższych słów w tytułach aktów obowiązujących."
+        )
+        first_warning = (
             "Dopasowanie leksykalne (słowa opisu ↔ hasła ELI i tytuły aktów), nie semantyczne. "
-            "Wyniki to kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej.",
-            *STANDARD_WARNINGS[:1],
-        ]
+            "Wyniki to kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej."
+        )
+        index = self.act_index
+        if index is not None and in_force_filter:
+            orders: list[list[str]] = []
+            sources = (
+                (index.titles(issue), "indeks tytułów i nagłówków"),
+                (await index.articles(issue), "treść ustaw"),
+            )
+            for hits, method in sources:
+                orders.append([])
+                for hit in hits:
+                    act = summarize_act(hit.act)
+                    entry = found.setdefault(act.eli, (act, set(), set(), set()))
+                    entry[1].add(hit.label)
+                    entry[2].add(method)
+                    orders[-1].append(act.eli)
+            order = lexical_first([e[0].eli for e in ranked], interleave(*orders))
+            ranked = [found[eli] for eli in order]
+            method_note += (
+                " Dodatkowo indeks aktów obowiązujących (stan na "
+                f"{index.built.isoformat()}): tytuły, hasła i nagłówki działów/rozdziałów ustaw "
+                "oraz treść artykułów ustaw, dopasowane po rdzeniach słów; trzy najlepsze wyniki "
+                "leksykalne zostają na górze listy."
+            )
+            first_warning = (
+                "Dopasowanie leksykalne oraz indeks tytułów, nagłówków i treści ustaw. Wyniki to "
+                "kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej. Treść ustaw w "
+                "indeksie pochodzi z ostatniego tekstu dostępnego w HTML (podanego przy artykule): "
+                "często tekstu jednolitego sprzed 2025 r. albo tekstu pierwotnego, bo nowsze "
+                "teksty jednolite ELI publikuje tylko w PDF. Wskazany artykuł mógł więc zostać "
+                "zmieniony, przenumerowany lub uchylony, a przepisy dodane później mogą nie być "
+                "znajdowane – brzmienie i stan prawny zawsze sprawdź get_legal_provision."
+            )
+        warnings = [first_warning, *STANDARD_WARNINGS[:1]]
+        if index is not None and not in_force_filter:
+            warnings.append(
+                f"Indeks aktów obejmuje akty obowiązujące w dniu {index.built.isoformat()}; "
+                "dla innej daty użyto tylko dopasowania leksykalnego."
+            )
         if cited:
             warnings.append(
                 "Sygnał z orzecznictwa: akty powoływane w orzeczeniach SAOS znalezionych dla słów "
@@ -1378,8 +1438,7 @@ class LegalService:
                 )
                 for a, labels, m, _ in ranked[:limit]
             ],
-            method_note="Hasła ze słownika ELI (/keywords) dopasowane do rdzeni słów opisu oraz "
-            "wyszukiwanie fragmentów najdłuższych słów w tytułach aktów obowiązujących.",
+            method_note=method_note,
             warnings=warnings,
         )
 

@@ -1,0 +1,515 @@
+{
+ "_doc": "Evaluation set for semantic act search (docs/roadmap.md, plan step 0). Each query is a plain-language description; `expected` lists acceptable acts (any one in the top k counts as a hit). Expected ELI ids verified against api.sejm.gov.pl on 2026-11-01 (all IN_FORCE). `kind`: `lexical` = words of the description appear in the act title, `mismatch` = they do not. `source`: who wrote the query; queries written by the developer knowing the titles are biased, so queries from real users are added with source `user`. Queries with `source: web` were collected from public Q&A pages (url, date, asker) by search-result order, not chosen by title match; `expected` = acts cited in the published answer that are in force (checked in ELI on 2026-11-01), `cited_not_in_force` = cited acts repealed since. `headline: true` = the portal's question-style headline, not the asker's own words. Queries with `kind: regulation` (added 2026-11-01) come from public Q&A pages whose answers cite a regulation in force (checked in ELI on 2026-11-01); `expected` lists only the cited regulations (a statute cited alongside, in `also_cited`, does not count), because they test whether the regulation itself is found. Nearly all of them are portal headlines from kadry.infor.pl, not askers' own words.",
+ "recorded": "2026-11-01",
+ "queries": [
+  {
+   "q": "Wynajmuję mieszkanie, najemca od trzech miesięcy nie płaci czynszu i nie chce się wyprowadzić",
+   "expected": [
+    "DU/2001/733",
+    "DU/1964/93"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Pracownica urodziła dziecko – ile tygodni wolnego jej przysługuje i czy ojciec też może wziąć wolne",
+   "expected": [
+    "DU/1974/141"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Kierowca przekroczył prędkość o 50 km/h w mieście i stracił prawo jazdy na trzy miesiące",
+   "expected": [
+    "DU/1997/602",
+    "DU/2011/151",
+    "DU/1971/114"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Sąsiad wyciął kilka dużych drzew na swojej działce bez zgody gminy",
+   "expected": [
+    "DU/2004/880"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Chcę postawić altanę i garaż na działce – czy potrzebuję zgody urzędu",
+   "expected": [
+    "DU/1994/414"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Przydział mieszkania służbowego i świadczenie mieszkaniowe dla żołnierza zawodowego",
+   "expected": [
+    "DU/2022/655",
+    "DU/1995/433"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Pies sąsiada pogryzł moje dziecko – kto odpowiada za szkodę",
+   "expected": [
+    "DU/1964/93",
+    "DU/1997/724"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Firma przysyła mi maile i SMS-y reklamowe, na które nie wyrażałem zgody",
+   "expected": [
+    "DU/2002/1204",
+    "DU/2024/1221"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Kupiłem buty w sklepie internetowym i chcę je oddać bez podawania przyczyny",
+   "expected": [
+    "DU/2014/827"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Ojciec nie płaci zasądzonych pieniędzy na utrzymanie dziecka, komornik nic nie ściągnął",
+   "expected": [
+    "DU/2007/1378",
+    "DU/1964/59"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Pracodawca chce sprawdzać alkomatem, czy pracownicy nie piją w pracy",
+   "expected": [
+    "DU/1974/141",
+    "DU/1982/230"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Ile wynosi miesięczna kwota na każde dziecko wypłacana przez ZUS niezależnie od dochodu",
+   "expected": [
+    "DU/2016/195"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Głośna muzyka z lokalu po 22 nie daje spać mieszkańcom",
+   "expected": [
+    "DU/1971/114",
+    "DU/2001/627"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Kto ma odśnieżyć chodnik przed domem i jak często gmina odbiera śmieci",
+   "expected": [
+    "DU/1996/622"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Rozwód i podział majątku małżonków",
+   "expected": [
+    "DU/1964/59"
+   ],
+   "kind": "mismatch",
+   "source": "developer"
+  },
+  {
+   "q": "Wniosek o dostęp do informacji publicznej – termin odpowiedzi urzędu",
+   "expected": [
+    "DU/2001/1198"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Ochrona danych osobowych pracowników w urzędzie",
+   "expected": [
+    "DU/2018/1000"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Próg stosowania przepisów o zamówieniach publicznych",
+   "expected": [
+    "DU/2019/2019"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Podatek od nieruchomości dla przedsiębiorcy",
+   "expected": [
+    "DU/1991/31"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Termin na wniesienie odwołania od decyzji w postępowaniu administracyjnym",
+   "expected": [
+    "DU/1960/168"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Pozwolenie na broń do celów sportowych",
+   "expected": [
+    "DU/1999/549"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Ulga na dzieci w podatku dochodowym od osób fizycznych",
+   "expected": [
+    "DU/1991/350"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Zasiłek z pomocy społecznej dla osoby bezdomnej",
+   "expected": [
+    "DU/2004/593"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Ochrona zwierząt domowych przed znęcaniem się",
+   "expected": [
+    "DU/1997/724"
+   ],
+   "kind": "lexical",
+   "source": "developer"
+  },
+  {
+   "q": "Jestem najemcą mieszkania komunalnego. Po podpisaniu umowy najmu w 1985r, wpłaciłem kaucję do Zakładu Gospodarki Mieszkaniowej. Obecnie wykupuję je na własność. Czy należy mi się zwrot kaucji i czy obejmuje ją waloryzacja?",
+   "expected": [
+    "DU/2001/733",
+    "DU/1964/93"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/zwrot-kaucji-przy-wykupie-mieszkania.html",
+   "date": "2006-06-23",
+   "asker": "citizen",
+   "cited_not_in_force": [
+    "DU/1994/509"
+   ]
+  },
+  {
+   "q": "Czy można eksmitować uciążliwego sąsiada z mieszkania, którego jest on właścicielem?",
+   "expected": [
+    "DU/2001/733"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/eksmisja-uciazliwego-sasiada.html",
+   "date": "2012-01-19",
+   "asker": "citizen"
+  },
+  {
+   "q": "Jestem współwłaścicielem domu dwurodzinnego na zasadach współwłasności. Czy pomimo sprzeciwu sąsiada mogę doprowadzić do podziału tej współwłasności? Uważam, że sąsiad użytkuje część powierzchni w budynku, która według procentowych udziałów należy się mnie. Czy w grę może wchodzić podział współwłasności przez sąd?",
+   "expected": [
+    "DU/1964/93"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/uprawnienie-do-zniesienia-wspolwlasnosci.html",
+   "date": "2002-07-29",
+   "asker": "citizen"
+  },
+  {
+   "q": "Czy pracownicy wracającej z urlopu macierzyńskiego i po wykorzystaniu zaległego urlopu wypoczynkowego (lub przebywająca bądź wracająca z udzielonego urlopu wychowawczego), która zastała po przyjściu wypowiedzenie umowy o pracę (np. 3 miesięczne) z przyczyn ekonomicznych zakładu pracy...",
+   "expected": [
+    "DU/1974/141"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/wypowiedzenie-umowy-po-urlopie-macierzynskim-1.html",
+   "date": "2004-10-12",
+   "asker": "citizen"
+  },
+  {
+   "q": "Jestem żołnierzem kontraktowym - kobietą i już za parę miesięcy upływa termin mojego kontraktu. Jestem w 6 miesiącu ciąży. Czy można mnie zwolnić z pełnienia służby zawodowej pełnionej jako kontraktowa w Siłach Zbrojnych RP jeżeli obowiązuje mnie nie kodeks pracy, a ustawa o zawodowej służbie",
+   "expected": [
+    "DU/1974/141"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/urlop-macierzynski-dla-kobiety-zolnierza.html",
+   "date": "2007-06-06",
+   "asker": "citizen",
+   "cited_not_in_force": [
+    "ustawa z 30 czerwca 1970 r. o służbie wojskowej żołnierzy zawodowych"
+   ]
+  },
+  {
+   "q": "Żona wyprowadziła się od męża 3 lata temu i obecnie mieszka w innym województwie. Czy może złożyć pozew o rozwód do sądu okręgowego w swoim miejscu zamieszkania?",
+   "expected": [
+    "DU/1964/296"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/wlasciwosc-sadu-w-sprawach-rozwodowych.html",
+   "date": "2004-12-08",
+   "asker": "citizen"
+  },
+  {
+   "q": "Siostra i jej mąż mieszkali razem z teściem, którym siostra się opiekowała. Teść w spadku przepisał jej (siostrze) mieszkanie. Czy pozostawione w spadku mieszkanie jest jej i tylko jej własnością, czy należy do wspólnoty małżeńskiej i według prawa należy również do jej męża?",
+   "expected": [
+    "DU/1964/59"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://e-prawnik.pl/porady-prawne/spadek-a-wspolnosc-majatkowa-malzenska.html",
+   "date": "2007-12-27",
+   "asker": "citizen"
+  },
+  {
+   "q": "Czy reprezentacja gminnej osoby prawnej zależy od formy prawnej? Czy wójt ma prawo do reprezentacji spółki komunalnej w sądzie?",
+   "expected": [
+    "DU/1964/296",
+    "DU/1990/95",
+    "DU/1991/493",
+    "DU/1997/679"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://samorzad.infor.pl/temat_dnia/387242,Kto-reprezentuje-gminne-osoby-prawne-w-postepowaniu-przed-sadem-cywilnym.html",
+   "date": "2008-02-15",
+   "asker": "administration"
+  },
+  {
+   "q": "Czy istnieje możliwość wypłacania kosztów zastępstwa procesowego, pomijając budżet przez rachunek depozytowy?",
+   "expected": [
+    "DU/1982/124",
+    "DU/1982/145"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://samorzad.infor.pl/sektor/organizacja/ustroj_i_jednostki/415129,Zastepstwo-prawne-starostwa.html",
+   "date": "2010-12-23",
+   "asker": "administration",
+   "cited_not_in_force": [
+    "DU/2006/1020"
+   ]
+  },
+  {
+   "q": "Czy gmina ma, na podstawie ustawy z 6 września 2001 r. o dostępie do informacji publicznych, obowiązek udostępniać wnioskodawcy faktury VAT oraz protokoły odbioru związane z realizacją zamówienia publicznego?",
+   "expected": [
+    "DU/2001/1198"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://samorzad.infor.pl/sektor/finanse/zamowienia_publiczne/693192,Zamowienia-publiczne-dostep-do-informacji.html",
+   "date": "2011-07-05",
+   "asker": "administration",
+   "cited_not_in_force": [
+    "DU/2004/177"
+   ]
+  },
+  {
+   "q": "Jaka jest klasyfikacja wydatków odprowadzania ścieków od 1 stycznia 2015 r., czy dalej § 430? Jak od 1 stycznia 2015 r. należy klasyfikować wydatki w zakresie wywozu odpadów? Czy nadal obowiązuje w tym zakresie § 430 „Zakup usług pozostałych”?",
+   "expected": [
+    "DU/1996/622"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://samorzad.infor.pl/sektor/finanse/rachunkowosc_budzetowa/724783,W-jakim-paragrafie-ujac-wydatki-z-tytulu-wywozu-odpadow-komunalnych.html",
+   "date": "2015-06-26",
+   "asker": "administration",
+   "cited_not_in_force": [
+    "DU/2010/207"
+   ]
+  },
+  {
+   "q": "Czy osoba prowadząca szkołę niepubliczną może być dyrektorem",
+   "expected": [
+    "DU/2017/59",
+    "DU/1982/19"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://www.portaloswiatowy.pl/powierzenie-funkcji-kierowniczej/organ-prowadzacy-i-dyrektor-w-jednej-osobie-21062.html",
+   "date": "2022-01-24",
+   "asker": "administration",
+   "headline": true
+  },
+  {
+   "q": "Czy dyrektor ma obowiązek odpowiadać na wszystkie pisma",
+   "expected": [
+    "DU/1960/168",
+    "DU/2001/1198",
+    "DU/2017/59"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://www.portaloswiatowy.pl/analizy-i-interpretacje/czy-dyrektor-ma-obowiazek-odpowiadac-na-wszystkie-pisma-20213.html",
+   "date": "2025-09-07",
+   "asker": "administration",
+   "headline": true
+  },
+  {
+   "q": "Czy rada miasta może podjąć uchwałę ze skutkiem wstecznym?",
+   "expected": [
+    "DU/2000/718",
+    "DU/1997/483",
+    "DU/1982/19"
+   ],
+   "kind": "web",
+   "source": "web",
+   "url": "https://www.doradcasamorzadu.pl/komunikaty/125-sas6-2019/4578-czy-rada-miasta-mo%C5%BCe-podj%C4%85%C4%87-uchwa%C5%82%C4%99-ze-skutkiem-wstecznym.html",
+   "date": null,
+   "asker": "administration",
+   "headline": true
+  },
+  {
+   "q": "Czy pracodawca musi zapłacić za szkła kontaktowe każdemu pracownikowi?",
+   "expected": [
+    "DU/1998/973"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/bhp/profilaktyczna_ochrona_zdrowia/6600697,czy-pracodawca-musi-zaplacic-za-szkla-kontaktowe-kazdemu-pracownikowi.html",
+   "date": "2026-09-11",
+   "headline": true
+  },
+  {
+   "q": "Okulary dla pracownika i dla zleceniobiorcy, w tym członka zarządu. Kiedy należy się refundacja?",
+   "expected": [
+    "DU/1998/973"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/bhp/profilaktyczna_ochrona_zdrowia/7611869,okulary-dla-pracownika-i-dla-zleceniobiorcy-w-tym-czlonka-zarzadu-kiedy-nalezy-sie-refundacja-jak-podatkowo-rozliczyc-zakup-okularow.html",
+   "date": "2026-06-23",
+   "also_cited": [
+    "DU/1974/141",
+    "DU/1991/350"
+   ],
+   "headline": true
+  },
+  {
+   "q": "Czy można palić e-papierosy w miejscu pracy?",
+   "expected": [
+    "DU/1997/844"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/bhp/profilaktyczna_ochrona_zdrowia/7572374,czy-mozna-palic-epapierosy-w-miejscu-pracy.html",
+   "date": "2026-04-30",
+   "also_cited": [
+    "ustawa o ochronie zdrowia przed następstwami używania tytoniu i wyrobów tytoniowych"
+   ],
+   "headline": true
+  },
+  {
+   "q": "Odzież robocza a odzież ochronna - jakie są różnice? Jak i gdzie zapisać przydział odzieży pracownikom?",
+   "expected": [
+    "DU/1997/844"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/bhp/ochrona_indywidualna/7508447,odziez-robocza-a-odziez-ochronna-jakie-sa-roznice-jak-i-gdzie-zapisac-przydzial-odziezy-pracownikom-przepisy-bhp.html",
+   "date": "2026-01-27",
+   "also_cited": [
+    "DU/1974/141"
+   ],
+   "headline": true
+  },
+  {
+   "q": "Dzień wolny od pracy na pogrzeb. Czy śmierć teścia, teściowej, cioci, wujka, babci i dziadka także uprawnia do dnia wolnego w pracy?",
+   "expected": [
+    "DU/1996/281"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/urlopy/urlopy-okolicznosciowe/7692209,dzien-wolny-od-pracy-na-pogrzeb-czy-smierc-tescia-tesciowej-cioci-wujka-babci-i-dziadka-takze-uprawnia-do-dnia-wolnego-w-pracy.html",
+   "date": "2026-10-29",
+   "headline": true
+  },
+  {
+   "q": "Czy można zatrudniać młodocianych w niskich temperaturach? Przepisy BHP",
+   "expected": [
+    "DU/2023/1240"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/bhp/profilaktyczna_ochrona_zdrowia/7462070,czy-mozna-zatrudniac-mlodocianych-w-niskich-temperaturach-przepisy-bhp.html",
+   "date": "2026-01-10",
+   "headline": true
+  },
+  {
+   "q": "Kontrola L4 w budżetówce. Kogo pracodawca może wysłać do pracownika?",
+   "expected": [
+    "DU/2026/503"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/indywidualne_prawo_pracy/7676815,kontrola-l4-w-budzetowce-kogo-pracodawca-moze-wyslac-do-pracownika.html",
+   "date": "2026-10-08",
+   "also_cited": [
+    "DU/1999/636"
+   ],
+   "headline": true
+  },
+  {
+   "q": "Minimalna krajowa w 2026 r. to 3575,85 zł netto (kwota zmniejszająca podatek 300 zł i zerowe KUP). Ile wynosi na godzinę?",
+   "expected": [
+    "DU/2025/1242"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/wynagrodzenia/wynagrodzenie-minimalne/7494371,minimalna-krajowa-w-2026-r-to-357585-zl-netto-kwota-zmniejszajaca-podatek-300-zl-i-zerowe-kup-ile-wynosi-na-godzine.html",
+   "date": "2026-10-20",
+   "also_cited": [
+    "ustawa o minimalnym wynagrodzeniu za pracę"
+   ],
+   "headline": true
+  },
+  {
+   "q": "Ile wynosi kwota netto z umowy zlecenia, gdy brutto to 31,40 zł?",
+   "expected": [
+    "DU/2025/1242"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://kadry.infor.pl/kadry/wynagrodzenia/wynagrodzenie-minimalne/7054449,ile-wynosi-kwota-netto-z-umowy-zlecenia-gdy-brutto-to-3140-zl.html",
+   "date": "2026-10-20",
+   "headline": true
+  },
+  {
+   "q": "Czy bilet za przejazd PKP można traktować jak faktury i zaksięgować w kosztach firmowych?",
+   "expected": [
+    "DU/2021/1979"
+   ],
+   "kind": "regulation",
+   "source": "web",
+   "url": "https://poradnikprzedsiebiorcy.pl/-jak-zaksiegowac-bilet-za-przejazd-pkp",
+   "date": "2024-04-02",
+   "headline": true
+  }
+ ]
+}

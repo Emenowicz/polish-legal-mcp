@@ -21,6 +21,7 @@ users may paste sensitive descriptions into prompts. Controls:
 | Container | Non-root uid 10001, read-only root FS, `cap_drop: ALL`, `no-new-privileges`, memory/CPU/PID limits, only `/data` (OAuth store) writable. |
 | Secrets | Only via environment / `.env` (git-ignored). OAuth store is Fernet-encrypted with a key derived from the JWT signing key. |
 | Supply chain | `uv.lock` pinned, `uv sync --locked` in CI and Docker, `pip-audit` in CI. |
+| Act index (optional) | One local SQLite file built only from ELI responses (public data, no user data); written only by the server's own refresh task, never by requests; kept off the size-capped OAuth state filesystem (systemd `CacheDirectory`). The `find_legal_basis` description is matched locally and never sent anywhere else. |
 
 ## Local development
 `PLMCP_ENV=development` (default) allows `PLMCP_AUTH_MODE=none` and binds `127.0.0.1`. Binding a

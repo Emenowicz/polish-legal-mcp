@@ -48,9 +48,22 @@
 ## Search
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems
   work better ("zakwaterowa", "gospodarce nieruchomo").
-- `find_legal_basis` is lexical (ELI keyword vocabulary + title stems). It misses acts whose
-  titles/keywords do not contain the words (e.g. zakwaterowanie provisions inside *ustawa o
-  obronie Ojczyzny*). `include_case_law` adds acts cited in the 10 most relevant SAOS judgments
+- `find_legal_basis` matches words of the description to ELI keywords and titles and, with the
+  optional act index, also to statute division/chapter headings and statute article texts. The
+  article texts come from the newest text ELI publishes as HTML — often a consolidated text from
+  before 2025 or the original text (≈365 of 1,151 statutes in the 2026-11-01 build), because
+  newer consolidated texts are PDF-only; 45 statutes have no HTML text and are matched by title
+  and headings only. A matched article may since have been amended, renumbered or repealed, and
+  provisions added later may not be found: the hit is a pointer for `get_legal_provision`,
+  which reads the current wording. Regulations are matched by title only; the index covers acts
+  in force on its refresh date (refreshed weekly) and is not used for other dates; a statute's
+  text is refetched when ELI lists a new consolidated text for it, not when an older one later
+  gains HTML. On 38 test queries the right
+  act was in the top 10 for 29 (8 without the index); all 38 are answered by statutes. For 10
+  real questions answered by a regulation (BHP, minimum wage, sick-leave checks, invoices) the
+  right regulation was found for only 2 (1 without the index): regulation texts are not
+  searched.
+  `include_case_law` adds acts cited in the 10 most relevant SAOS judgments
   (procedural acts such as k.p.c. and fee regulations excluded, repealed acts dropped): it finds
   e.g. k.c. for "zachowek" or u.g.n. for "wywłaszczenie", costs ~6–9 s, and inherits SAOS
   coverage (no WSA/NSA). Treat results as candidates only.

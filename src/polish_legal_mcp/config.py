@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
@@ -63,6 +64,13 @@ class Settings(BaseSettings):
     # published, unlike metadata (status, amendments), so they are kept longer.
     document_cache_ttl_seconds: int = Field(default=24 * 3600, ge=0)
     cache_max_documents: int = Field(default=32, ge=1)
+    # find_legal_basis act index (titles, keywords, statute headings and article texts from ELI),
+    # kept in one SQLite file at act_index_path (~90 MB; a rebuildable cache, keep it off the
+    # 64 MB OAuth state filesystem). Production only: loaded at start-up, refreshed
+    # incrementally every act_index_rebuild_days. Off by default: opt in per host.
+    act_index: bool = False
+    act_index_path: Path | None = None
+    act_index_rebuild_days: int = Field(default=7, ge=1)
     # Production only: newest texts of these acts are loaded at start-up and every 6 h, so the
     # first question about a code does not wait seconds for a PDF to be read on the Pi.
     prewarm_acts: Annotated[list[str], NoDecode] = Field(
@@ -82,6 +90,12 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
+
+    @model_validator(mode="after")
+    def _check_act_index(self) -> Settings:
+        if self.act_index and self.act_index_path is None:
+            raise ValueError("act_index requires act_index_path (PLMCP_ACT_INDEX_PATH)")
+        return self
 
     @model_validator(mode="after")
     def _check_security(self) -> Settings:

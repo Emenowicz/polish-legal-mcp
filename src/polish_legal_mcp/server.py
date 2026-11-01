@@ -56,10 +56,11 @@ from polish_legal_mcp.models import (
     TranspositionResult,
 )
 from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
+from polish_legal_mcp.services.act_index import load_act_index, refresh_act_index
 from polish_legal_mcp.services.cjeu import CjeuService
 from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
-from polish_legal_mcp.services.legal import LegalService, issue_terms
+from polish_legal_mcp.services.legal import LegalService, issue_terms, warsaw_today
 from polish_legal_mcp.services.legislation import LegislationService
 
 logger = logging.getLogger(__name__)
@@ -328,6 +329,8 @@ def build_auth(
 
 
 PREWARM_DELAY_SECONDS = 30
+ACT_INDEX_DELAY_SECONDS = 60
+ACT_INDEX_RETRY_SECONDS = 3600
 PREWARM_INTERVAL_SECONDS = 6 * 3600
 
 
@@ -361,6 +364,49 @@ async def prewarm(legal: LegalService, settings: Settings) -> AsyncIterator[None
             await task
 
 
+@asynccontextmanager
+async def act_index_refresh(
+    legal: LegalService, eli: EliClient, settings: Settings
+) -> AsyncIterator[None]:
+    """Load the stored find_legal_basis act index (production, PLMCP_ACT_INDEX), then refresh
+    it from ELI every act_index_rebuild_days; without it the tool uses lexical matching only."""
+    if settings.env != "production" or not settings.act_index or not settings.act_index_path:
+        yield
+        return
+    path = settings.act_index_path
+
+    async def loop() -> None:
+        try:
+            legal.act_index = await load_act_index(path)
+        except Exception as exc:  # unreadable file: the refresh below rebuilds it
+            logger.warning("act index not loaded", extra={"fields": {"error": type(exc).__name__}})
+        await asyncio.sleep(ACT_INDEX_DELAY_SECONDS)
+        while True:
+            try:
+                started = asyncio.get_running_loop().time()
+                legal.act_index = await refresh_act_index(eli, path, warsaw_today())
+                logger.info(
+                    "act index ready",
+                    extra={
+                        "fields": {"seconds": round(asyncio.get_running_loop().time() - started)}
+                    },
+                )
+                await asyncio.sleep(settings.act_index_rebuild_days * 86400)
+            except Exception as exc:
+                logger.warning(
+                    "act index build failed", extra={"fields": {"error": type(exc).__name__}}
+                )
+                await asyncio.sleep(ACT_INDEX_RETRY_SECONDS)
+
+    task = asyncio.create_task(loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
 def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     eli = EliClient(settings, backoff_base=backoff_base)
     saos = SaosClient(settings, backoff_base=backoff_base)
@@ -375,7 +421,11 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
         try:
-            async with periodic_cull(oauth_store), prewarm(legal, settings):
+            async with (
+                periodic_cull(oauth_store),
+                prewarm(legal, settings),
+                act_index_refresh(legal, eli, settings),
+            ):
                 yield
         finally:
             await eli.aclose()
@@ -669,10 +719,11 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             ),
         ] = False,
     ) -> LegalBasisResult:
-        """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując słowa opisu do haseł
-        przedmiotowych ELI i tytułów aktów obowiązujących. To dopasowanie leksykalne, nie
-        semantyczne i nie porada prawna: każdego kandydata zweryfikuj get_legal_act /
-        get_legal_provision. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
+        """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując opis do haseł
+        przedmiotowych ELI, tytułów aktów obowiązujących oraz nagłówków działów i rozdziałów
+        ustaw oraz treści artykułów ustaw (indeks z ELI, jeśli serwer go ma). Kandydaci, nie
+        porada prawna: każdego zweryfikuj get_legal_act / get_legal_provision; wskazany
+        nagłówek lub artykuł to miejsce, od którego zacząć. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
         (np. RODO), użyj search_eu_acts / get_eu_provision zamiast podsuwać niepowiązane akty
         krajowe. Opcja include_case_law dokłada akty, na które najczęściej powołują się sądy w
         orzeczeniach pasujących do opisu."""

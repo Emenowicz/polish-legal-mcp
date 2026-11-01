@@ -35,7 +35,14 @@ docker compose up -d --build              # container (needs .env)
   fragment endpoint (ambiguous in consolidated texts, 200 on missing units).
 - Upstream calls go through `clients/http.UpstreamClient` (retries, Retry-After, size limit, path
   guard). Paths are built only from validated identifiers (`ActId`, ints). No user-supplied URLs.
-- Stateless HTTP, no database/Redis/vector store/LLM. In-memory caches must stay bounded (Pi).
+- Stateless HTTP, no database server/Redis/vector store/LLM. In-memory caches must stay bounded
+  (Pi). One deliberate exception (decision of 2026-11-01, numbers in docs/architecture.md): the
+  `find_legal_basis` act index (`services/act_index.py`) — one local SQLite file
+  (`PLMCP_ACT_INDEX_PATH`), a rebuildable cache of public ELI data only (titles, keywords,
+  statute headings and article texts), never user data. It only proposes candidates (never
+  wording, never `VERIFIED`), is used only for current-date queries, and says which ELI text an
+  article hit comes from. Any change to its ranking must be re-measured with
+  `scripts/eval_legal_basis.py`.
 - Responses must be bounded (truncate/paginate); never return a whole act.
 
 ## Conventions

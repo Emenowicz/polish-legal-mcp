@@ -47,18 +47,21 @@ class EliClient:
         return await self._meta.get_or_load(act_id.eli, load)
 
     async def struct(self, act_id: ActId) -> list[dict[str, Any]]:
-        async def load() -> list[dict[str, Any]]:
-            data = await self._http.get_json(f"{act_id.api_path}/struct")
-            if not isinstance(data, list):
-                raise UpstreamBadResponseError("ELI: nieoczekiwany format struktury aktu.")
-            return data
+        return await self._struct.get_or_load(act_id.eli, lambda: self.struct_uncached(act_id))
 
-        return await self._struct.get_or_load(act_id.eli, load)
+    async def struct_uncached(self, act_id: ActId) -> list[dict[str, Any]]:
+        """For bulk reads (the act index): does not push prewarmed codes out of the cache."""
+        data = await self._http.get_json(f"{act_id.api_path}/struct")
+        if not isinstance(data, list):
+            raise UpstreamBadResponseError("ELI: nieoczekiwany format struktury aktu.")
+        return data
 
     async def html(self, act_id: ActId) -> str:
-        return await self._html.get_or_load(
-            act_id.eli, lambda: self._http.get_text(f"{act_id.api_path}/text.html")
-        )
+        return await self._html.get_or_load(act_id.eli, lambda: self.html_uncached(act_id))
+
+    async def html_uncached(self, act_id: ActId) -> str:
+        """For bulk reads (the act index): does not push prewarmed codes out of the cache."""
+        return await self._http.get_text(f"{act_id.api_path}/text.html")
 
     async def pdf_text(self, act_id: ActId) -> PdfText:
         """Official PDF of the act, read into lines (in a worker thread: CPU-bound)."""
