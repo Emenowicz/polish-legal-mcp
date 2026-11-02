@@ -5,7 +5,8 @@
 # certificates enabled in the tailnet, and a Google OAuth client or GitHub OAuth App whose
 # redirect/callback URL is https://<host>.<tailnet>.ts.net/auth/callback.
 # Re-running updates the code and restarts; --reconfigure asks for the sign-in settings again
-# (and rotates the signing key, so every client has to connect again).
+# (and rotates the signing key, so every client has to connect again); other settings in the
+# environment file, such as PLMCP_ACT_INDEX*, are kept.
 set -euo pipefail
 
 APP_USER=plmcp
@@ -87,6 +88,11 @@ PLMCP_ALLOWED_GOOGLE_DOMAINS=$domains"
   fi
   upper=$(echo "$provider" | tr '[:lower:]' '[:upper:]')
   jwt=$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')
+  # --reconfigure redoes sign-in only: every other setting (e.g. PLMCP_ACT_INDEX*) is kept.
+  kept=""
+  if [ -f "$ENV_FILE" ]; then
+    kept=$(grep -v -E '^(PLMCP_(ENV|AUTH_MODE|BASE_URL|JWT_SIGNING_KEY|(GOOGLE|GITHUB)_CLIENT_(ID|SECRET)|ALLOWED_(EMAILS|GOOGLE_DOMAINS|GITHUB_LOGINS))=|[[:space:]]*$)' "$ENV_FILE" || true)
+  fi
   umask 077
   # No inline comments: systemd EnvironmentFile would keep them as part of the value.
   cat > "$ENV_FILE" <<CONF
@@ -98,6 +104,10 @@ PLMCP_${upper}_CLIENT_SECRET=$client_secret
 PLMCP_JWT_SIGNING_KEY=$jwt
 $allow_line
 CONF
+  if [ -n "$kept" ]; then
+    printf '%s\n' "$kept" >> "$ENV_FILE"
+    echo "Kept from the previous $ENV_FILE: $(printf '%s\n' "$kept" | cut -d= -f1 | tr '\n' ' ')"
+  fi
   chown root:root "$ENV_FILE"; chmod 600 "$ENV_FILE"
   echo "Wrote $ENV_FILE (redirect/callback URL to register: $base_url/auth/callback)"
 else

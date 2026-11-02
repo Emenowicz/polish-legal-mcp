@@ -138,7 +138,10 @@ never fill the host's root disk (see security.md).
    ```
 3. Update later by re-running the same command (keeps `/etc/polish-legal-mcp.env`). To switch
    provider or change the allowlist: `ssh -t <pi> 'sudo bash ~/pi-setup.sh --reconfigure'`
-   (rotates the signing key — connected clients must connect again).
+   (rotates the signing key — connected clients must connect again; settings it does not ask
+   about, e.g. `PLMCP_ACT_INDEX*`, are kept). To only add an e-mail, editing the
+   `PLMCP_ALLOWED_EMAILS=` line of `/etc/polish-legal-mcp.env` and restarting the service is
+   enough and keeps every client signed in.
 4. Operate: `systemctl status polish-legal-mcp`, `journalctl -u polish-legal-mcp -f`,
    `sudo systemctl restart polish-legal-mcp`, `tailscale funnel status`.
 

@@ -119,3 +119,22 @@ async def test_regulation_texts_are_indexed_and_empty_html_is_skipped(settings, 
         assert await empty.articles("nadmiernym wysiłkiem fizycznym") == []
     finally:
         await eli.aclose()
+
+
+async def test_malformed_struct_is_a_stable_answer_not_retried(settings, tmp_path):
+    # ELI answers some /struct requests with broken JSON (seen 2026-11-02 for two statutes).
+    path = tmp_path / "act_index.sqlite"
+    statutes = load_json("eli/search_gornictwo_siarki.json")
+    eli = EliClient(settings, backoff_base=0)
+    try:
+        for expected_struct_calls in (1, 0):
+            with respx.mock(assert_all_called=False) as router:
+                struct = router.get(url__regex=r".*/struct$").respond(200, text="{not json")
+                _routes(router, statutes)
+                index = await refresh_act_index(eli, path, TODAY)
+            assert struct.call_count == expected_struct_calls  # second refresh: nothing refetched
+        assert [h.label for h in await index.articles("kopalnie Siarkopol")] == [
+            "art. 1 (tekst jednolity DU/2024/1835)"
+        ]
+    finally:
+        await eli.aclose()

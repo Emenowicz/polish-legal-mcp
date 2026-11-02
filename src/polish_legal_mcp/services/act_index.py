@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from polish_legal_mcp.clients.eli import EliClient
-from polish_legal_mcp.errors import LegalMcpError, UpstreamNotFoundError
+from polish_legal_mcp.errors import LegalMcpError, UpstreamUnavailableError
 from polish_legal_mcp.models import ActId
 from polish_legal_mcp.parsers.legal_html import (
     CONTAINER_TYPES,
@@ -334,10 +334,11 @@ class _Change:
 async def _act_text(
     eli: EliClient, item: dict[str, Any]
 ) -> tuple[str, list[tuple[str, str]], bool]:
-    """(source ELI id, unit tokens, complete). Not complete when an ELI request failed for a
-    transient reason (5xx, timeout): the act is then stored without its text key and retried on
-    the next refresh. A 404, an empty or unparsable HTML body (ELI answers 200 with nothing for
-    some old acts) are stable answers: that source is skipped, not retried weekly."""
+    """(source ELI id, unit tokens, complete). Not complete when ELI was unavailable (5xx,
+    timeout, rate limit): the act is then stored without its text key and retried on the next
+    refresh. Every other failure is ELI's stable answer and that source is skipped, not retried
+    on every refresh: 404, malformed JSON, an HTML body over the size limit (a few regulations
+    with large attachments), an empty or unparsable HTML body (some old acts)."""
     refs = (item.get("references") or {}).get(CONSOLIDATED_TEXTS) or []
     notices = sorted(
         (ActId.parse(r["id"]) for r in refs), key=lambda a: (a.year, a.position), reverse=True
@@ -348,19 +349,19 @@ async def _act_text(
             if (await eli.act(notice)).get("textHTML"):
                 sources.append(notice)
                 break
-        except UpstreamNotFoundError:
-            continue
-        except LegalMcpError:
+        except UpstreamUnavailableError:
             complete = False
+        except LegalMcpError:
+            continue
     if item.get("textHTML"):
         sources.append(ActId.parse(str(item["ELI"])))
     for source in sources:
         try:
             html = await eli.html_uncached(source)
-        except UpstreamNotFoundError:
+        except UpstreamUnavailableError:
+            complete = False
             continue
         except LegalMcpError:
-            complete = False
             continue
         if not html.strip():
             continue
@@ -449,10 +450,10 @@ async def refresh_act_index(eli: EliClient, path: Path, today: date) -> ActIndex
         if item.get("type") == "Ustawa":  # headings: statutes only (regulations rarely have any)
             try:
                 found = headings(await eli.struct_uncached(ActId.parse(eli_id)))
-            except UpstreamNotFoundError:
-                pass
-            except LegalMcpError:
+            except UpstreamUnavailableError:
                 struct_ok = False
+            except LegalMcpError:  # 404, malformed JSON (seen for two statutes): no headings
+                pass
         source, units, text_ok = await _act_text(eli, item)
         # An empty key never matches a real key: incomplete fetches are retried.
         return _Change(item, key if struct_ok and text_ok else "", found, units, source)
