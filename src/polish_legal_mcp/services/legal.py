@@ -208,14 +208,34 @@ def _act_id_or_none(value: str) -> ActId | None:
         return None
 
 
+# One-off acts (ELI "akt jednorazowy") are mostly noise as a legal basis: gmina boundaries,
+# ratifications, Natura 2000 sites. The exception is the regulations that set yearly rates and
+# amounts (minimum wage, kwota bazowa, pension indexation): measured 2026-11-02 on 48 queries,
+# allowing these ~300 gave +1 hit and took 4 of 480 top-10 slots; allowing all one-off acts gave
+# the same hit but took 33 slots with mostly irrelevant acts.
+RATE_REGULATION_RE = re.compile(
+    r"z dnia \d{1,2} \S+ \d{4}\s*r\.\s*-?\s*w sprawie\b.*"
+    r"\b(wysokości|kwot\w*|wskaźnik\w*|stawek|stawki|minimaln\w*|średni\w*)\b",
+    re.IGNORECASE,
+)
+
+
 def is_basis_candidate(act: ActSummary) -> bool:
-    """Statute or regulation that can itself be a legal basis (no amending/one-off acts)."""
-    return not (
+    """Statute or regulation that can itself be a legal basis: no amending acts, and no one-off
+    acts except regulations setting rates or amounts."""
+    if (
         act.is_amending_act
         or act.is_consolidated_text_notice
         or act.act_type not in ("Ustawa", "Rozporządzenie")
-        or act.status in ONE_OFF_STATUSES
-    )
+    ):
+        return False
+    if act.status in ONE_OFF_STATUSES:
+        return (
+            act.status == "akt jednorazowy"
+            and act.act_type == "Rozporządzenie"
+            and bool(RATE_REGULATION_RE.search(act.title))
+        )
+    return True
 
 
 def interleave(first: list[str], second: list[str]) -> list[str]:

@@ -54,13 +54,14 @@
   consolidated text from before 2025 or the original text, because newer consolidated texts are
   PDF-only; acts with no HTML at all (45 statutes, ~2,900 regulations in the 2026-11-01 build,
   including every act published since 2025) are matched by title and headings only. Acts ELI
-  marks as one-off (e.g. the yearly minimum-wage regulation) are never candidates. A matched
+  marks as one-off are not candidates (gmina boundaries, ratifications…), except regulations
+  setting rates or amounts such as the yearly minimum wage. A matched
   article or § may since have been amended, renumbered or repealed, and provisions added later
   may not be found: the hit is a pointer for `get_legal_provision`, which reads the current
   wording. The index covers acts in force on its refresh date (refreshed weekly) and is not
   used for other dates; an act's text is refetched when ELI lists a new consolidated text for
   it, not when an older one later gains HTML. On 48 test queries the right act was in the top
-  10 for 33 (9 without the index): 29 of 38 answered by statutes, 4 of 10 answered by
+  10 for 34 (10 without the index): 29 of 38 answered by statutes, 5 of 10 answered by
   regulations.
   `include_case_law` adds acts cited in the 10 most relevant SAOS judgments
   (procedural acts such as k.p.c. and fee regulations excluded, repealed acts dropped): it finds

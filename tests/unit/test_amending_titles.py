@@ -1,8 +1,9 @@
-"""Amending-act detection from ELI titles (real titles, api.sejm.gov.pl, checked 2026-11-01)."""
+"""Amending-act detection and the one-off filter on ELI titles (real titles from
+api.sejm.gov.pl, checked 2026-11-01/02; the ratification title is cut after "wraz z poprawkami")."""
 
 import pytest
 
-from polish_legal_mcp.services.legal import summarize_act
+from polish_legal_mcp.services.legal import is_basis_candidate, summarize_act
 
 BASE = [
     # Base acts whose title also amends another act: they must stay search candidates.
@@ -30,3 +31,45 @@ def test_base_acts_are_not_amending(title):
 @pytest.mark.parametrize("title", AMENDING)
 def test_amending_acts_are_detected(title):
     assert summarize_act({"ELI": "DU/2021/1509", "title": title}).is_amending_act
+
+
+ONE_OFF = "akt jednorazowy"
+
+
+@pytest.mark.parametrize(
+    ("act_type", "title", "expected"),
+    [
+        # Yearly rates: one-off in ELI, but a legal basis people ask about.
+        (
+            "Rozporządzenie",
+            "Rozporządzenie Rady Ministrów z dnia 11 września 2025 r. w sprawie wysokości minimalnego wynagrodzenia za pracę oraz wysokości minimalnej stawki godzinowej w 2026 r.",
+            True,
+        ),
+        (
+            "Rozporządzenie",
+            "Rozporządzenie Ministra Sprawiedliwości z dnia 30 lipca 2021 r. w sprawie wysokości kwoty bazowej w 2022 r.",
+            True,
+        ),
+        # Other one-off acts stay out.
+        (
+            "Rozporządzenie",
+            "Rozporządzenie Ministra Spraw Wewnętrznych z dnia 14 marca 1927 r. o zniesieniu gmin wiejskich Karsusy, Jakusze i Skrzyszew oraz o zmianie granic gmin na terenie powiatu łukowskiego w województwie lubelskiem.",
+            False,
+        ),
+        (
+            "Rozporządzenie",
+            "Rozporządzenie Ministra Klimatu i Środowiska z dnia 14 października 2021 r. w sprawie specjalnego obszaru ochrony siedlisk Bystrzyno (PLH320061)",
+            False,
+        ),
+        (
+            "Ustawa",
+            "Ustawa z dnia 12 września 2025 r. o ratyfikacji Umowy o Międzynarodowym Banku Odbudowy i Rozwoju, sporządzonej w Bretton Woods dnia 22 lipca 1944 r., wraz z poprawkami",
+            False,
+        ),
+    ],
+)
+def test_one_off_acts_are_candidates_only_when_they_set_rates(act_type, title, expected):
+    act = summarize_act(
+        {"ELI": "DU/2025/1242", "title": title, "type": act_type, "status": ONE_OFF}
+    )
+    assert is_basis_candidate(act) is expected

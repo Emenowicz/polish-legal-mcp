@@ -65,10 +65,13 @@ uvicorn ─ Starlette app (FastMCP http_app)
    stay on top, then title/heading and text hits are interleaved. Measured with
    `scripts/eval_legal_basis.py` on 48 queries (`tests/fixtures/legal_basis_eval.json`: 24
    written by the developer and 14 real Q&A questions answered by statutes, 10 real Q&A
-   questions answered by regulations): recall@10 **9/48 lexical only → 33/48 with the index**
-   (statutes 8/38 → 29/38, of which real questions 3/14 → 11/14; regulations 1/10 → 4/10), no
-   query lost. Of the 6 regulation questions still missed, 5 cite regulations the index cannot
-   read (PDF-only texts since 2025, acts ELI marks as one-off). File ~160 MB; first build ~20 min,
+   questions answered by regulations): recall@10 **10/48 lexical only → 34/48 with the index**
+   (statutes 8/38 → 29/38, of which real questions 3/14 → 11/14; regulations 2/10 → 5/10), no
+   query lost. Of the 5 regulation questions still missed, 3 cite regulations available only as
+   PDF (published or consolidated since 2025). One-off acts (ELI "akt jednorazowy") are not
+   candidates except regulations setting rates or amounts (`RATE_REGULATION_RE`, ~300 acts):
+   allowing those gave the minimum-wage hit and took 4 of 480 top-10 slots, allowing all one-off
+   acts gave the same hit but filled 33 slots with gmina boundaries, ratifications and the like. File ~160 MB; first build ~20 min,
    network-bound (~15,000 ELI requests), later refreshes ~1 min; Linux arm64 memory (measured
    with statute texts): +~150 MB peak during the first build (HTML parsed one at a time), +~50 MB
    once loaded. Measured on the same queries and dropped: titles + keywords only (6–11/38),
