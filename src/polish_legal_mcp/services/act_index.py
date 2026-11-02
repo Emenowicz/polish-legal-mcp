@@ -1,17 +1,18 @@
-"""Act index for find_legal_basis: titles, ELI keywords, statute headings and statute article texts.
+"""Act index for find_legal_basis: titles, ELI keywords, statute headings and act texts.
 
 Built only from ELI: `/acts/search` pages of statutes and regulations in force; for base statutes
 also `/struct` (book/title/division/chapter headings: a code's title says nothing about
-"urlop macierzyński", its "Dział ósmy - Uprawnienia pracowników związane z rodzicielstwem" does)
-and the article texts of the newest text that has HTML (consolidated text, else the original).
+"urlop macierzyński", its "Dział ósmy - Uprawnienia pracowników związane z rodzicielstwem" does);
+for statutes and regulations the units (articles, §, attachment blocks) of the newest text that
+has HTML (consolidated text, else the original).
 
-Two rankers, as measured (scripts/eval_legal_basis.py, 38 queries, 2026-11-01): BM25 in memory
-over titles + keywords + headings, and SQLite FTS5 over article texts. find_legal_basis keeps its
-three best lexical hits on top and interleaves the two (recall@10 8/38 → 29/38).
+Two rankers, as measured (scripts/eval_legal_basis.py, 2026-11-01): BM25 in memory over titles +
+keywords + headings, and SQLite FTS5 over the texts. find_legal_basis keeps its three best
+lexical hits on top and interleaves the two (numbers in docs/architecture.md, decision 9).
 
 Storage: one local SQLite file (`PLMCP_ACT_INDEX_PATH`), a rebuildable cache of public ELI data,
-refreshed incrementally: a statute's struct and text are refetched only when its text key
-(newest consolidated-text notice in ELI references + HTML flag) changes. The index only proposes
+refreshed incrementally: an act's struct and text are refetched only when its text key (newest
+consolidated-text notice in ELI references + HTML flag) changes. The index only proposes
 candidates; wording and verification always come from ELI.
 """
 
@@ -31,7 +32,12 @@ from typing import Any
 from polish_legal_mcp.clients.eli import EliClient
 from polish_legal_mcp.errors import LegalMcpError, UpstreamNotFoundError
 from polish_legal_mcp.models import ActId
-from polish_legal_mcp.parsers.legal_html import CONTAINER_TYPES, display_name, parse_html
+from polish_legal_mcp.parsers.legal_html import (
+    CONTAINER_TYPES,
+    UnitLookupError,
+    display_name,
+    parse_html,
+)
 from polish_legal_mcp.services.legal import (
     _WORD_RE,
     CONSOLIDATED_TEXTS,
@@ -127,27 +133,36 @@ def text_tokens(text: str) -> str:
     )
 
 
-def articles(html: str) -> list[tuple[str, str]]:
-    """(unit id, text) of the act's own articles: every id part before the article must be a
-    container (part/book/division/chapter…), which skips articles quoted in a notice's text."""
+def text_units(html: str) -> list[tuple[str, str]]:
+    """(unit id, text) of the act's own articles and § (every id part before them must be a
+    container, which skips units quoted in a notice's text) and of top-level attachment blocks
+    (ELI ids `none_…`: lists and tables of regulations, e.g. prohibited work for minors)."""
     found = []
     for el in parse_html(html).xpath("//*[@id]"):
         unit_id = str(el.get("id"))
         if "unit" not in (el.get("class") or "").split():
             continue
         *parents, last = unit_id.split("-")
-        if last.startswith("arti_") and all(p.split("_")[0] in CONTAINER_TYPES for p in parents):
+        kind = last.split("_")[0]
+        in_act = all(p.split("_")[0] in CONTAINER_TYPES for p in parents)
+        if (kind in ("arti", "para") and in_act) or (kind == "none" and not parents):
             found.append((unit_id, re.sub(r"\s+", " ", el.text_content()).strip()))
     return found
 
 
-def article_label(unit_id: str) -> str:
-    """'chpt_2-arti_180_1' → 'art. 180¹' (as get_legal_provision and legal texts write it)."""
-    return "art. " + display_name(unit_id.rsplit("-", 1)[-1].removeprefix("arti_"))
+def unit_label(unit_id: str) -> str:
+    """'chpt_2-arti_180_1' → 'art. 180¹', 'para_3' → '§ 3', 'none_I' → 'załącznik' (as
+    get_legal_provision and legal texts write them)."""
+    kind, _, number = unit_id.rsplit("-", 1)[-1].partition("_")
+    if kind == "arti":
+        return f"art. {display_name(number)}"
+    if kind == "para":
+        return f"§ {display_name(number)}"
+    return "załącznik"
 
 
 def text_key(item: dict[str, Any]) -> str:
-    """Changes when a statute gets a new consolidated text or its HTML appears."""
+    """Changes when an act gets a new consolidated text or its own HTML appears."""
     refs = (item.get("references") or {}).get(CONSOLIDATED_TEXTS) or []
     ids = sorted((ActId.parse(r["id"]) for r in refs), key=lambda a: (a.year, a.position))
     return f"{ids[-1].eli if ids else ''}|{bool(item.get('textHTML'))}"
@@ -238,7 +253,7 @@ class ActIndex:
             n = self._by_eli[eli_id]
             source = self.sources[n] if n < len(self.sources) else ""
             text = "tekst pierwotny" if source == eli_id else f"tekst jednolity {source}"
-            hits.append(Hit(self.acts[n], f"{article_label(unit)} ({text})"))
+            hits.append(Hit(self.acts[n], f"{unit_label(unit)} ({text})"))
             if len(hits) >= k:
                 break
         return hits
@@ -316,12 +331,13 @@ class _Change:
     source: str = ""  # ELI id of the text the articles come from ("" when none had HTML)
 
 
-async def _statute_text(
+async def _act_text(
     eli: EliClient, item: dict[str, Any]
 ) -> tuple[str, list[tuple[str, str]], bool]:
-    """(source ELI id, article tokens, complete). Not complete when an ELI request failed for a
-    transient reason (5xx, timeout): the statute is then stored without its text key and retried
-    on the next refresh. A 404 is ELI's stable answer and is not retried weekly."""
+    """(source ELI id, unit tokens, complete). Not complete when an ELI request failed for a
+    transient reason (5xx, timeout): the act is then stored without its text key and retried on
+    the next refresh. A 404, an empty or unparsable HTML body (ELI answers 200 with nothing for
+    some old acts) are stable answers: that source is skipped, not retried weekly."""
     refs = (item.get("references") or {}).get(CONSOLIDATED_TEXTS) or []
     notices = sorted(
         (ActId.parse(r["id"]) for r in refs), key=lambda a: (a.year, a.position), reverse=True
@@ -346,8 +362,13 @@ async def _statute_text(
         except LegalMcpError:
             complete = False
             continue
+        if not html.strip():
+            continue
         async with _PARSING:
-            units = await asyncio.to_thread(articles, html)
+            try:
+                units = await asyncio.to_thread(text_units, html)
+            except UnitLookupError:
+                continue
             tokens = [(unit, text_tokens(text)) for unit, text in units]
         return source.eli, tokens, complete
     return "", [], complete  # no HTML text (PDF-only): titles and headings are still indexed
@@ -391,9 +412,10 @@ def _store(path: Path, changes: list[_Change], gone: list[str], built: date | No
 
 
 async def refresh_act_index(eli: EliClient, path: Path, today: date) -> ActIndex:
-    """Bring the stored index up to date with ELI and return it. The first run fetches every
-    statute (~1,200 structs, ~1,150 texts, up to ~3,600 notice metadata calls); later runs only
-    statutes whose text key changed. Parsing and SQLite run in worker threads."""
+    """Bring the stored index up to date with ELI and return it. The first run fetches every act
+    (~1,200 statute structs, ~6,500 HTML texts of statutes and regulations, notice metadata:
+    ~15,000 requests); later runs only acts whose text key changed. Parsing and SQLite run in
+    worker threads."""
     items: dict[str, dict[str, Any]] = {}
     for act_type in TYPES:
         offset = 0
@@ -419,21 +441,20 @@ async def refresh_act_index(eli: EliClient, path: Path, today: date) -> ActIndex
         )
 
     async def change(item: dict[str, Any]) -> _Change:
-        statute = item.get("type") == "Ustawa"
-        key = text_key(item) if statute else ""
+        key = text_key(item)
         eli_id = str(item["ELI"])
         if stored.get(eli_id) == key:
             return _Change(item, key)
-        if not statute:
-            return _Change(item, key, [])
-        try:
-            found, struct_ok = headings(await eli.struct_uncached(ActId.parse(eli_id))), True
-        except UpstreamNotFoundError:
-            found, struct_ok = [], True
-        except LegalMcpError:
-            found, struct_ok = [], False
-        source, units, text_ok = await _statute_text(eli, item)
-        # An empty key never matches a statute's real key: incomplete fetches are retried.
+        found, struct_ok = [], True
+        if item.get("type") == "Ustawa":  # headings: statutes only (regulations rarely have any)
+            try:
+                found = headings(await eli.struct_uncached(ActId.parse(eli_id)))
+            except UpstreamNotFoundError:
+                pass
+            except LegalMcpError:
+                struct_ok = False
+        source, units, text_ok = await _act_text(eli, item)
+        # An empty key never matches a real key: incomplete fetches are retried.
         return _Change(item, key if struct_ok and text_ok else "", found, units, source)
 
     fetched = 0
@@ -441,13 +462,13 @@ async def refresh_act_index(eli: EliClient, path: Path, today: date) -> ActIndex
     for start in range(0, len(pending), BATCH):
         batch = pending[start : start + BATCH]
         changes = await gather_limited([lambda i=i: change(i) for i in batch], CONCURRENCY)
-        fetched += sum(1 for c in changes if c.headings is not None and c.item["type"] == "Ustawa")
+        fetched += sum(1 for c in changes if c.headings is not None)
         await asyncio.to_thread(_store, path, changes, [], None)
     gone = [eli_id for eli_id in stored if eli_id not in items]
     await asyncio.to_thread(_store, path, [], gone, today)
     logger.info(
         "act index refreshed",
-        extra={"fields": {"acts": len(items), "statutes_fetched": fetched, "removed": len(gone)}},
+        extra={"fields": {"acts": len(items), "fetched": fetched, "removed": len(gone)}},
     )
     index = await load_act_index(path)
     assert index is not None

@@ -1,0 +1,89 @@
+{
+ "count": 1,
+ "totalCount": 1,
+ "offset": 0,
+ "items": [
+  {
+   "address": "WDU20230001240",
+   "announcementDate": "2023-06-19",
+   "changeDate": "2024-03-14T12:54:29",
+   "displayAddress": "Dz.U. 2023 poz. 1240",
+   "pos": 1240,
+   "promulgation": "2023-06-29",
+   "publisher": "DU",
+   "status": "obowiązujący",
+   "textHTML": true,
+   "textPDF": true,
+   "title": "Rozporządzenie Rady Ministrów z dnia 19 czerwca 2023 r. w sprawie wykazu prac wzbronionych młodocianym i warunków ich zatrudniania przy niektórych z tych prac",
+   "type": "Rozporządzenie",
+   "volume": 0,
+   "year": 2023,
+   "authorizedBody": [],
+   "directives": [],
+   "entryIntoForce": "2023-09-30",
+   "inForce": "IN_FORCE",
+   "keywords": [
+    "praca",
+    "młodociani",
+    "kodeks pracy"
+   ],
+   "keywordsNames": [],
+   "obligated": [],
+   "previousTitle": [],
+   "prints": [],
+   "references": {
+    "Akty uchylone": [
+     {
+      "id": "DU/2016/1509",
+      "date": "2023-09-30"
+     },
+     {
+      "id": "DU/2015/929",
+      "date": "2023-09-30"
+     },
+     {
+      "id": "DU/2006/724",
+      "date": "2023-09-30"
+     },
+     {
+      "id": "DU/2005/1145",
+      "date": "2023-09-30"
+     },
+     {
+      "id": "DU/2004/2047",
+      "date": "2023-09-30"
+     }
+    ],
+    "Podstawa prawna": [
+     {
+      "id": "DU/1974/141"
+     }
+    ],
+    "Podstawa prawna z art.": [
+     {
+      "id": "DU/1974/141",
+      "art": "art. 204 par. 1 i 3"
+     }
+    ]
+   },
+   "releasedBy": [
+    "RADA MINISTRÓW"
+   ],
+   "texts": [
+    {
+     "fileName": "text.html",
+     "type": "H"
+    },
+    {
+     "fileName": "D20231240.pdf",
+     "type": "O"
+    },
+    {
+     "fileName": "D20231240.pdf",
+     "type": "I"
+    }
+   ],
+   "ELI": "DU/2023/1240"
+  }
+ ]
+}

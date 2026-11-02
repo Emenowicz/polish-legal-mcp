@@ -721,9 +721,9 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     ) -> LegalBasisResult:
         """Wskazuje akty prawne – kandydatów na podstawę prawną – dopasowując opis do haseł
         przedmiotowych ELI, tytułów aktów obowiązujących oraz nagłówków działów i rozdziałów
-        ustaw oraz treści artykułów ustaw (indeks z ELI, jeśli serwer go ma). Kandydaci, nie
+        ustaw oraz treści ustaw i rozporządzeń (indeks z ELI, jeśli serwer go ma). Kandydaci, nie
         porada prawna: każdego zweryfikuj get_legal_act / get_legal_provision; wskazany
-        nagłówek lub artykuł to miejsce, od którego zacząć. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
+        nagłówek, artykuł lub § to miejsce, od którego zacząć. Nie obejmuje prawa UE – jeśli sprawa dotyczy przepisów unijnych
         (np. RODO), użyj search_eu_acts / get_eu_provision zamiast podsuwać niepowiązane akty
         krajowe. Opcja include_case_law dokłada akty, na które najczęściej powołują się sądy w
         orzeczeniach pasujących do opisu."""

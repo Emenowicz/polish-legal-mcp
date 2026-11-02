@@ -1,18 +1,19 @@
 """Act index pieces. ELI inputs are real fixtures (struct of DU/2015/1322 and HTML of the
-consolidated text DU/2024/1835, captured 2026-10-29; search page for górnictwo siarki); the
-titles in the BM25 test are synthetic."""
+consolidated text DU/2024/1835, captured 2026-10-29; HTML of the regulation DU/2023/1240,
+captured 2026-11-01; search page for górnictwo siarki); the titles in the BM25 test are
+synthetic."""
 
 import gzip
 from datetime import date
 
 from polish_legal_mcp.services.act_index import (
     ActIndex,
-    article_label,
-    articles,
     headings,
     is_generic,
     subject,
     text_key,
+    text_units,
+    unit_label,
 )
 from polish_legal_mcp.services.legal import interleave, lexical_first
 from tests.conftest import FIXTURES, load_json
@@ -35,14 +36,30 @@ def test_headings_of_a_real_struct_skip_only_generic_ones():
     assert is_generic("Zmiany w przepisach obowiązujących")
 
 
-def test_articles_of_a_consolidated_text_skip_articles_quoted_by_the_notice():
-    html = gzip.decompress((FIXTURES / "eli/DU_2024_1835.html.gz").read_bytes()).decode()
-    units = articles(html)
+def _html(name: str) -> str:
+    return gzip.decompress((FIXTURES / "eli" / name).read_bytes()).decode()
+
+
+def test_units_of_a_consolidated_text_skip_articles_quoted_by_the_notice():
+    units = text_units(_html("DU_2024_1835.html.gz"))
     # The notice's own text quotes "Art. 84" of an amending act (id pass_2-arti_84): not indexed.
-    assert [article_label(u) for u, _ in units] == [f"art. {n}" for n in range(1, 10)]
+    assert [unit_label(u) for u, _ in units] == [f"art. {n}" for n in range(1, 10)]
     assert "Siarkopol" in units[0][1]
-    assert article_label("chpt_2-arti_15a") == "art. 15a"
-    assert article_label("arti_180_1") == "art. 180¹"
+
+
+def test_units_of_a_regulation_include_paragraphs_and_attachment_blocks():
+    units = text_units(_html("DU_2023_1240.html.gz"))
+    labels = [unit_label(u) for u, _ in units]
+    assert labels[:7] == [f"§ {n}" for n in range(1, 8)]
+    assert labels.count("załącznik") == 6  # the list of work prohibited to minors
+    assert any("NADMIERNYM WYSIŁKIEM FIZYCZNYM" in t for u, t in units if u.startswith("none_"))
+
+
+def test_unit_labels():
+    assert unit_label("chpt_2-arti_15a") == "art. 15a"
+    assert unit_label("arti_180_1") == "art. 180¹"
+    assert unit_label("para_3") == "§ 3"
+    assert unit_label("none_I") == "załącznik"
 
 
 def test_text_key_follows_the_newest_consolidated_text():

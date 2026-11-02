@@ -36,7 +36,7 @@ case numbers.
 | `get_eu_provision` | EU law (e.g. RODO) by CELEX, act number or alias: most current Polish wording from the EUR-Lex consolidated version (amendments + corrigenda), OJ citation, verification report. |
 | `get_legal_act_amendments` | Amending acts with ELI dates, pending amendments, amendments after the latest consolidated text, TK rulings. |
 | `verify_legal_citation` | Parse a citation ("art. 61 § 1 k.p.a.", "… (Dz. U. z 2025 r. poz. 817)"), resolve the act, check unit, wording and date. |
-| `find_legal_basis` | Candidate acts: ELI keyword vocabulary + title stems; with the optional act index also titles, statute division/chapter headings and statute article texts (pointing at the matching article); optionally (`include_case_law`) acts most cited in SAOS judgments matching the description. Candidates, not advice. |
+| `find_legal_basis` | Candidate acts: ELI keyword vocabulary + title stems; with the optional act index also titles, statute division/chapter headings and the texts of statutes and regulations (pointing at the matching article or §); optionally (`include_case_law`) acts most cited in SAOS judgments matching the description. Candidates, not advice. |
 | `search_judgments` | SAOS search (common courts, Supreme Court, Constitutional Tribunal, KIO) with paging. |
 | `get_judgment` | Judgment metadata, legal bases, referenced regulations, paged text, phrase excerpts, citation built from SAOS metadata ("wyrok Sądu Najwyższego z dnia …, I CSK …"). |
 | `search_cjeu_judgments` | CJEU / General Court decisions interpreting an EU act (optionally one article, e.g. RODO art. 17), newest first, from EU Publications Office metadata. |
@@ -92,7 +92,7 @@ Environment variables with prefix `PLMCP_` (see [.env.example](.env.example)):
 | `PLMCP_HTTP_TIMEOUT_SECONDS`, `PLMCP_HTTP_MAX_RETRIES` | `20`, `3` | Upstream calls. |
 | `PLMCP_CACHE_TTL_SECONDS`, `PLMCP_CACHE_MAX_DOCUMENTS` | `3600`, `32` | In-memory cache (metadata TTL, max documents). |
 | `PLMCP_DOCUMENT_CACHE_TTL_SECONDS` | `86400` | Cache time for texts of published acts (ELI struct/HTML/PDF, EUR-Lex documents). |
-| `PLMCP_ACT_INDEX` / `PLMCP_ACT_INDEX_PATH` | `false` / – | Production, opt-in: `find_legal_basis` act index in one SQLite file (~100 MB, public ELI data only); the path is required when enabled. |
+| `PLMCP_ACT_INDEX` / `PLMCP_ACT_INDEX_PATH` | `false` / – | Production, opt-in: `find_legal_basis` act index in one SQLite file (~160 MB, public ELI data only); the path is required when enabled. |
 | `PLMCP_ACT_INDEX_REBUILD_DAYS` | `7` | Incremental refresh interval (only statutes with a new consolidated text are refetched). |
 | `PLMCP_PREWARM_ACTS` | k.c., k.p.c., k.p.a., k.p. | Production: acts whose newest texts are loaded at start-up and every 6 h (empty = off). |
 
@@ -148,7 +148,7 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
   provisions are confirmed against the last HTML text (`VERIFIED`); changed ones are read
   automatically from the PDF and marked `UNVERIFIED` with the page number to check.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
-- With the act index, statute texts are searched in the newest version ELI publishes as HTML (often a pre-2025 consolidated text or the original text, since newer consolidated texts are PDF-only); regulations are searched by title only.
+- With the act index, texts of statutes and regulations are searched in the newest version ELI publishes as HTML (often a pre-2025 consolidated text or the original text, since newer consolidated texts are PDF-only); acts available only as PDF are matched by title.
 - EU law: acts are found by number/CELEX/alias or words of the Polish title (no full-text search);
   wording comes from the EUR-Lex consolidated version, which is informational — the Official
   Journal text is binding. CJEU decisions in Polish are translations.

@@ -58,23 +58,24 @@ uvicorn ─ Starlette app (FastMCP http_app)
 9. **`find_legal_basis`: lexical matching plus an optional act index** (decision 2026-11-01).
    The index (`services/act_index.py`, `PLMCP_ACT_INDEX`) keeps titles + ELI keywords of
    statutes and regulations in force and the division/chapter headings of base statutes,
-   ranked by BM25 in memory, and the article texts of base statutes (newest text with HTML) in
-   SQLite FTS5 — one local file (`PLMCP_ACT_INDEX_PATH`) of public ELI data, refreshed
-   incrementally (a statute is refetched only when ELI lists a new consolidated text for it).
-   Ranking: the three best lexical hits stay on top, then title/heading and article hits are
-   interleaved. Measured with `scripts/eval_legal_basis.py` on 38 queries
-   (`tests/fixtures/legal_basis_eval.json`: 24 written by the developer, 14 real Q&A questions
-   whose published answers name the act): recall@10 **8/38 lexical only → 29/38 with the
-   index** (real questions 3/14 → 11/14), no query lost. Those 38 are all answered by statutes;
-   10 further real questions answered by a regulation (matched by title only) gave 1/10 → 2/10:
-   regulations remain the weak spot. File ~98 MB; first build 11–15 min,
-   network-bound (~5,000 ELI requests), later refreshes ~1 min; Linux arm64 memory: +~150 MB
-   peak during the first build (HTML parsed one at a time), +~50 MB once loaded. Measured on the same set and dropped: titles + keywords only
-   (6–11/38), titles + headings without article texts (22/38), and a local embedding model
-   (multilingual-e5-small, int8 ONNX, ~+230 MB RAM on Linux arm64): 23/38 over titles +
-   headings and 28/38 on top of the article texts, i.e. no gain once provisions are searched.
-   Article hits name the ELI text they come from, because consolidated texts since 2025 are
-   PDF-only and the index reads HTML.
+   ranked by BM25 in memory, and the texts of statutes and regulations (articles, §, attachment
+   blocks of the newest text with HTML) in SQLite FTS5 — one local file
+   (`PLMCP_ACT_INDEX_PATH`) of public ELI data, refreshed incrementally (an act is refetched
+   only when ELI lists a new consolidated text for it). Ranking: the three best lexical hits
+   stay on top, then title/heading and text hits are interleaved. Measured with
+   `scripts/eval_legal_basis.py` on 48 queries (`tests/fixtures/legal_basis_eval.json`: 24
+   written by the developer and 14 real Q&A questions answered by statutes, 10 real Q&A
+   questions answered by regulations): recall@10 **9/48 lexical only → 33/48 with the index**
+   (statutes 8/38 → 29/38, of which real questions 3/14 → 11/14; regulations 1/10 → 4/10), no
+   query lost. Of the 6 regulation questions still missed, 5 cite regulations the index cannot
+   read (PDF-only texts since 2025, acts ELI marks as one-off). File ~160 MB; first build ~20 min,
+   network-bound (~15,000 ELI requests), later refreshes ~1 min; Linux arm64 memory (measured
+   with statute texts): +~150 MB peak during the first build (HTML parsed one at a time), +~50 MB
+   once loaded. Measured on the same queries and dropped: titles + keywords only (6–11/38),
+   titles + headings without texts (22/38), and a local embedding model (multilingual-e5-small,
+   int8 ONNX, ~+230 MB RAM on Linux arm64): 23/38 over titles + headings and 28/38 on top of
+   the statute texts, i.e. no gain once provisions are searched. Text hits name the ELI text
+   they come from, because consolidated texts since 2025 are PDF-only and the index reads HTML.
 
 ## Extension points
 

@@ -49,20 +49,19 @@
 - ELI title search is substring-based without relevance ranking; titles are inflected, so stems
   work better ("zakwaterowa", "gospodarce nieruchomo").
 - `find_legal_basis` matches words of the description to ELI keywords and titles and, with the
-  optional act index, also to statute division/chapter headings and statute article texts. The
-  article texts come from the newest text ELI publishes as HTML — often a consolidated text from
-  before 2025 or the original text (≈365 of 1,151 statutes in the 2026-11-01 build), because
-  newer consolidated texts are PDF-only; 45 statutes have no HTML text and are matched by title
-  and headings only. A matched article may since have been amended, renumbered or repealed, and
-  provisions added later may not be found: the hit is a pointer for `get_legal_provision`,
-  which reads the current wording. Regulations are matched by title only; the index covers acts
-  in force on its refresh date (refreshed weekly) and is not used for other dates; a statute's
-  text is refetched when ELI lists a new consolidated text for it, not when an older one later
-  gains HTML. On 38 test queries the right
-  act was in the top 10 for 29 (8 without the index); all 38 are answered by statutes. For 10
-  real questions answered by a regulation (BHP, minimum wage, sick-leave checks, invoices) the
-  right regulation was found for only 2 (1 without the index): regulation texts are not
-  searched.
+  optional act index, also to statute division/chapter headings and to the texts of statutes
+  and regulations. Texts come from the newest version ELI publishes as HTML — often a
+  consolidated text from before 2025 or the original text, because newer consolidated texts are
+  PDF-only; acts with no HTML at all (45 statutes, ~2,900 regulations in the 2026-11-01 build,
+  including every act published since 2025) are matched by title and headings only. Acts ELI
+  marks as one-off (e.g. the yearly minimum-wage regulation) are never candidates. A matched
+  article or § may since have been amended, renumbered or repealed, and provisions added later
+  may not be found: the hit is a pointer for `get_legal_provision`, which reads the current
+  wording. The index covers acts in force on its refresh date (refreshed weekly) and is not
+  used for other dates; an act's text is refetched when ELI lists a new consolidated text for
+  it, not when an older one later gains HTML. On 48 test queries the right act was in the top
+  10 for 33 (9 without the index): 29 of 38 answered by statutes, 4 of 10 answered by
+  regulations.
   `include_case_law` adds acts cited in the 10 most relevant SAOS judgments
   (procedural acts such as k.p.c. and fee regulations excluded, repealed acts dropped): it finds
   e.g. k.c. for "zachowek" or u.g.n. for "wywłaszczenie", costs ~6–9 s, and inherits SAOS

@@ -26,7 +26,7 @@ releases with `sudo bash deploy/pi-setup.sh` and check `/health` for the version
 | Staged amending acts | `get_legal_provision` warning | Pending amendments listed; amending acts already in force whose change of this act is dated later are flagged (informational, never widens `VERIFIED`). |
 | Case-law signal for legal basis | `find_legal_basis(include_case_law=True)` | Acts most cited in matching SAOS judgments (procedural acts excluded); longer stems. |
 | Transitional provisions pointer | `get_legal_provision` (`transitional_provisions`) | Chapters of transitional provisions with their article range (from the struct) and the introducing act of codes (ELI "Przepisy wprowadzające", e.g. k.c. → DU/1964/94). |
-| Act index for legal basis | `find_legal_basis`, `services/act_index.py` (`PLMCP_ACT_INDEX`) | Titles, keywords, statute headings (BM25 in memory) and statute article texts (SQLite FTS5) from ELI; article hits point at the article and name the text used; recall@10 8/38 → 29/38 (`scripts/eval_legal_basis.py`). |
+| Act index for legal basis | `find_legal_basis`, `services/act_index.py` (`PLMCP_ACT_INDEX`) | Titles, keywords, statute headings (BM25 in memory) and texts of statutes and regulations (SQLite FTS5) from ELI; text hits point at the article/§ and name the text used; recall@10 9/48 → 33/48 (`scripts/eval_legal_basis.py`). |
 | Polish inflection in searches | `find_legal_basis`, `search_eu_acts` | Fleeting e of "-ek" nouns (podatek → podatku), whole short words as prefixes (system → systemu), three most selective words for EUR-Lex (VAT directive in 1 s instead of 12 s). |
 | Citations for SAOS judgments | `search_judgments`, `get_judgment`, `find_judgments_for_provision` (`citation`) | "wyrok Sądu Najwyższego z dnia 12 marca 2020 r., I CSK 123/19" built only from SAOS metadata (type, court, date, case number); none when a part is missing. |
 | Faster answers on the Pi | 24 h cache for published texts, prewarm | Texts (struct/HTML/PDF, EUR-Lex documents) cached 24 h, metadata 1 h; k.c., k.p.c., k.p.a., k.p. loaded at start-up and every 6 h (production). |
@@ -55,10 +55,10 @@ Nothing open: remaining limits are listed below as deliberate decisions, with ev
   for a candidate-search tool; prefix stems plus the fleeting e cover the common cases.
 - **Commentaries, doctrine, case notes (glosy)**: no official open source; licensed databases
   (LEX, Legalis) only.
-- **Full text of regulations, PDF-only statute texts, semantic search**: the act index covers
-  statute article texts from HTML only; regulations are matched by title. A local embedding
-  model was measured (no gain over article texts) and dropped; revisit only with new
-  measurements on `tests/fixtures/legal_basis_eval.json`.
+- **PDF-only texts, one-off acts, semantic search**: the act index reads texts from HTML only
+  (acts published or consolidated since 2025 are PDF-only) and never offers acts ELI marks as
+  one-off. A local embedding model was measured (no gain over texts) and dropped; revisit only
+  with new measurements on `tests/fixtures/legal_basis_eval.json`.
 - **Unofficial mirrors or compilations as a wording source** (incl. ELI `U` texts).
 - **Drafting letters or opinions in the server**: that is Claude's job; the server supplies
   sources and verification.

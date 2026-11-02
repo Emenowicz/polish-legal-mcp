@@ -157,8 +157,9 @@ from Anthropic's infrastructure, so the server must be reachable from the intern
 server will not work, even from a phone on the same Wi-Fi.
 
 ## Appendix: act index for `find_legal_basis` (optional)
-Titles, keywords and statute division/chapter headings (ranked in memory, ~40 MB) plus statute
-article texts (SQLite FTS5 on disk), all from ELI, in one SQLite file of ~100 MB. Enable it in
+Titles, keywords and statute division/chapter headings (ranked in memory, ~40 MB) plus the
+texts of statutes and regulations (SQLite FTS5 on disk), all from ELI, in one SQLite file of
+~160 MB. Enable it in
 the environment file:
 ```bash
 PLMCP_ACT_INDEX=true
@@ -167,7 +168,7 @@ PLMCP_ACT_INDEX_PATH=/var/cache/polish-legal-mcp/act_index.sqlite   # Pi: system
 ```
 Keep the file off the 64 MB state filesystem of the Pi installer (it bounds OAuth writes); on
 the Pi re-run `pi-setup.sh` first so the unit gets its `CacheDirectory`. The first refresh,
-60 s after start, fetches every statute (~5,000 ELI requests, 11–15 min on a fast connection,
+60 s after start, fetches every act (~15,000 ELI requests, ~20 min on a fast connection,
 one core busy; tool calls are slower meanwhile) and needs about +150 MB of memory on top of
 the server (Linux arm64); once built, the index costs about +50 MB and later refreshes (weekly)
 refetch only statutes with a new consolidated text (~1 min). Progress is stored in batches, so

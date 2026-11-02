@@ -1384,7 +1384,7 @@ class LegalService:
             orders: list[list[str]] = []
             sources = (
                 (index.titles(issue), "indeks tytułów i nagłówków"),
-                (await index.articles(issue), "treść ustaw"),
+                (await index.articles(issue), "treść aktów"),
             )
             for hits, method in sources:
                 orders.append([])
@@ -1399,15 +1399,16 @@ class LegalService:
             method_note += (
                 " Dodatkowo indeks aktów obowiązujących (stan na "
                 f"{index.built.isoformat()}): tytuły, hasła i nagłówki działów/rozdziałów ustaw "
-                "oraz treść artykułów ustaw, dopasowane po rdzeniach słów; trzy najlepsze wyniki "
+                "oraz treść ustaw i rozporządzeń (artykuły, §, załączniki), dopasowane po rdzeniach "
+                "słów; trzy najlepsze wyniki "
                 "leksykalne zostają na górze listy."
             )
             first_warning = (
-                "Dopasowanie leksykalne oraz indeks tytułów, nagłówków i treści ustaw. Wyniki to "
-                "kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej. Treść ustaw w "
+                "Dopasowanie leksykalne oraz indeks tytułów, nagłówków i treści aktów. Wyniki to "
+                "kandydaci do dalszej analizy, a nie wskazanie podstawy prawnej. Treść aktów w "
                 "indeksie pochodzi z ostatniego tekstu dostępnego w HTML (podanego przy artykule): "
                 "często tekstu jednolitego sprzed 2025 r. albo tekstu pierwotnego, bo nowsze "
-                "teksty jednolite ELI publikuje tylko w PDF. Wskazany artykuł mógł więc zostać "
+                "teksty jednolite ELI publikuje tylko w PDF. Wskazany przepis mógł więc zostać "
                 "zmieniony, przenumerowany lub uchylony, a przepisy dodane później mogą nie być "
                 "znajdowane – brzmienie i stan prawny zawsze sprawdź get_legal_provision."
             )
