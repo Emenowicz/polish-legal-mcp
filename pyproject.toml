@@ -1,6 +1,6 @@
 [project]
 name = "polish-legal-mcp"
-version = "0.6.0"
+version = "0.6.1"
 description = "Remote MCP server for official Polish legislation (ELI) and case law (SAOS)"
 readme = "README.md"
 license = "MIT"
@@ -12,7 +12,7 @@ dependencies = [
     "pydantic-settings>=2.11",
     "beautifulsoup4>=4.13",
     "lxml>=6.0",
-    "pypdf>=6.21.2,<7",
+    "pypdf>=6.21.4,<7",
 ]
 
 [project.scripts]
