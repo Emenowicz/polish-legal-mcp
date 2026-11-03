@@ -6,6 +6,8 @@ Dziennik Ustaw, Monitor Polski), **bills pending in the Sejm** (API Sejmu), **EU
 case law in Polish** (EU Publications Office / EUR-Lex) and **court decisions** (SAOS), with
 explicit, component-level verification of what could and could not be established.
 
+Project page (Polish, with real examples): https://emenowicz.github.io/polish-legal-mcp/
+
 > **Ważne / Important**
 > - Serwer jest narzędziem pomocniczym, **nie** źródłem opinii prawnych. Każde twierdzenie bez
 >   statusu `VERIFIED` należy traktować jako niezweryfikowane.

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polskie prawo w Claude</title>
+<meta name="description" content="Serwer MCP, dzięki któremu Claude podaje brzmienie polskich przepisów z oficjalnych źródeł i mówi, co udało się potwierdzić.">
+<meta property="og:title" content="Polskie prawo w Claude">
+<meta property="og:description" content="Brzmienie przepisów z oficjalnych baz Sejmu, UE i sądów, z gotowym cytatem i statusem weryfikacji.">
+<!-- System fonts only: no third-party requests from visitors' browsers. -->
+<style>
+  /* Layout: one reading column; the hero pairs the pitch with a real verification report, like a
+     document with its official stamp beside it. */
+  :root {
+    --paper: #f6f7f9;
+    --sheet: #ffffff;
+    --ink: #15203a;
+    --muted: #586178;
+    --rule: #dde1e8;
+    --accent: #1f4fa3;
+    --ok: #17704a;
+    --ok-bg: #e3f3ea;
+    --warn: #9a5a00;
+    --warn-bg: #fbf0dc;
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1420; --sheet: #171e2d; --ink: #e5e9f1; --muted: #9ba5ba; --rule: #2a3346;
+      --accent: #92b2ff; --ok: #6fd39f; --ok-bg: #16362a; --warn: #f1b659; --warn-bg: #3a2c14;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1420; --sheet: #171e2d; --ink: #e5e9f1; --muted: #9ba5ba; --rule: #2a3346;
+    --accent: #92b2ff; --ok: #6fd39f; --ok-bg: #16362a; --warn: #f1b659; --warn-bg: #3a2c14;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font: 400 1.0625rem/1.6 var(--body);
+    margin: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 68rem; margin: 0 auto; padding-block: 3rem 4rem; display: grid; gap: 4rem; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); letter-spacing: -0.01em; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.2rem; }
+  p { margin: 0; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .label { font: 500 0.75rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .mono { font-family: var(--mono); font-size: 0.9em; }
+  .muted { color: var(--muted); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 3rem; align-items: start; }
+  .pitch { display: grid; gap: 1.25rem; padding-top: 0.5rem; }
+  .pitch .lead { font-size: 1.2rem; color: var(--muted); max-width: 34rem; }
+  .sources { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; margin: 0; list-style: none; }
+  .sources li { font: 500 0.8rem/1 var(--mono); border: 1px solid var(--rule); border-radius: 999px; padding: 0.45rem 0.7rem; background: var(--sheet); }
+
+  .report { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 1.5rem; display: grid; gap: 1.1rem; min-width: 0; }
+  .ask { font-family: var(--mono); font-size: 0.95rem; }
+  .ask::before { content: "Pytanie: "; color: var(--muted); }
+  blockquote { margin: 0; font-family: var(--display); font-size: 1.35rem; line-height: 1.35; border-left: 3px solid var(--accent); padding-left: 1rem; }
+  .cite { font-size: 0.95rem; color: var(--muted); }
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--rule); }
+  .checks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--rule); font-size: 0.97rem; }
+  .pill { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.04em; padding: 0.35rem 0.5rem; border-radius: 4px; white-space: nowrap; }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .pill.warn { color: var(--warn); background: var(--warn-bg); }
+  .foot { font-size: 0.85rem; color: var(--muted); }
+
+  /* Sections */
+  section { display: grid; gap: 1.5rem; max-width: 52rem; }
+  .intro { display: grid; gap: 0.6rem; max-width: 42rem; }
+
+  .query { font-family: var(--mono); font-size: 0.95rem; background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 0.9rem 1rem; }
+  .cands { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .cands li { display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 0.75rem; padding: 1rem 0; border-bottom: 1px solid var(--rule); }
+  .rank { font: 500 0.95rem/1.6 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cands .title { font-weight: 600; }
+  .cands .where { font-size: 0.95rem; color: var(--muted); }
+
+  .tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; }
+  .tools div { display: grid; gap: 0.3rem; align-content: start; }
+  .tools p { color: var(--muted); font-size: 0.98rem; }
+
+  .prompts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .prompts li { font-family: var(--display); font-size: 1.15rem; line-height: 1.4; }
+  .prompts li::before { content: "„"; color: var(--accent); }
+  .prompts li::after { content: "”"; color: var(--accent); }
+
+  .steps { margin: 0; padding-left: 1.4rem; display: grid; gap: 0.6rem; }
+  .note { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 1rem 1.1rem; font-size: 0.98rem; }
+
+  footer { display: grid; gap: 0.5rem; font-size: 0.92rem; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 1.5rem; max-width: 52rem; }
+
+  @media (max-width: 52rem) {
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+    .tools { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="pitch">
+      <span class="label">Serwer MCP dla Claude</span>
+      <h1>Polskie prawo w Claude, prosto ze źródła</h1>
+      <p class="lead">Claude sięga po aktualne brzmienie przepisów do oficjalnych baz Sejmu, UE i
+        sądów, podaje gotowy cytat z Dziennika Ustaw i mówi wprost, co udało się potwierdzić, a czego nie.</p>
+      <ul class="sources" aria-label="Źródła danych">
+        <li>ELI API Sejmu</li>
+        <li>API Sejmu</li>
+        <li>EUR-Lex</li>
+        <li>SAOS</li>
+      </ul>
+      <p class="muted">Bez wymyślania: jeśli czegoś nie ma w oficjalnych danych, serwer odpowiada
+        „nie znaleziono” albo „niezweryfikowane”, zamiast zgadywać.</p>
+    </div>
+
+    <article class="report" aria-label="Przykładowy raport weryfikacji">
+      <span class="label">Prawdziwy wynik, 2 listopada 2026</span>
+      <p class="ask">art. 61 § 1 k.p.a.</p>
+      <blockquote>§ 1. Postępowanie administracyjne wszczyna się na żądanie strony lub z urzędu.</blockquote>
+      <p class="cite">art. 61 § 1 ustawy z dnia 14 czerwca 1960 r. Kodeks postępowania administracyjnego (Dz. U. z 2025 r. poz. 1691)</p>
+      <ul class="checks">
+        <li><span>Dane z oficjalnego źródła</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Akt istnieje</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Art. 61 § 1 istnieje</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Dokładne brzmienie</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Akt obowiązuje w tym dniu</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Brzmienie aktualne na ten dzień</span><span class="pill ok">VERIFIED</span></li>
+        <li><span>Lista zmian jest kompletna</span><span class="pill warn">UNVERIFIED</span></li>
+        <li><span>Przepis pasuje do Twojej sprawy</span><span class="pill warn">UNVERIFIED</span></li>
+      </ul>
+      <p class="foot">Brzmienie z tekstu jednolitego Dz. U. z 2025 r. poz. 1691 (PDF, str. 14), potwierdzone
+        z oficjalnym HTML. Ostatnie dwa punkty zawsze zostają niezweryfikowane: to ocena dla człowieka.</p>
+    </article>
+  </header>
+
+  <section aria-labelledby="basis">
+    <div class="intro">
+      <span class="label">Szukanie podstawy prawnej</span>
+      <h2 id="basis">Opisujesz sprawę własnymi słowami</h2>
+      <p class="muted">Serwer przeszukuje tytuły, nagłówki rozdziałów i treść ok. 9,7 tys. obowiązujących
+        ustaw i rozporządzeń i podaje, gdzie trafił. To kandydaci do sprawdzenia, nie porada.</p>
+    </div>
+    <p class="query">wynajmuję mieszkanie, najemca od trzech miesięcy nie płaci czynszu</p>
+    <ol class="cands">
+      <li><span class="rank">1</span>
+        <div><p class="title">Ustawa o ochronie praw lokatorów, mieszkaniowym zasobie gminy i o zmianie Kodeksu cywilnego</p>
+          <p class="where">Dz.U. 2001 nr 71 poz. 733 · hasła ELI „najem”, „czynsze” · trafienie w treści: art. 37</p></div></li>
+      <li><span class="rank">2</span>
+        <div><p class="title">Ustawa o zasadach przekazywania zakładowych budynków mieszkalnych przez przedsiębiorstwa państwowe</p>
+          <p class="where">Dz.U. 1994 nr 119 poz. 567 · hasła ELI „najem”, „czynsze”</p></div></li>
+      <li><span class="rank">3</span>
+        <div><p class="title">Kodeks cywilny</p>
+          <p class="where">Dz.U. 1964 nr 16 poz. 93 · nagłówek „Najem lokali mieszkalnych i użytkowych” · trafienie w treści: art. 659</p></div></li>
+    </ol>
+    <p class="foot">Pierwsze trzy wyniki z prawdziwego zapytania, 2 listopada 2026. Brzmienie każdego
+      artykułu Claude pobiera potem osobno i sprawdza jak powyżej.</p>
+  </section>
+
+  <section aria-labelledby="what">
+    <div class="intro">
+      <span class="label">15 narzędzi</span>
+      <h2 id="what">Co Claude potrafi z tym serwerem</h2>
+    </div>
+    <div class="tools">
+      <div><h3>Przepisy i cytaty</h3>
+        <p>Brzmienie art., ust., §, pkt i lit. z Dziennika Ustaw i Monitora Polskiego, gotowy cytat,
+          sprawdzenie cytatu na wybrany dzień, późniejsze zmiany i wyroki TK.</p></div>
+      <div><h3>Podstawa prawna</h3>
+        <p>Akty pasujące do opisu sprawy, ze wskazaniem artykułu lub paragrafu, który pasuje.</p></div>
+      <div><h3>Projekty ustaw</h3>
+        <p>Projekty w Sejmie bieżącej kadencji, które zmieniają dany akt, z etapem prac i linkami.</p></div>
+      <div><h3>Prawo UE i TSUE</h3>
+        <p>Rozporządzenia i dyrektywy po polsku (np. RODO), ich polskie wdrożenia oraz wyroki TSUE
+          interpretujące konkretny artykuł.</p></div>
+      <div><h3>Orzecznictwo</h3>
+        <p>Wyroki sądów powszechnych, SN, TK i KIO z SAOS, także te powołujące konkretny przepis, np. art. 5 k.c.</p></div>
+      <div><h3>Uczciwe statusy</h3>
+        <p>Każda odpowiedź ma osobny status dla źródła, istnienia aktu, brzmienia i daty. „VERIFIED”
+          znaczy, że to konkretne pytanie zostało potwierdzone w oficjalnych danych.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="try">
+    <div class="intro">
+      <span class="label">Przykładowe pytania</span>
+      <h2 id="try">Co można wpisać w Claude</h2>
+    </div>
+    <ul class="prompts">
+      <li>Sprawdź, czy art. 61 § 1 k.p.a. obowiązuje na dzień dzisiejszy i podaj link do źródła.</li>
+      <li>Podaj artykuły dotyczące zakwaterowania żołnierzy.</li>
+      <li>Jaka jest minimalna stawka godzinowa w 2026 roku i z jakiego rozporządzenia to wynika?</li>
+      <li>Znajdź orzeczenia, które powołują art. 5 k.c.</li>
+      <li>Podaj brzmienie art. 17 RODO i wyroki TSUE, które go interpretują.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="connect">
+    <div class="intro">
+      <span class="label">Podłączenie</span>
+      <h2 id="connect">Jak dodać to do swojego Claude</h2>
+    </div>
+    <ol class="steps">
+      <li>W Claude (web, desktop albo aplikacja): <strong>Ustawienia → Connectors → Add custom connector</strong>.</li>
+      <li>Wklej adres connectora (kończy się na <span class="mono">/mcp</span>), pola OAuth zostaw puste.</li>
+      <li>Kliknij Connect i zaloguj się kontem Google.</li>
+    </ol>
+    <p class="note">Instancja działa z listą dostępu. Adres connectora dostaniesz od osoby, która ją
+      prowadzi; ona też dopisuje Twój adres Google do listy. Na planie Free Claude pozwala na jeden
+      własny connector. Własną instancję możesz postawić według
+      <a href="https://github.com/Emenowicz/polish-legal-mcp/blob/main/docs/deployment.md">instrukcji wdrożenia</a>.</p>
+  </section>
+
+  <footer>
+    <p>To narzędzie pomocnicze, nie opinia prawna. Nie wklejaj do Claude danych osobowych ani poufnych dokumentów.</p>
+    <p>Kod jest otwarty: <a href="https://github.com/Emenowicz/polish-legal-mcp">github.com/Emenowicz/polish-legal-mcp</a>.
+      Projekt nie jest oficjalnym narzędziem żadnego organu ani instytucji publicznej.</p>
+  </footer>
+</div>
+
+</body>
+</html>
