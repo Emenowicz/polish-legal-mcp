@@ -123,3 +123,19 @@ async def test_live_pending_bills_for_civil_code(settings):
     await client.aclose()
     assert result.term >= 10 and result.pending_scanned > 0
     assert all(i.sejm_url.startswith("https://www.sejm.gov.pl/") for i in result.items)
+
+
+async def test_live_uodo_search_and_decision(settings):
+    from polish_legal_mcp.clients.uodo import UodoClient
+    from polish_legal_mcp.services.uodo import UodoService
+
+    client = UodoClient(settings)
+    service = UodoService(client)
+    try:
+        found = await service.search("monitoring kamer", limit=3)
+        assert found.items and all(i.signature and i.decision_date for i in found.items)
+        decision = await service.get(found.items[0].signature, search_text="monitoring")
+    finally:
+        await client.aclose()
+    assert decision.text and decision.status in {"nieprawomocna", "prawomocna", "uchylona"}
+    assert decision.citation and decision.citation.endswith(decision.signature)

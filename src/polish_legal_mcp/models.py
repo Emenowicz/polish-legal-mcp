@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from typing import Literal
 
@@ -593,5 +593,94 @@ class JudgmentDetails(BaseModel):
     source_url: str = Field(description="Strona orzeczenia w SAOS.")
     original_source_url: str | None = Field(
         default=None, description="Źródło pierwotne (portal sądu)."
+    )
+    warnings: list[str] = Field(default_factory=list)
+
+
+class UodoStatusEvent(BaseModel):
+    date: date
+    event: str = Field(
+        description="Zdarzenie wg portalu UODO: 'wydanie decyzji', 'publikacja w portalu', "
+        "'uprawomocnienie', 'uchylenie' albo oryginalna wartość portalu (np. 'defended')."
+    )
+    status: str | None = Field(
+        default=None,
+        description="Status decyzji po tym dniu: 'nieprawomocna', 'prawomocna', 'uchylona' "
+        "albo oryginalna wartość portalu.",
+    )
+    court_case: str | None = Field(
+        default=None, description="Sygnatura orzeczenia sądu, którego dotyczy zdarzenie."
+    )
+
+
+class UodoDecisionSummary(BaseModel):
+    signature: str = Field(description="Sygnatura decyzji, np. 'DKE.561.5.2026'.")
+    refid: str = Field(description="Identyfikator w portalu UODO (urn:ndoc:gov:pl:uodo:…).")
+    name: str
+    subject: str | None = Field(
+        default=None, description="Opis przedmiotu decyzji z metadanych portalu."
+    )
+    decision_date: date | None = None
+    publication_date: date | None = Field(default=None, description="Publikacja w portalu.")
+    status: str | None = Field(
+        default=None,
+        description="Ostatni status wg portalu: nieprawomocna, prawomocna albo uchylona.",
+    )
+    status_date: date | None = None
+    citation: str | None = Field(
+        default=None,
+        description="Cytat z metadanych, np. 'decyzja Prezesa Urzędu Ochrony Danych Osobowych "
+        "z dnia 5 września 2026 r., DKE.561.5.2026'; brak, gdy metadanych nie wystarcza.",
+    )
+    source_url: str = Field(description="Strona decyzji w Portalu Orzeczeń UODO.")
+
+
+class UodoSearchResult(BaseModel):
+    query_words: list[str] = Field(description="Słowa, które musiały wystąpić w treści.")
+    signature: str | None = None
+    page: int
+    page_size: int
+    has_more: bool
+    items: list[UodoDecisionSummary]
+    warnings: list[str] = Field(default_factory=list)
+    source_note: str
+
+
+class UodoReference(BaseModel):
+    kind: str = Field(
+        description="akt polski (Dz.U.), akt UE, sąd administracyjny, sąd powszechny, "
+        "Trybunał Konstytucyjny, TSUE, EROD, decyzja UODO albo inne."
+    )
+    name: str = Field(
+        description="Oznaczenie z metadanych portalu, np. 'Dz.U. 1960 nr 30 poz. 168'."
+    )
+    eli_candidate: str | None = Field(
+        default=None, description="Przypuszczalny ELI (DU/rok/poz.) – niezweryfikowany."
+    )
+
+
+class UodoDecision(UodoDecisionSummary):
+    status_history: list[UodoStatusEvent] = Field(default_factory=list)
+    department: str | None = None
+    signed_by: str | None = None
+    keywords: list[str] = Field(
+        default_factory=list, description="Indeksy merytoryczne portalu UODO."
+    )
+    references: list[UodoReference] = Field(
+        default_factory=list,
+        description="Akty, orzeczenia i wytyczne powołane w decyzji (metadane portalu).",
+    )
+    text: str = Field(description="Fragment treści decyzji.")
+    text_offset: int
+    text_length_total: int
+    has_more: bool
+    excerpts: list[str] = Field(
+        default_factory=list, description="Fragmenty zawierające szukaną frazę."
+    )
+    api_url: str
+    retrieved_at: datetime
+    source_note: str = Field(
+        description="Źródło, czas pobrania i informacja o przetworzeniu – podawaj przy "
+        "wykorzystaniu treści (warunek ponownego wykorzystania danych portalu UODO)."
     )
     warnings: list[str] = Field(default_factory=list)

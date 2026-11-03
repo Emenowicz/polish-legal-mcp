@@ -3,7 +3,8 @@
 Free, open-source **remote MCP server** that lets Claude (web, desktop, mobile) and other MCP
 clients retrieve, inspect and cite **official Polish legislation** (ELI API of the Sejm —
 Dziennik Ustaw, Monitor Polski), **bills pending in the Sejm** (API Sejmu), **EU law and CJEU
-case law in Polish** (EU Publications Office / EUR-Lex) and **court decisions** (SAOS), with
+case law in Polish** (EU Publications Office / EUR-Lex), **court decisions** (SAOS) and
+**decisions of the President of UODO** (data protection authority, Portal Orzeczeń UODO), with
 explicit, component-level verification of what could and could not be established.
 
 Project page (Polish, with real examples): https://emenowicz.github.io/polish-legal-mcp/
@@ -44,6 +45,8 @@ case numbers.
 | `search_cjeu_judgments` | CJEU / General Court decisions interpreting an EU act (optionally one article, e.g. RODO art. 17), newest first, from EU Publications Office metadata. |
 | `get_cjeu_judgment` | CJEU decision in Polish by case number, ECLI or CELEX: operative part, selected numbered paragraphs or paragraphs matching a phrase, interpreted provisions, language of the case, citation with ECLI and "pkt N". |
 | `find_pending_bills` | Bills pending in the Sejm (current term) whose title names a given act or contains a phrase, with the current stage and links (Sejm, RCL). |
+| `search_uodo_decisions` | Decisions of the President of UODO (GDPR, since 2018) by words of the text (stems, all must occur) or signature, newest first: date, subject, status (non-final / final / repealed), citation, link. |
+| `get_uodo_decision` | UODO decision: status history (incl. repeal by a court), department, subject index, cited acts with ELI candidates, CJEU and EDPB references, paged text, phrase excerpts, citation and the source note required by the portal's reuse terms. |
 | `find_judgments_for_provision` | Judgments (newest first) whose SAOS metadata cite a given provision, e.g. art. 5 k.c.; each one confirmed against its list of cited provisions. |
 
 Tool names are English; descriptions and messages are Polish. All outputs are typed (structured
@@ -150,6 +153,8 @@ fetching, no logging of tool arguments, hardened container. Details: [docs/secur
   provisions are confirmed against the last HTML text (`VERIFIED`); changed ones are read
   automatically from the PDF and marked `UNVERIFIED` with the page number to check.
 - SAOS has **no administrative-court (WSA/NSA) judgments** and is not complete.
+- UODO decisions: the portal search matches word fragments without inflection and has no
+  relevance ranking; decision texts are informational (portal terms).
 - With the act index, texts of statutes and regulations are searched in the newest version ELI publishes as HTML (often a pre-2025 consolidated text or the original text, since newer consolidated texts are PDF-only); acts available only as PDF are matched by title.
 - EU law: acts are found by number/CELEX/alias or words of the Polish title (no full-text search);
   wording comes from the EUR-Lex consolidated version, which is informational — the Official
@@ -171,4 +176,4 @@ non-goals: [docs/roadmap.md](docs/roadmap.md).
 
 ## License
 MIT — see [LICENSE](LICENSE). Legal texts and judgments come from public official sources
-(api.sejm.gov.pl, saos.org.pl, publications.europa.eu).
+(api.sejm.gov.pl, saos.org.pl, orzeczenia.uodo.gov.pl, publications.europa.eu).

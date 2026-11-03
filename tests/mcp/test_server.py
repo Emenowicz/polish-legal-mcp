@@ -24,6 +24,8 @@ EXPECTED_TOOLS = {
     "get_eu_transposition",
     "find_pending_bills",
     "get_cjeu_judgment",
+    "search_uodo_decisions",
+    "get_uodo_decision",
 }
 
 

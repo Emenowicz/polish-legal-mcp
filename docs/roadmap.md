@@ -11,6 +11,11 @@ sized). Current gaps: [limitations.md](limitations.md). Evidence for every sourc
 Nothing pending: release 0.2.0 (b011701) is deployed on the Pi (2026-10-30). Deploy later
 releases with `sudo bash deploy/pi-setup.sh` and check `/health` for the version.
 
+## Done (2026-11-03)
+| Item | Tool / change | Notes |
+|---|---|---|
+| UODO decisions | `search_uodo_decisions`, `get_uodo_decision` | Official Portal Orzeczeń UODO API: decisions of the President of UODO since 2018 by words or signature, status (non-final, final, repealed by a court), citation, cited acts with ELI candidates, attribution required by the portal's reuse terms. |
+
 ## Done (2026-10-30)
 | Item | Tool / change | Notes |
 |---|---|---|

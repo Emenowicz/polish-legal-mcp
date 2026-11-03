@@ -100,6 +100,37 @@ Bills name amended acts only in the title ("o zmianie ustawy – Kodeks cywilny"
 "o zmianie Kodeksu cywilnego"). Not available: RCL (legislacja.gov.pl) has no API (robots.txt
 disallows generic crawlers, `/api` returns a WAF block) — only `rclLink` from the Sejm API.
 
+## Portal Orzeczeń UODO — `https://orzeczenia.uodo.gov.pl/api` (verified 2026-11-03)
+
+Documented public REST API (OpenAPI 3.1 at `/api-doc/schemas/openapi.yml`; the portal manual,
+section 7, links it). The spec declares HTTP basic auth, but the manual calls it a public API and
+every call works without credentials. Reuse is free under the Open Data Act (ustawa z 11 sierpnia
+2021 r.) on condition of naming the source, the time of creation and retrieval, and whether the
+data were processed (manual §9.1) — the tools return this as `source_note`. The manual calls the
+published texts informational (art. 57 ust. 1 lit. b RODO).
+
+| Capability | Endpoint | Notes |
+|---|---|---|
+| Search | `GET /documents/search/PublicDocument/{timespan}/{conditions}?from=&count=&order=&fields=` | `timespan` = publication dates (`,` = all). `conditions` = `index:operator:value` path segments joined with `/` (AND); operators eq, ne, lt, le, gt, ge, in, notin, glob, notglob, regex. Returns a JSON array (no total). `order=-date_announcement` sorts newest first. |
+| Fields | `GET /documents/search` | Indexes: `refid`, `refname` (signature), `kind`, `publicator_subtype`, `date_announcement`, `date_publication`, `title_pl`, `content_pl`, … |
+| Metadata | `GET /documents/public/items/{refid}/meta.json` | `name`, `title` (subject), `dates[]` (`use`, `status`, optional court `refid`), `entities[]` (department, creator, plus staff who entered/edited the record — not returned by the tools), `terms[]` (subject index), `refs[]` (cited acts as `urn:ndoc:pro:pl:durp:{year}:{position}` = Dz.U., EU OJ, courts, CJEU, EDPB, other decisions), `parts`. |
+| Text | `GET /documents/public/items/{refid}:0/body.html` | HTML of the decision (~100 KB), footnotes included; also `body.pdf`. |
+
+- Index content (2026-11-03): 586 decisions of the President of UODO (`publicator_subtype=uodo`,
+  `kind=decision`, issued 2018-07-13 to 2026-09-05), ~420 court rulings, mostly WSA/NSA re-published
+  from CBOSA (`publicator.subtype=sa`),, and ~200 acts. The tools search the decisions only: acts come from
+  ELI. The court rulings are not integrated (user's decision, 2026-11-03): the portal holds no
+  text for them (`resources` empty, `parts` 0, `body.html` → 415), only court, signature, date,
+  judges, the first ~600 characters of the sentencja (`title`) and the CBOSA id
+  (`https://orzeczenia.nsa.gov.pl/doc/{id}`). Full texts exist only in CBOSA (no API; its
+  robots.txt allows `/doc/` for generic agents but disallows it for GPTBot).
+- `content_pl:glob:*kamer*` is a case-insensitive substring match without inflection
+  (`*żądani*` and `*ŻĄDANI*` both give 388); ~0.25 s per search.
+- Status per date: `nonfinal`, `final` (after `use=validation`), `repealed` (with the court
+  ruling's `refid`); `use=defended` is not in the schema enumeration and is passed through as is.
+  499 of 586 decisions are final, 84 non-final, 3 repealed.
+- Signatures (`refname`) look like `DKE.561.5.2026`, `ZSOŚS.440.25.2019`, `ZSOŚS.440.1.2019.II`.
+
 ## Sources checked without an official machine-readable interface (2026-10-30)
 
 - **CBOSA (WSA/NSA)**: no API or open-data dataset (dane.gov.pl search: none); robots.txt and

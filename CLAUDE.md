@@ -16,7 +16,8 @@ docker compose up -d --build              # container (needs .env)
 
 ## Source-of-truth rules (non-negotiable)
 - Only official sources: `api.sejm.gov.pl/eli`, `api.sejm.gov.pl/sejm` (legislative processes),
-  `www.saos.org.pl/api` and the EU Publications Office (`publications.europa.eu`, behind
+  `www.saos.org.pl/api`, the UODO decisions portal (`orzeczenia.uodo.gov.pl/api`, decisions of
+  the President of UODO only) and the EU Publications Office (`publications.europa.eu`, behind
   EUR-Lex). Never substitute an unofficial source silently; ELI `U` texts (*tekst ujednolicony*) are informational only.
 - Never fabricate acts, article numbers, wording, dates, amendments, case numbers or statuses.
   If data is missing, return `UNVERIFIED`/`NOT_FOUND` with a Polish explanation.

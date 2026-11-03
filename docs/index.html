@@ -115,13 +115,14 @@
     <div class="pitch">
       <span class="label">Serwer MCP dla Claude</span>
       <h1>Polskie prawo w Claude, prosto ze źródła</h1>
-      <p class="lead">Claude sięga po aktualne brzmienie przepisów do oficjalnych baz Sejmu, UE i
-        sądów, podaje gotowy cytat z Dziennika Ustaw i mówi wprost, co udało się potwierdzić, a czego nie.</p>
+      <p class="lead">Claude sięga po aktualne brzmienie przepisów do oficjalnych baz Sejmu, UE,
+        sądów i UODO, podaje gotowy cytat z Dziennika Ustaw i mówi wprost, co udało się potwierdzić, a czego nie.</p>
       <ul class="sources" aria-label="Źródła danych">
         <li>ELI API Sejmu</li>
         <li>API Sejmu</li>
         <li>EUR-Lex</li>
         <li>SAOS</li>
+        <li>Portal Orzeczeń UODO</li>
       </ul>
       <p class="muted">Bez wymyślania: jeśli czegoś nie ma w oficjalnych danych, serwer odpowiada
         „nie znaleziono” albo „niezweryfikowane”, zamiast zgadywać.</p>
@@ -172,7 +173,7 @@
 
   <section aria-labelledby="what">
     <div class="intro">
-      <span class="label">15 narzędzi</span>
+      <span class="label">17 narzędzi</span>
       <h2 id="what">Co Claude potrafi z tym serwerem</h2>
     </div>
     <div class="tools">
@@ -186,8 +187,10 @@
       <div><h3>Prawo UE i TSUE</h3>
         <p>Rozporządzenia i dyrektywy po polsku (np. RODO), ich polskie wdrożenia oraz wyroki TSUE
           interpretujące konkretny artykuł.</p></div>
-      <div><h3>Orzecznictwo</h3>
-        <p>Wyroki sądów powszechnych, SN, TK i KIO z SAOS, także te powołujące konkretny przepis, np. art. 5 k.c.</p></div>
+      <div><h3>Orzecznictwo i decyzje UODO</h3>
+        <p>Wyroki sądów powszechnych, SN, TK i KIO z SAOS, także te powołujące konkretny przepis,
+          np. art. 5 k.c., oraz decyzje Prezesa UODO od 2018 r. ze statusem: prawomocna,
+          nieprawomocna albo uchylona przez sąd.</p></div>
       <div><h3>Uczciwe statusy</h3>
         <p>Każda odpowiedź ma osobny status dla źródła, istnienia aktu, brzmienia i daty. „VERIFIED”
           znaczy, że to konkretne pytanie zostało potwierdzone w oficjalnych danych.</p></div>
@@ -205,6 +208,7 @@
       <li>Jaka jest minimalna stawka godzinowa w 2026 roku i z jakiego rozporządzenia to wynika?</li>
       <li>Znajdź orzeczenia, które powołują art. 5 k.c.</li>
       <li>Podaj brzmienie art. 17 RODO i wyroki TSUE, które go interpretują.</li>
+      <li>Znajdź decyzje Prezesa UODO o monitoringu wizyjnym obejmującym posesję sąsiada.</li>
     </ul>
   </section>
 

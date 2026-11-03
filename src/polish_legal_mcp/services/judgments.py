@@ -86,6 +86,21 @@ def html_to_text(html: str) -> str:
     return _BLANK_LINES_RE.sub("\n\n", "\n".join(lines)).strip()
 
 
+def phrase_excerpts(text: str, phrase: str | None) -> list[str]:
+    """Up to MAX_EXCERPTS fragments of the text around each case-insensitive hit of the phrase."""
+    excerpts: list[str] = []
+    needle = (phrase or "").strip().lower()
+    if not needle:
+        return excerpts
+    lowered = text.lower()
+    start = lowered.find(needle)
+    while start != -1 and len(excerpts) < MAX_EXCERPTS:
+        lo, hi = max(0, start - EXCERPT_RADIUS), start + len(needle) + EXCERPT_RADIUS
+        excerpts.append(("…" if lo else "") + text[lo:hi] + ("…" if hi < len(text) else ""))
+        start = lowered.find(needle, hi)
+    return excerpts
+
+
 def _date(value: Any) -> date | None:
     try:
         return date.fromisoformat(str(value)[:10]) if value else None
@@ -359,17 +374,7 @@ class JudgmentService:
         item = await self._saos.judgment(judgment_id)
         court_name, division = _court(item)
         full_text = html_to_text(str(item.get("textContent") or ""))
-        excerpts: list[str] = []
-        if search_text:
-            needle = search_text.strip().lower()
-            lowered = full_text.lower()
-            start = lowered.find(needle)
-            while start != -1 and len(excerpts) < MAX_EXCERPTS:
-                lo, hi = max(0, start - EXCERPT_RADIUS), start + len(needle) + EXCERPT_RADIUS
-                excerpts.append(
-                    ("…" if lo else "") + full_text[lo:hi] + ("…" if hi < len(full_text) else "")
-                )
-                start = lowered.find(needle, hi)
+        excerpts = phrase_excerpts(full_text, search_text)
         source = item.get("source") or {}
         warnings = [COVERAGE_NOTE]
         if not full_text:

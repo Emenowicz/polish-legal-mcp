@@ -17,6 +17,7 @@ uvicorn ─ Starlette app (FastMCP http_app)
                                  legal.py      eli.py   api.sejm.gov.pl/eli
                                  judgments.py  saos.py  www.saos.org.pl/api
                                  eu_law.py     eurlex.py publications.europa.eu (EUR-Lex)
+                                 uodo.py       uodo.py  orzeczenia.uodo.gov.pl/api
 ```
 
 | Module | Responsibility |
@@ -31,6 +32,7 @@ uvicorn ─ Starlette app (FastMCP http_app)
 | `clients/eurlex.py`, `parsers/eu_html.py`, `services/eu_law.py` | EU law: CELLAR documents (redirects only within the host) and SPARQL metadata, OJ/consolidated article extraction, version choice, corrigenda/amendment checks. |
 | `services/judgments.py` | SAOS search/details normalisation, HTML stripping, paging, excerpts; judgments citing a provision (confirmed per judgment); acts cited for an issue. |
 | `parsers/cjeu_html.py`, `services/cjeu.py` | CJEU decisions from CELLAR: numbered paragraphs, operative part, language of the case, citation with ECLI; decisions interpreting an act/article (SPARQL annotations). |
+| `clients/uodo.py`, `services/uodo.py` | Portal Orzeczeń UODO: decisions of the President of UODO by words of the text (substring, AND) or signature; metadata, status history (court rulings named from the portal index), cited acts with ELI candidates, paged text, attribution note. Search conditions are path segments, so they are built only from validated words/dates/signatures and the path is not logged. |
 | `clients/sejm.py`, `services/legislation.py` | API Sejmu: legislative processes of the current term, bills naming a given act, current stage. |
 | `server.py` | FastMCP server, Polish tool descriptions, auth, middleware, health. |
 | `main.py` | Entry point: logging, uvicorn with proxy headers and graceful shutdown. |

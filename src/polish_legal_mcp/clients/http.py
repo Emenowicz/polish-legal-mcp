@@ -131,8 +131,10 @@ class UpstreamClient:
         path: str,
         params: Mapping[str, str | int] | None = None,
         accept: str = "application/json",
+        log_path: str | None = None,
     ) -> Any:
-        body = await self._get(path, params, accept=accept)
+        """``log_path`` replaces ``path`` in the request log when the path carries user text."""
+        body = await self._get(path, params, accept=accept, log_path=log_path)
         try:
             return json.loads(body)
         except ValueError as exc:
@@ -160,6 +162,7 @@ class UpstreamClient:
         params: Mapping[str, str | int] | None,
         accept: str,
         headers: Mapping[str, str] | None = None,
+        log_path: str | None = None,
     ) -> bytes:
         # Paths are built from validated identifiers only; refuse anything URL-like.
         if not path.startswith("/") or "://" in path or ".." in path or "\\" in path:
@@ -177,7 +180,7 @@ class UpstreamClient:
                         extra={
                             "fields": {
                                 "upstream": self.name,
-                                "path": path,
+                                "path": log_path or path,
                                 "status": status,
                                 "attempt": attempt + 1,
                                 "ms": round((time.monotonic() - started) * 1000),

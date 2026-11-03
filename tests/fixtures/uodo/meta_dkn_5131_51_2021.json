@@ -1,0 +1,499 @@
+{
+ "type": "PublicDocument",
+ "version": "4.3",
+ "id": "PublicDocument-20220531-000000-000-c2a0402de02541b0bb908882b5824ca3",
+ "time": "2022-05-31T00:00:00.000Z",
+ "languages": [
+  "pl"
+ ],
+ "name": {
+  "pl": "Decyzja Prezesa UODO nr DKN.5131.51.2021"
+ },
+ "title": {
+  "pl": "nałożenie administracyjnej kary pieniężnej za naruszenie polegające na nagrywaniu i utrwalaniu dźwięku w zainstalowanym w systemie monitoringu."
+ },
+ "refid": "urn:ndoc:gov:pl:uodo:2021:dkn_5131_51",
+ "refname": "DKN.5131.51.2021",
+ "kind": "decision",
+ "publication": {
+  "status": "repealed",
+  "inforce": true,
+  "version": "1.0.0",
+  "pubid": null
+ },
+ "publicator": {
+  "type": "gov",
+  "subtype": "uodo",
+  "name": {
+   "pl": "Decyzje Prezesa Urzędu Ochrony Danych Osobowych"
+  },
+  "country": "pl",
+  "year": "2022",
+  "extids": [
+   {
+    "id": "urn:ndoc:gov:pl:uodo:2021:dkn_5131_51",
+    "type": "uodo"
+   }
+  ]
+ },
+ "dates": [
+  {
+   "date": "2022-05-31",
+   "use": "announcement",
+   "type": "direct",
+   "status": "nonfinal",
+   "scope": "*"
+  },
+  {
+   "date": "2022-10-28",
+   "use": "defended",
+   "type": "direct",
+   "status": "nonfinal",
+   "scope": "*",
+   "refid": "urn:ndoc:court:pl:sa:2022:ii_sa-wa_1341"
+  },
+  {
+   "date": "2023-01-11",
+   "use": "publication",
+   "type": "direct",
+   "status": "nonfinal",
+   "scope": "*"
+  },
+  {
+   "date": "2025-03-19",
+   "use": "repealed",
+   "type": "direct",
+   "status": "repealed",
+   "scope": "*",
+   "refid": "urn:ndoc:court:pl:sa:2023:iii_osk_3311"
+  }
+ ],
+ "parts": 1,
+ "entities": [
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "Departament Kontroli i Naruszeń"
+   },
+   "function": "department"
+  },
+  {
+   "title": {
+    "pl": "Prezes Urzędu Ochrony Danych Osobowych"
+   },
+   "name": {
+    "pl": "Jan Nowak"
+   },
+   "function": "creator",
+   "date": "2022-05-31"
+  },
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "pracownik@uodo.gov.pl"
+   },
+   "function": "introductor",
+   "date": "2023-01-11"
+  },
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "Redaktor Portalu"
+   },
+   "function": "editor",
+   "date": "2023-01-11"
+  }
+ ],
+ "terms": [
+  {
+   "label": "1.10.104",
+   "name": {
+    "en": "",
+    "pl": "nałożenie kary"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "1.20.101",
+   "name": {
+    "en": "",
+    "pl": "Monitoring"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "1.20.106",
+   "name": {
+    "en": "health",
+    "pl": "Zdrowie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.10.102",
+   "name": {
+    "en": "",
+    "pl": "nieuwzględnienie zasad ochrony danych osobowych w fazie projektowania i domyślnej ochrony danych"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.10.116",
+   "name": {
+    "en": "",
+    "pl": "związane z procedurą certyfikacji"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.100",
+   "name": {
+    "en": "",
+    "pl": "naruszenie zasad przetwarzania"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.101",
+   "name": {
+    "en": "",
+    "pl": "dopuszczalność przetwarzania danych zwykłych"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.103",
+   "name": {
+    "en": "",
+    "pl": "dopuszczalność przetwarzania danych szczególnie chronionych"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.116",
+   "name": {
+    "en": "",
+    "pl": "niezapewnienia dostępu w celu wykonywania uprawnień kontrolnych (utrudnianie kontroli)"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "3.10.102",
+   "name": {
+    "en": "",
+    "pl": "obowiązek prawny"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "3.10.103",
+   "name": {
+    "en": "",
+    "pl": "ochrona żywotnych interesów"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "3.10.104",
+   "name": {
+    "en": "",
+    "pl": "interes publiczny lub władza publiczna"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "3.20.101",
+   "name": {
+    "en": "",
+    "pl": "obowiązek prawny"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "3.20.102",
+   "name": {
+    "en": "",
+    "pl": "ochrona żywotnych interesów"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "4.10.100",
+   "name": {
+    "en": "warning",
+    "pl": "ostrzeżenie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "4.10.108",
+   "name": {
+    "en": "imposition an administrative fine",
+    "pl": "administracyjna kara pieniężna"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.100",
+   "name": {
+    "en": "data controller",
+    "pl": "administrator"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.130",
+   "name": {
+    "en": "biometric data",
+    "pl": "dane biometryczne"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.131",
+   "name": {
+    "en": "data concerning health",
+    "pl": "dane dotyczące zdrowia"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.132",
+   "name": {
+    "en": "genetic data",
+    "pl": "dane genetyczne"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.251",
+   "name": {
+    "en": "data processor",
+    "pl": "podmiot przetwarzający"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.252",
+   "name": {
+    "en": "legal bases",
+    "pl": "podstawy prawne"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.253",
+   "name": {
+    "en": "police/prosecutor's office",
+    "pl": "policja/prokuratura"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.280",
+   "name": {
+    "en": "integrity and transparency",
+    "pl": "rzetelność i przejrzystość"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.281",
+   "name": {
+    "en": "self-government",
+    "pl": "samorząd"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.284",
+   "name": {
+    "en": "public sector",
+    "pl": "sektor publiczny"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.342",
+   "name": {
+    "en": "health",
+    "pl": "zdrowie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.344",
+   "name": {
+    "en": "legality",
+    "pl": "zgodność z prawem"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.350",
+   "name": {
+    "en": "technical and organisational measures",
+    "pl": "środki techniczne i organizacyjne"
+   },
+   "base": "uodo"
+  }
+ ],
+ "refs": [
+  {
+   "refid": "urn:ndoc:pro:eu:ojol:2016:679",
+   "name": "Dz. Urz. UE L 119 z 4.05.2016",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:eu:ojol:2016:679r02",
+   "name": "Dz. Urz. UE L 127 z 23.05.2018",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:eu:ojol:2016:679r03",
+   "name": "Dz. Urz. UE L 74 z 4.03.2021",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1960:168",
+   "name": "Dz.U. 1960 nr 30 poz. 168",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2018:1000",
+   "name": "Dz.U. 2018 poz. 1000",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0,n17",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1982:230",
+   "name": "Dz.U. 1982 nr 35 poz. 230",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n1,n3:c1:t1",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2009:1240",
+   "name": "Dz.U. 2009 nr 157 poz. 1240",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n1",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2014:1850",
+   "name": "Dz. U. z 2014 r., poz. 1850",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n12:t2",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2012:638",
+   "name": "Dz. U. z 2012, poz. 638",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n33",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1990:179",
+   "name": "Dz.U. 1990 nr 30 poz. 179",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n33",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2009:417",
+   "name": "Dz.U. 2009 nr 52 poz. 417",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n41",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2011:654",
+   "name": "Dz.U. 2011 nr 112 poz. 654",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n41",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1997:557",
+   "name": "Dz.U. 1997 nr 90 poz. 557",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n43",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2002:676",
+   "name": "Dz.U. 2002 nr 74 poz. 676",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n45:s1",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2006:708",
+   "name": "Dz.U. 2006 nr 104 poz. 708",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n45:s2",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2009:504",
+   "name": "Dz.U. 2009 nr 62 poz. 504",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n46",
+   "dest": "*"
+  }
+ ],
+ "resources": {
+  "000_pl.xml": {
+   "ref": "0",
+   "lang": "pl",
+   "kind": "body",
+   "mimetype": "application/xml",
+   "size": 86887,
+   "checksum": "{SHA256}089792daaa31b087fe9d9f3a68c758f73e334d954595a12b2553e2cc606f7ed1"
+  },
+  "toc.json": {
+   "kind": "toc",
+   "mimetype": "application/json",
+   "size": 9558,
+   "checksum": "{SHA256}02410d8e8c83e531a2c54b6cbedf346d7768effcadc2e7373e31aefcd49236c8"
+  },
+  "search.json": {
+   "kind": "search",
+   "mimetype": "application/json",
+   "size": 71486,
+   "checksum": "{SHA256}ad2e54bd1c583605f8cebf46dbc54f590d2ae528215702a3e40fe068d15559dc"
+  }
+ }
+}

@@ -34,6 +34,7 @@ from polish_legal_mcp.clients.eli import EliClient
 from polish_legal_mcp.clients.eurlex import EurLexClient
 from polish_legal_mcp.clients.saos import SaosClient
 from polish_legal_mcp.clients.sejm import SejmClient
+from polish_legal_mcp.clients.uodo import UodoClient
 from polish_legal_mcp.config import Settings
 from polish_legal_mcp.errors import LegalMcpError
 from polish_legal_mcp.logging_setup import AccessLog
@@ -54,6 +55,8 @@ from polish_legal_mcp.models import (
     ProvisionResult,
     SearchActsResult,
     TranspositionResult,
+    UodoDecision,
+    UodoSearchResult,
 )
 from polish_legal_mcp.security import RequestGuard, build_oauth_storage, periodic_cull
 from polish_legal_mcp.services.act_index import load_act_index, refresh_act_index
@@ -62,12 +65,13 @@ from polish_legal_mcp.services.eu_law import EuLawService
 from polish_legal_mcp.services.judgments import JudgmentService
 from polish_legal_mcp.services.legal import LegalService, issue_terms, warsaw_today
 from polish_legal_mcp.services.legislation import LegislationService
+from polish_legal_mcp.services.uodo import UodoService
 
 logger = logging.getLogger(__name__)
 
 INSTRUCTIONS = """\
 Serwer udostępnia oficjalne źródła prawa: akty prawne z API ELI Kancelarii Sejmu (Dziennik Ustaw,
-Monitor Polski), projekty ustaw z API Sejmu, orzeczenia z SAOS oraz prawo UE i orzecznictwo TSUE
+Monitor Polski), projekty ustaw z API Sejmu, orzeczenia z SAOS, decyzje Prezesa UODO oraz prawo UE i orzecznictwo TSUE
 z Urzędu Publikacji UE (EUR-Lex). Zasady:
 - Cytuj wyłącznie treść zwróconą przez narzędzia wraz z linkiem do źródła.
 - Statusy weryfikacji są cząstkowe (VERIFIED, UNVERIFIED, NOT_FOUND, NOT_APPLICABLE,
@@ -91,6 +95,9 @@ z Urzędu Publikacji UE (EUR-Lex). Zasady:
   get_legal_provision. find_legal_basis dopasowuje słowa (opcjonalnie z sygnałem z orzecznictwa
   SAOS) – traktuj go pomocniczo.
 - Zmiany w przygotowaniu (projekty ustaw w Sejmie): find_pending_bills – projekt nie jest prawem.
+- Decyzje Prezesa UODO (ochrona danych osobowych, RODO): search_uodo_decisions i
+  get_uodo_decision. Zawsze podawaj status decyzji (nieprawomocna, prawomocna, uchylona) i źródło
+  z pola source_note.
 - Wynik nie jest opinią prawną.
 """
 
@@ -417,6 +424,8 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
     cjeu = CjeuService(eurlex)
     sejm = SejmClient(settings, backoff_base=backoff_base)
     legislation = LegislationService(sejm)
+    uodo_client = UodoClient(settings, backoff_base=backoff_base)
+    uodo = UodoService(uodo_client)
 
     @asynccontextmanager
     async def lifespan(_: FastMCP) -> AsyncIterator[None]:
@@ -432,6 +441,7 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
             await saos.aclose()
             await eurlex.aclose()
             await sejm.aclose()
+            await uodo_client.aclose()
 
     def client_key(context: MiddlewareContext) -> str:
         # Dropping the buckets only refills them: at most one extra burst per account.
@@ -902,6 +912,74 @@ def build_server(settings: Settings, *, backoff_base: float = 0.5) -> FastMCP:
         z szukaną frazą, gotowy cytat (citation, np. 'wyrok Sądu Najwyższego z dnia 12 marca
         2020 r., I CSK 123/19') i link do strony orzeczenia w SAOS."""
         return await _run(lambda: judgments.get(judgment_id, text_offset, text_limit, search_text))
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def search_uodo_decisions(
+        query: Annotated[
+            str | None,
+            Field(
+                default=None,
+                min_length=3,
+                max_length=200,
+                description="Do 5 słów, które muszą wystąpić w treści decyzji. Portal nie "
+                "odmienia słów – podawaj rdzenie, np. 'monitoring kamer', 'sąsiad', 'wyciek'.",
+            ),
+        ] = None,
+        signature: Annotated[
+            str | None,
+            Field(
+                default=None,
+                min_length=8,
+                max_length=40,
+                description="Sygnatura decyzji, np. 'DKE.561.5.2026'.",
+            ),
+        ] = None,
+        date_from: Annotated[
+            date | None, Field(default=None, description="Decyzje wydane od dnia.")
+        ] = None,
+        date_to: Annotated[
+            date | None, Field(default=None, description="Decyzje wydane do dnia.")
+        ] = None,
+        limit: Annotated[int, Field(ge=1, le=20, description="Wyników na stronę.")] = 10,
+        page: Annotated[int, Field(ge=0, le=100, description="Numer strony (od 0).")] = 0,
+    ) -> UodoSearchResult:
+        """Wyszukuje decyzje Prezesa Urzędu Ochrony Danych Osobowych (RODO, od 2018 r.) w
+        oficjalnym Portalu Orzeczeń UODO – po słowach z treści lub po sygnaturze, od
+        najnowszych. Zwraca sygnaturę, datę wydania, opis przedmiotu, status (nieprawomocna,
+        prawomocna, uchylona), gotowy cytat i link. Decyzja dotyczy konkretnej sprawy i nie jest
+        przepisem prawa. Treść decyzji: get_uodo_decision."""
+        return await _run(lambda: uodo.search(query, signature, date_from, date_to, limit, page))
+
+    @mcp.tool(annotations=READ_ONLY)
+    async def get_uodo_decision(
+        decision: Annotated[
+            str,
+            Field(
+                min_length=8,
+                max_length=60,
+                description="Sygnatura decyzji ('DKE.561.5.2026') albo identyfikator z portalu "
+                "('urn:ndoc:gov:pl:uodo:2026:dke_561_5').",
+            ),
+        ],
+        text_offset: Annotated[int, Field(ge=0, description="Przesunięcie w treści (znaki).")] = 0,
+        text_limit: Annotated[
+            int, Field(ge=500, le=20000, description="Długość fragmentu treści.")
+        ] = 8000,
+        search_text: Annotated[
+            str | None,
+            Field(
+                default=None,
+                max_length=200,
+                description="Fraza – zwraca fragmenty treści, w których występuje.",
+            ),
+        ] = None,
+    ) -> UodoDecision:
+        """Pobiera decyzję Prezesa UODO z oficjalnego Portalu Orzeczeń UODO: sygnaturę, datę,
+        status z historią (np. uprawomocnienie, uchylenie przez sąd administracyjny), departament,
+        indeksy merytoryczne, powołane akty (z przypuszczalnym ELI), orzeczenia i wytyczne EROD,
+        stronicowaną treść, fragmenty z frazą, gotowy cytat i notę o źródle (source_note) do
+        podania przy wykorzystaniu treści. Treści portalu mają charakter informacyjny."""
+        return await _run(lambda: uodo.get(decision, text_offset, text_limit, search_text))
 
     return mcp
 

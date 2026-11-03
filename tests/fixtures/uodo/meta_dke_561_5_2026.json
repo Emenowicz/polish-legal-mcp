@@ -1,0 +1,369 @@
+{
+ "type": "PublicDocument",
+ "version": "4.3",
+ "id": "PublicDocument-20260905-000000-000-b6de6a4d933e4772888d87bbdab18fbe",
+ "time": "2026-09-05T00:00:00.000Z",
+ "languages": [
+  "pl"
+ ],
+ "name": {
+  "pl": "Decyzja Prezesa UODO nr DKE.561.5.2026"
+ },
+ "title": {
+  "pl": "nałożenie administracyjnej kary pieniężnej na właściciela nieruchomości prowadzącego monitoring wizyjny, z powodu nieprzestrzegania nakazu organu nadzorczego zaprzestania rejestrowania obrazu wykraczającego poza granice własnej posesji (obejmującego nieruchomość sąsiadów i drogę publiczną) oraz usunięcia tak utrwalonych nagrań — w postępowaniu wszczętym z urzędu wskutek sygnałów sąsiadów o dalszym ich monitorowaniu po uprawomocnieniu się nakazu."
+ },
+ "refid": "urn:ndoc:gov:pl:uodo:2026:dke_561_5",
+ "refname": "DKE.561.5.2026",
+ "kind": "decision",
+ "publication": {
+  "status": "nonfinal",
+  "inforce": true,
+  "version": "1.0.0",
+  "pubid": null
+ },
+ "publicator": {
+  "type": "gov",
+  "subtype": "uodo",
+  "name": {
+   "pl": "Decyzje Prezesa Urzędu Ochrony Danych Osobowych"
+  },
+  "country": "pl",
+  "year": "2026",
+  "extids": [
+   {
+    "id": "urn:ndoc:gov:pl:uodo:2026:dke_561_5",
+    "type": "uodo"
+   }
+  ]
+ },
+ "dates": [
+  {
+   "date": "2026-09-05",
+   "use": "announcement",
+   "type": "direct",
+   "status": "nonfinal"
+  },
+  {
+   "date": "2026-09-25",
+   "use": "publication",
+   "type": "direct",
+   "status": "nonfinal"
+  }
+ ],
+ "parts": 1,
+ "entities": [
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "Departament Kar i Egzekucji"
+   },
+   "function": "department"
+  },
+  {
+   "title": {
+    "pl": "Prezes Urzędu Ochrony Danych Osobowych"
+   },
+   "name": {
+    "pl": "Mirosław Wróblewski"
+   },
+   "function": "creator",
+   "date": "2026-09-05"
+  },
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "pracownik@uodo.gov.pl"
+   },
+   "function": "introductor",
+   "date": ""
+  },
+  {
+   "title": {
+    "pl": ""
+   },
+   "name": {
+    "pl": "Redaktor Portalu"
+   },
+   "function": "editor",
+   "date": ""
+  }
+ ],
+ "terms": [
+  {
+   "label": "1.10.104",
+   "name": {
+    "en": "",
+    "pl": "nałożenie kary"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "1.20.101",
+   "name": {
+    "en": "",
+    "pl": "Monitoring"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.10.102",
+   "name": {
+    "en": "",
+    "pl": "nieuwzględnienie zasad ochrony danych osobowych w fazie projektowania i domyślnej ochrony danych"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.10.108",
+   "name": {
+    "en": "",
+    "pl": "niepodjęcie współpracy z organem nadzoru na jego żądanie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.10.116",
+   "name": {
+    "en": "",
+    "pl": "związane z procedurą certyfikacji"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.103",
+   "name": {
+    "en": "",
+    "pl": "dopuszczalność przetwarzania danych szczególnie chronionych"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "2.11.117",
+   "name": {
+    "en": "",
+    "pl": "nieprzestrzeganie nakazu orzeczonego przez organ nadzorczy"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "4.10.101",
+   "name": {
+    "en": "reprimand",
+    "pl": "upomnienie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "4.10.102",
+   "name": {
+    "en": "an order to comply with a request",
+    "pl": "nakaz spełnienia żądania"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "4.10.108",
+   "name": {
+    "en": "imposition an administrative fine",
+    "pl": "administracyjna kara pieniężna"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.111",
+   "name": {
+    "en": "security of processing",
+    "pl": "bezpieczeństwo przetwarzania"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.120",
+   "name": {
+    "en": "nature of the violation",
+    "pl": "charakter naruszenia"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.240",
+   "name": {
+    "en": "information obligation",
+    "pl": "obowiązek informacyjny"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.251",
+   "name": {
+    "en": "data processor",
+    "pl": "podmiot przetwarzający"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.253",
+   "name": {
+    "en": "police/prosecutor's office",
+    "pl": "policja/prokuratura"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.259",
+   "name": {
+    "en": "right to be forgotten",
+    "pl": "prawo do bycia zapomnianym"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.268",
+   "name": {
+    "en": "accountability",
+    "pl": "rozliczalność"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.281",
+   "name": {
+    "en": "self-government",
+    "pl": "samorząd"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.342",
+   "name": {
+    "en": "health",
+    "pl": "zdrowie"
+   },
+   "base": "uodo"
+  },
+  {
+   "label": "9.10.350",
+   "name": {
+    "en": "technical and organisational measures",
+    "pl": "środki techniczne i organizacyjne"
+   },
+   "base": "uodo"
+  }
+ ],
+ "refs": [
+  {
+   "refid": "urn:ndoc:gov:pl:uodo:2024:ds_523_1469",
+   "name": "DS.523.1469.2024",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n0b,s1,s36",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:gov:pl:uodo:2025:dke_560_282",
+   "name": "DKE.560.282.2025",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s4,s36,s37,s57,s69",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:court:eu:tsue:2013:c_212",
+   "name": "C-212/13",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s10,s38,s41",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1990:179",
+   "name": "Dz.U. 1990 nr 30 poz. 179",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s40",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:gov:eu:edpb:2022:04",
+   "name": "Wytycznymi 04/2022",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s51,s53,s57,s68,s68,s69,s69,s73,s73,s73,s73,s75,s80,s80,n90,n90",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:court:eu:tsue:1997:c_387",
+   "name": "C-387/97",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s80",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:court:eu:tsue:2001:c_278",
+   "name": "C-278/01",
+   "relation": "refers",
+   "type": "direct",
+   "source": "s80",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1960:168",
+   "name": "Dz.U. 1960 nr 30 poz. 168",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n90",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:2018:1000",
+   "name": "Dz.U. 2018 poz. 1000",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n90",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:eu:ojol:2016:679",
+   "name": "Dz. Urz. UE L 119 z 04.05.2016",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n90",
+   "dest": "*"
+  },
+  {
+   "refid": "urn:ndoc:pro:pl:durp:1966:151",
+   "name": "Dz.U. 1966 nr 24 poz. 151",
+   "relation": "refers",
+   "type": "direct",
+   "source": "n90",
+   "dest": "*"
+  }
+ ],
+ "resources": {
+  "000_pl.xml": {
+   "ref": "0",
+   "lang": "pl",
+   "kind": "body",
+   "mimetype": "application/xml",
+   "size": 116457,
+   "checksum": "{SHA256}b5ed6b98e390473bf68a0b06b7d07e95c057f66379d574c18c4be276af715d49"
+  },
+  "toc.json": {
+   "kind": "toc",
+   "mimetype": "application/json",
+   "size": 11670,
+   "checksum": "{SHA256}194b166a4d9b00eff5295a09f888ba4f8335d9c677b3d75541059caa816c7ae1"
+  },
+  "search.json": {
+   "kind": "search",
+   "mimetype": "application/json",
+   "size": 98531,
+   "checksum": "{SHA256}eb90d078dec8a4212e8c06c95a00a57c59f6917bfebcd0a8e45d6ca4079e34d1"
+  }
+ }
+}

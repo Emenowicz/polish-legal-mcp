@@ -14,6 +14,10 @@
   they are listed with `official: false` and never used as a wording source.
 - **SAOS has no administrative-court judgments** (`courtType=ADMINISTRATIVE` → 0 results). WSA/NSA
   case law (CBOSA) is not available through an official API and is not integrated.
+- **UODO decisions** (`search_uodo_decisions`): the portal matches substrings without inflection
+  (use stems), all words must occur, and there is no relevance ranking (newest first). Only
+  decisions of the President of UODO are searched; the WSA/NSA rulings on UODO decisions that the
+  portal re-publishes are not. Status (final, non-final, repealed) is the portal's metadata.
 - SAOS `lawJournalEntryCode` indexes only the originally cited publication; use
   `referenced_regulation` (title text) instead.
 - `find_judgments_for_provision` relies on SAOS's cited-provision metadata: good for codes and
